@@ -1,0 +1,223 @@
+/* #attendance:focus {
+    background-color: #e1efee;
+    border-radius: 0px 0px 0px 8px;
+} */
+
+@font-face {
+    font-family: 'Material Icons';
+    font-style: normal;
+    font-weight: 400;
+    src: url(chrome-extension://gioogehddfnceeihfoeencjbhggblkkd/icons/MaterialIcons-Regular.eot); /* For IE6-8 */
+    src: local('Material Icons'), local('MaterialIcons-Regular'),
+        url(chrome-extension://gioogehddfnceeihfoeencjbhggblkkd/icons/MaterialIcons-Regular.woff2)
+            format('woff2'),
+        url(chrome-extension://gioogehddfnceeihfoeencjbhggblkkd/icons/MaterialIcons-Regular.woff)
+            format('woff'),
+        url(chrome-extension://gioogehddfnceeihfoeencjbhggblkkd/icons/MaterialIcons-Regular.ttf)
+            format('truetype');
+}
+
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px; /* Preferred icon size */
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+
+    /* Support for all WebKit browsers. */
+    -webkit-font-smoothing: antialiased;
+    /* Support for Safari and Chrome. */
+    text-rendering: optimizeLegibility;
+
+    /* Support for Firefox. */
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Support for IE. */
+    font-feature-settings: 'liga';
+}
+
+#dialog-title {
+    text-align: center;
+    top: -4px;
+    max-width: none;
+    font-size: 20px;
+}
+
+.card-title {
+    text-align: center;
+    margin: 12px;
+    max-width: none;
+    font-size: 20px;
+}
+
+.left {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    padding: 0px;
+    z-index: 1;
+}
+
+.right {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    padding: 0px;
+}
+
+.big-button {
+    margin: 4px 8px 0 4px;
+}
+
+.medium-button {
+    margin: 8px 10px 0 10px;
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+}
+
+.small-button {
+    margin: 0 0 8px 0;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    font-size: 18px;
+}
+
+.material-icons.green {
+    color: #7fff7f;
+}
+
+.material-icons.red {
+    color: #ff7f7f;
+}
+
+.material-icons.yellow {
+    color: #ffec7f;
+}
+
+.material-icons.gray {
+    color: #bababa;
+}
+
+.mdc-dialog .mdc-dialog__content {
+    padding: 0px;
+}
+
+.mdc-dialog .mdc-dialog__surface {
+    max-width: none;
+}
+
+.mdc-list {
+    padding: 0px;
+}
+
+.mdc-list-item {
+    padding-right: 8px;
+}
+
+.class-entry {
+    max-width: 600px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+#class-list {
+    padding-bottom: 0;
+}
+
+.mdc-button {
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+#add-class {
+    width: 100%;
+    height: 48px;
+    justify-content: left;
+    padding-left: 16px;
+    color: #00796b;
+}
+
+#add-class .mdc-button__icon {
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
+    margin-right: 16px;
+    color: #00796b;
+}
+
+#edit-roster {
+    width: 100%;
+}
+
+.confirm-roster {
+    width: 100%;
+}
+
+.mdc-list-item__graphic {
+    margin-right: 16px;
+}
+
+.export-button {
+    margin: 0 auto !important;
+}
+
+:root {
+    --text-offset: -10px;
+}
+
+.label {
+    margin: 8px 16px 0 16px;
+    font-weight: 500 !important;
+    font-size: 1rem !important;
+}
+
+.class-name-field {
+    margin: 4px 16px 0 16px;
+}
+
+.mdc-text-field--textarea {
+    width: calc(100% - 32px);
+    max-width: 69vw;
+    margin: 4px 16px 0 16px !important;
+    align-items: flex-start;
+    overflow: hidden;
+}
+
+.mdc-text-field--textarea .mdc-text-field__input {
+    line-height: 40px;
+    font-size: 16px;
+    font-family: Consolas, 'Liberation Mono', Menlo, Courier,
+        monospace;
+    letter-spacing: normal;
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
+}
+
+.mdc-chip-set {
+    max-width: 100%;
+    width: calc(100% - 18px);
+    position: absolute;
+}
+
+.mdc-chip {
+    padding-left: 9px;
+    padding-right: 9px;
+    z-index: 1;
+}
+
+.mdc-chip__text {
+    font-size: 16px;
+    font-family: Consolas, 'Liberation Mono', Menlo, Courier,
+        monospace;
+    letter-spacing: normal;
+}
+
+.mdc-notched-outline {
+    z-index: 2;
+}

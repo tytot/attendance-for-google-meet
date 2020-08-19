@@ -51,9 +51,11 @@
 
 .card-title {
     text-align: center;
-    margin: 12px;
-    max-width: none;
-    font-size: 20px;
+    max-width: calc(100% - 148px) !important;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .left {
@@ -123,7 +125,7 @@
 }
 
 .class-entry {
-    max-width: 600px;
+    max-width: calc(100% - 140px);
     font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 

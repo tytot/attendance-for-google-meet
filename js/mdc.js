@@ -28,7 +28,13 @@ document.querySelector('.more').addEventListener('click', function () {
     sortMenu.open = true
 })
 const sortOptions = new MDCList(sortMenuEl.querySelector('.mdc-list'))
-sortOptions.listElements.map((listItemEl) => new MDCRipple(listItemEl))
+for (const listEl of sortOptions.listElements) {
+    new MDCRipple(listEl)
+    listEl.addEventListener('click', function () {
+        setSortMethod(listEl.id)
+        forceStatusUpdate()
+    })
+}
 
 const MDCSnackbar = mdc.snackbar.MDCSnackbar
 const snackbar = new MDCSnackbar(document.querySelector('.mdc-snackbar'))
@@ -46,7 +52,7 @@ port.onMessage.addListener(function (msg) {
         if (error) {
             snackbar.labelText = error
         } else {
-            snackbar.labelText = 'Successfully updated sheet!'
+            snackbar.labelText = 'Successfully exported to Google Sheet!'
             snackbar.actionButtonText = 'OK'
         }
         snackbar.open()
@@ -119,46 +125,47 @@ document.getElementById('cancel-class').addEventListener('click', function () {
     document.getElementById('dialog-edit-view').hidden = true
 })
 
+function addChip(name) {
+    const chipEl = document.createElement('div')
+    chipEl.className = 'mdc-chip'
+    chipEl.setAttribute('role', 'row')
+    chipEl.innerHTML = `<div class="mdc-chip__ripple"></div>
+    <span role="gridcell">
+        <span
+            role="button"
+            tabindex="0"
+            class="mdc-chip__primary-action"
+        >
+            <span class="mdc-chip__text"
+                >${name}</span
+            >
+        </span>
+        <span role="gridcell">
+        <i class="material-icons mdc-chip__icon mdc-chip__icon--trailing" tabindex="0" role="button" style="margin-left: 0;">cancel</i>
+        </span>
+    </span>`
+    chipSetEl.appendChild(chipEl)
+    chipSet.addChip(chipEl)
+
+    chipEl
+        .querySelector('.mdc-chip__icon')
+        .addEventListener('click', function () {
+            const i = nameArray.indexOf(name)
+            chipSet.chips[i].beginExit()
+            nameArray.splice(i, 1)
+            recalibrate(name)
+        })
+}
+
 function editClass(className) {
     classTextField.value = className
     classTextField.initValue = className
     chipSetEl.innerHTML = ''
-    for (const name of nameArray) {
-        chipSetEl.insertAdjacentHTML(
-            'beforeend',
-            `<div class="mdc-chip" role="row">
-                <div class="mdc-chip__ripple"></div>
-                <span role="gridcell">
-                    <span
-                        role="button"
-                        tabindex="0"
-                        class="mdc-chip__primary-action"
-                    >
-                        <span class="mdc-chip__text"
-                            >${name}</span
-                        >
-                    </span>
-                    <span role="gridcell">
-                    <i class="material-icons mdc-chip__icon mdc-chip__icon--trailing" tabindex="0" role="button" style="margin-left: 0;">cancel</i>
-                    </span>
-                </span>
-            </div>`
-        )
-    }
     chipSet = new MDCChipSet(chipSetEl)
-    stuTextField.value = getNewFieldValue()
-
-    for (const chipEl of chipSetEl.getElementsByClassName('mdc-chip')) {
-        const name = chipEl.querySelector('.mdc-chip__text').innerHTML
-        chipEl
-            .querySelector('.mdc-chip__icon')
-            .addEventListener('click', function () {
-                const index = nameArray.indexOf(name)
-                chipSet.chips[index].beginExit()
-                nameArray.splice(index, 1)
-                recalibrate(name)
-            })
+    for (const name of nameArray) {
+        addChip(name)
     }
+    stuTextField.value = getNewFieldValue()
 }
 
 function prepareChips(_cardView, defaultView, editView) {
@@ -197,7 +204,7 @@ function prepareChips(_cardView, defaultView, editView) {
         .addEventListener('click', function () {
             const className = classTextField.value
             const initClassName = classTextField.initValue
-            
+
             chrome.storage.local.get('rosters', function (result) {
                 let res = result['rosters']
                 if (className === '') {
@@ -222,7 +229,11 @@ function prepareChips(_cardView, defaultView, editView) {
                     deleteClass(initClassName)
                         .then(() => {
                             delete classTextField.initValue
-                            return addClass(className, nameArray, !selectDialog.isOpen)
+                            return addClass(
+                                className,
+                                nameArray,
+                                !selectDialog.isOpen
+                            )
                         })
                         .then((classEl) => {
                             addDefaultEventListeners(
@@ -271,57 +282,20 @@ function prepareChips(_cardView, defaultView, editView) {
             })
         })
 
-    stuTextFieldEl.addEventListener('input', function () {
-        let name = stuTextField.value.trim()
-        if (stuTextField.value.endsWith(' ') && name !== '') {
-            name += ' '
-        }
-        stuTextField.value = getNewFieldValue() + name
-    })
-    stuTextFieldEl.addEventListener('keydown', function (event) {
-        if (
-            event.key === 'Enter' ||
-            event.keyCode === 13 ||
-            event.key === 'Comma' ||
-            event.keyCode === 188
-        ) {
-            event.preventDefault()
-
-            let name = stuTextField.value.trim()
-            if (name !== '') {
-                const chipEl = document.createElement('div')
-                chipEl.className = 'mdc-chip'
-                chipEl.setAttribute('role', 'row')
-                chipEl.innerHTML = `<div class="mdc-chip__ripple"></div>
-                <span role="gridcell">
-                    <span
-                        role="button"
-                        tabindex="0"
-                        class="mdc-chip__primary-action"
-                    >
-                        <span class="mdc-chip__text"
-                            >${name}</span
-                        >
-                    </span>
-                    <span role="gridcell">
-                    <i class="material-icons mdc-chip__icon mdc-chip__icon--trailing" tabindex="0" role="button" style="margin-left: 0;">cancel</i>
-                    </span>
-                </span>`
-                chipSetEl.appendChild(chipEl)
-                chipSet.addChip(chipEl)
+    stuTextFieldEl.addEventListener('input', function (event) {
+        const input = stuTextField.value.trimLeft()
+        if (input.includes('\n') || input.includes(',')) {
+            let names = input
+                .split(/\r?\n|\t|,/)
+                .map((name) => name.trim().replace(/  +/g, ' '))
+                .filter((name) => name !== '')
+            for (const name of names) {
                 nameArray.push(name)
-
-                chipEl
-                    .querySelector('.mdc-chip__icon')
-                    .addEventListener('click', function () {
-                        const i = nameArray.indexOf(name)
-                        chipSet.chips[i].beginExit()
-                        nameArray.splice(i, 1)
-                        recalibrate(name)
-                    })
-
-                stuTextField.value = getNewFieldValue()
+                addChip(name)
             }
+            stuTextField.value = getNewFieldValue()
+        } else {
+            stuTextField.value = getNewFieldValue() + input
         }
     })
     document

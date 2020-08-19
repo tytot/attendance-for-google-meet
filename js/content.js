@@ -55,90 +55,120 @@ function storeNames(names) {
     })
 }
 
+let sortMethod = 'lastName'
+function setSortMethod(method) {
+    sortMethod = method
+}
+
 function updateRosterStatus(attendance, roster) {
     const rosterStatus = document.getElementById('roster-status')
     rosterStatus.innerHTML = ''
+    let entries = []
     for (const name in attendance) {
         const arr = attendance[name]
         if (roster.includes(name)) {
             if (arr.length % 2 === 1) {
-                var color = 'green'
-                var tooltip = 'Present'
-                var icon = 'check_circle'
-                var text = `Joined at ${toTimeString(arr[0])}`
+                entries.push({
+                    name: name,
+                    color: 'green',
+                    tooltip: 'Present',
+                    icon: 'check_circle',
+                    text: `Joined at ${toTimeString(arr[0])}`,
+                    index: 2
+                })
             } else {
-                color = 'yellow'
-                tooltip = 'Previously Present'
-                icon = 'watch_later'
-                text = `Last seen at ${toTimeString(arr[arr.length - 1])}`
+                entries.push({
+                    name: name,
+                    color: 'yellow',
+                    tooltip: 'Previously Present',
+                    icon: 'watch_later',
+                    text: `Last seen at ${toTimeString(arr[arr.length - 1])}`,
+                    index: 1
+                })
             }
         } else {
-            color = 'gray'
-            tooltip = 'Not on List'
-            icon = 'error'
-            text = `Joined at ${toTimeString(arr[0])}`
+            entries.push({
+                name: name,
+                color: 'gray',
+                tooltip: 'Not on List',
+                icon: 'error',
+                text: `Joined at ${toTimeString(arr[0])}`,
+                index: -1
+            })
         }
-
-        rosterStatus.insertAdjacentHTML(
-            'beforeend',
-            `
-        <li class="mdc-list-item mdc-ripple-surface" tabindex="0">
-            <span
-                class="mdc-list-item__graphic material-icons ${color}"
-                jscontroller="VXdfxd"
-                jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
-                tabindex="0"
-                aria-label="${tooltip}"
-                data-tooltip="${tooltip}"
-                data-tooltip-vertical-offset="-12"
-                data-tooltip-horizontal-offset="0"
-            >
-                ${icon}
-            </span>
-
-            <span class="mdc-list-item__text">
-                <span class="mdc-list-item__primary-text">
-                    ${name}
-                </span>
-                <span class="mdc-list-item__secondary-text">
-                    ${text}
-                </span>
-            </span>
-        </li>
-        <li class="mdc-list-divider" role="separator"></li>`
-        )
     }
     for (const name of roster) {
         if (!attendance.hasOwnProperty(name)) {
-            rosterStatus.insertAdjacentHTML(
-                'beforeend',
-                `
-            <li class="mdc-list-item mdc-ripple-surface" tabindex="0">
+            entries.push({
+                name: name,
+                color: 'red',
+                tooltip: 'Absent',
+                icon: 'cancel',
+                text: 'Not here',
+                index: 0
+            })
+        }
+    }
+
+    if (sortMethod === 'firstName') {
+        var compare = (a, b) => {
+            const aFirstName = a.name.split(' ')[0]
+            const bFirstName = b.name.split(' ')[0]
+            return aFirstName.localeCompare(bFirstName)
+        }
+    } else if (sortMethod === 'lastName') {
+        compare = (a, b) => {
+            const aName = a.name.split(' ')
+            const bName = b.name.split(' ')
+            const aLastName = aName[aName.length - 1]
+            const bLastName = bName[bName.length - 1]
+            return aLastName.localeCompare(bLastName)
+        }
+    } else if (sortMethod === 'presentFirst') {
+        compare = (a, b) => {
+            return b.index - a.index
+        }
+    } else {
+        compare = (a, b) => {
+            if (a.index === -1) {
+                a.index = 3
+            }
+            if (b.index === -1) {
+                b.index = 3
+            }
+            return a.index - b.index
+        }
+    }
+    entries.sort(compare)
+    console.log(entries)
+    for (const entry of entries) {
+        rosterStatus.insertAdjacentHTML(
+            'beforeend',
+            `<li class="mdc-list-item mdc-ripple-surface" tabindex="0">
                 <span
-                    class="mdc-list-item__graphic material-icons red"
+                    class="mdc-list-item__graphic material-icons ${entry.color}"
                     jscontroller="VXdfxd"
                     jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
                     tabindex="0"
-                    aria-label="Absent"
-                    data-tooltip="Absent"
+                    aria-label="${entry.tooltip}"
+                    data-tooltip="${entry.tooltip}"
                     data-tooltip-vertical-offset="-12"
                     data-tooltip-horizontal-offset="0"
                 >
-                    cancel
+                    ${entry.icon}
                 </span>
 
                 <span class="mdc-list-item__text">
                     <span class="mdc-list-item__primary-text">
-                        ${name}
+                        ${entry.name}
                     </span>
                     <span class="mdc-list-item__secondary-text">
-                        Not here
+                        ${entry.text}
                     </span>
                 </span>
             </li>
             <li class="mdc-list-divider" role="separator"></li>`
-            )
-        }
+        )
     }
 }
 
@@ -557,6 +587,17 @@ aria-label="Attendance management"
                     <ul class="mdc-list mdc-list--dense">
                         <li
                             class="mdc-list-item mdc-ripple-surface"
+                            id="firstName"
+                            role="menuitem"
+                            tabindex="0"
+                        >
+                            <span class="mdc-list-item__text"
+                                >Sort by First Name (A - Z)</span
+                            >
+                        </li>
+                        <li
+                            class="mdc-list-item mdc-ripple-surface"
+                            id="lastName"
                             role="menuitem"
                             tabindex="0"
                         >
@@ -566,13 +607,24 @@ aria-label="Attendance management"
                         </li>
                         <li
                             class="mdc-list-item mdc-ripple-surface"
+                            id="presentFirst"
                             role="menuitem"
                             tabindex="0"
                         >
                             <span class="mdc-list-item__text"
-                                >Sort by Absences</span
+                                >Sort by Presence (Present First)</span
                             >
                         </li>
+                        <li
+                            class="mdc-list-item mdc-ripple-surface"
+                            id="absentFirst"
+                            role="menuitem"
+                            tabindex="0"
+                        >
+                        <span class="mdc-list-item__text"
+                            >Sort by Presence (Absent First)</span
+                        >
+                    </li>
                     </ul>
                 </div>
             </div>

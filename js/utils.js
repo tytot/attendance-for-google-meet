@@ -27,13 +27,10 @@ function toTimeString(timestamp) {
 }
 
 function compare(a, b) {
-    var aName = a.split(' ')
-    var bName = b.split(' ')
+    const aName = a.split(' ')
+    const bName = b.split(' ')
+    const aLastName = aName[aName.length - 1]
+    const bLastName = bName[bName.length - 1]
 
-    var aLastName = aName[aName.length - 1]
-    var bLastName = bName[bName.length - 1]
-
-    if (aLastName < bLastName) return -1
-    if (aLastName > bLastName) return 1
-    return 0
+    return aLastName.localeCompare(bLastName)
 }

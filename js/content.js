@@ -424,7 +424,6 @@ const readyObserver = new MutationObserver(function (mutations, me) {
         document.body.insertAdjacentHTML('afterbegin', snackbarHTML)
 
         const bar = document.getElementsByClassName('NzPR9b')[0]
-        //const svgPath = chrome.runtime.getURL('img/icon.svg');
         bar.insertAdjacentHTML('afterbegin', buttonHTML)
 
         const attendanceButton = document.getElementById('attendance')

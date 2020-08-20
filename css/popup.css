@@ -1,0 +1,35 @@
+@font-face {
+    font-family: 'OpenSans';
+    font-style: normal;
+    font-weight: 400;
+    src: url(../fonts/opensans/OpenSans-Regular.eot);
+    src: url(../fonts/opensans/OpenSans-Regular.ttf)
+            format('truetype'),
+        url(../fonts/opensans/OpenSans-Regular.woff)
+            format('woff'),
+        url(../fonts/opensans/OpenSans-Regular.woff2)
+            format('woff2');
+}
+
+html {
+    width: 500px;
+}
+
+body {
+    margin: 12px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+summary {
+    font-family: 'OpenSans', Roboto, Arial, sans-serif;
+}
+
+details {
+    margin-bottom: 8px;
+}

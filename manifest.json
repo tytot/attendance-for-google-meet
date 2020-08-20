@@ -10,11 +10,15 @@
   ],
   "background": {
     "scripts": [
+      "js/marked.min.js",
       "js/background.js",
       "js/requests.js",
       "js/utils.js"
     ],
     "persistent": false
+  },
+  "browser_action": {
+    "default_popup": "popup.html"
   },
   "content_scripts": [
     {

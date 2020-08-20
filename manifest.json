@@ -34,7 +34,7 @@
   "permissions": [
     "storage",
     "identity",
-    "activeTab",
+    "tabs",
     "*://meet.google.com/**-**-**"
   ],
   "oauth2": {

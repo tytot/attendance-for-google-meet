@@ -503,6 +503,8 @@ function createGroupRequest(token, className, code, spreadsheetId, sheetId) {
                     ]
                     resolve(requests)
                 })
+            } else {
+                resolve(null)
             }
         })
     })
@@ -833,8 +835,7 @@ function batchUpdate(token, requests, spreadsheetId, sheetId) {
     console.log(requests)
     return new Promise((resolve, reject) => {
         const body = {
-            requests: requests,
-            includeSpreadsheetInResponse: true,
+            requests: requests
         }
         const init = {
             method: 'POST',

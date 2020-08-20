@@ -1,8 +1,10 @@
 chrome.runtime.onMessage.addListener(function (message, callback) {
-    if (message.data == 'mdc') {
+    if (message.data === 'mdc') {
         chrome.tabs.executeScript({
             file: 'js/mdc.js',
         })
+    } else if (message.data === 'open-sheet') {
+        chrome.tabs.create({ url: message.url })
     }
 })
 
@@ -135,13 +137,18 @@ async function updateSpreadsheet(port, token, className, code, spreadsheetId) {
         })
         .then(function (reqs) {
             port.postMessage({ progress: 0.75 })
+            if (reqs == null) {
+                return Promise.resolve()
+            }
             requests = reqs
             return batchUpdate(token, requests, spreadsheetId, sheetId)
         })
         .then(function (data) {
             port.postMessage({ done: true, progress: 1 })
-            console.log('Update metadata and groups response:')
-            console.log(data)
+            if (data) {
+                console.log('Update metadata and groups response:')
+                console.log(data)
+            }
         })
         .catch(function (error) {
             port.postMessage({ done: true, error: error.message, progress: 0 })

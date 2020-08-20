@@ -38,6 +38,7 @@ for (const listEl of sortOptions.listElements) {
 
 const MDCSnackbar = mdc.snackbar.MDCSnackbar
 const snackbar = new MDCSnackbar(document.querySelector('.mdc-snackbar'))
+snackbar.timeoutMs = -1
 
 const MDCLinearProgress = mdc.linearProgress.MDCLinearProgress
 const linearProgress = new MDCLinearProgress(
@@ -53,11 +54,18 @@ port.onMessage.addListener(function (msg) {
             snackbar.labelText = error
         } else {
             snackbar.labelText = 'Successfully exported to Google Sheet!'
-            snackbar.actionButtonText = 'OK'
+            snackbar.actionButtonText = 'Open'
+
+            const action = document.querySelector('.mdc-snackbar__action')
+            action.addEventListener('click', openSpreadsheet)
+            snackbar.listen('MDCSnackbar:closed', (event) => {
+                action.removeEventListener('click', openSpreadsheet)
+            })
         }
         snackbar.open()
     }
 })
+
 document.getElementById('export').addEventListener('click', function () {
     port.postMessage({ data: 'export', code: getMeetCode() })
     console.log('Exporting...')

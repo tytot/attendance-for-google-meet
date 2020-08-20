@@ -55,6 +55,39 @@ function storeNames(names) {
     })
 }
 
+function getVisibleAttendees(container, names) {
+    const labels = document.getElementsByClassName('cS7aqe NkoVdd')
+    for (const label of labels) {
+        const name = label.innerHTML
+        if (
+            !names.includes(name) &&
+            !name.endsWith(' (You)') &&
+            !name.endsWith(' (Your Presentation)') &&
+            !name.endsWith(' (Presentation)')
+        ) {
+            names.push(name)
+        }
+    }
+    container.scrollTop = 56 * names.length
+}
+
+function takeAttendance() {
+    const container = document.getElementsByClassName(
+        'HALYaf tmIkuc s2gQvd KKjvXb'
+    )[0]
+    let lastNumNames = 0
+    let names = []
+    getVisibleAttendees(container, names)
+    while (names.length !== lastNumNames) {
+        lastNumNames = names.length
+        setTimeout(function () {
+            getVisibleAttendees(container, names)
+        }, 100)
+    }
+    container.scrollTop = 0
+    storeNames(names)
+}
+
 let sortMethod = 'lastName'
 function setSortMethod(method) {
     sortMethod = method
@@ -74,7 +107,7 @@ function updateRosterStatus(attendance, roster) {
                     tooltip: 'Present',
                     icon: 'check_circle',
                     text: `Joined at ${toTimeString(arr[0])}`,
-                    index: 2
+                    index: 2,
                 })
             } else {
                 entries.push({
@@ -83,7 +116,7 @@ function updateRosterStatus(attendance, roster) {
                     tooltip: 'Previously Present',
                     icon: 'watch_later',
                     text: `Last seen at ${toTimeString(arr[arr.length - 1])}`,
-                    index: 1
+                    index: 1,
                 })
             }
         } else {
@@ -93,7 +126,7 @@ function updateRosterStatus(attendance, roster) {
                 tooltip: 'Not on List',
                 icon: 'error',
                 text: `Joined at ${toTimeString(arr[0])}`,
-                index: -1
+                index: -1,
             })
         }
     }
@@ -105,7 +138,7 @@ function updateRosterStatus(attendance, roster) {
                 tooltip: 'Absent',
                 icon: 'cancel',
                 text: 'Not here',
-                index: 0
+                index: 0,
             })
         }
     }
@@ -140,7 +173,6 @@ function updateRosterStatus(attendance, roster) {
         }
     }
     entries.sort(compare)
-    console.log(entries)
     for (const entry of entries) {
         rosterStatus.insertAdjacentHTML(
             'beforeend',
@@ -172,41 +204,19 @@ function updateRosterStatus(attendance, roster) {
     }
 }
 
-function getVisibleAttendees(container, names) {
-    const labels = document.getElementsByClassName('cS7aqe NkoVdd')
-    for (const label of labels) {
-        const name = label.innerHTML
-        if (
-            !names.includes(name) &&
-            !name.endsWith(' (You)') &&
-            !name.endsWith(' (Your Presentation)') &&
-            !name.endsWith(' (Presentation)')
-        ) {
-            names.push(name)
-        }
-    }
-    container.scrollTop = 56 * names.length
-}
-
-function takeAttendance() {
-    const container = document.getElementsByClassName(
-        'HALYaf tmIkuc s2gQvd KKjvXb'
-    )[0]
-    let lastNumNames = 0
-    let names = []
-    getVisibleAttendees(container, names)
-    while (names.length !== lastNumNames) {
-        lastNumNames = names.length
-        setTimeout(function () {
-            getVisibleAttendees(container, names)
-        }, 100)
-    }
-    container.scrollTop = 0
-    storeNames(names)
-}
-
 function getMeetCode() {
     return document.title.substring(7)
+}
+
+function openSpreadsheet() {
+    chrome.storage.local.get('spreadsheet-id', function (result) {
+        const id = result['spreadsheet-id']
+        const url = `https://docs.google.com/spreadsheets/d/${id}`
+        chrome.runtime.sendMessage({
+            data: 'open-sheet',
+            url: url
+        })
+    })
 }
 
 function showCard() {
@@ -420,10 +430,7 @@ const readyObserver = new MutationObserver(function (mutations, me) {
         const attendanceButton = document.getElementById('attendance')
         attendanceButton.addEventListener('click', showCard)
         attendanceButton.addEventListener('keydown', function (event) {
-            if (
-                event.key === 'Enter' ||
-                event.keyCode === 13
-            ) {
+            if (event.key === 'Enter' || event.keyCode === 13) {
                 showCard()
             }
         })

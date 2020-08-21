@@ -1,7 +1,7 @@
 fetch('../README.md')
     .then((response) => response.text())
     .then((text) => {
-        text = text.replace(/(\r\n|\r|\n)## \w+/g, replacer)
+        text = text.replace(/(\r\n|\r|\n)## .+/g, replacer)
         text = text.replace('\n</details>\n', '')
         text += '\n\n</details>'
         console.log(text)

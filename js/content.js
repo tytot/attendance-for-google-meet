@@ -762,6 +762,19 @@ aria-label="Attendance management"
                 </h2>
             </div>
             <button
+                class="mdc-icon-button medium-button material-icons right"
+                style="right: 32px;"
+                aria-label="Help"
+                jscontroller="VXdfxd"
+                jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                tabindex="0"
+                data-tooltip="Help"
+                data-tooltip-vertical-offset="-12"
+                data-tooltip-horizontal-offset="0"
+            >
+                help_outline
+            </button>
+            <button
                 class="mdc-icon-button medium-button material-icons right close-card"
                 aria-label="Exit"
                 jscontroller="VXdfxd"

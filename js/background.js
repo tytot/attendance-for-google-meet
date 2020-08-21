@@ -33,13 +33,13 @@ chrome.runtime.onConnect.addListener(function (port) {
                     const newClassName = msg.newClassName
 
                     let requests = [
-                        createDeleteSheetMetadataRequest(oldClassName),
+                        deleteSheetMetadata(oldClassName),
                     ]
                     getMetaByKey(oldClassName, token, id)
                         .then(function (meta) {
                             const sheetId = meta.location.sheetId
                             requests = requests.concat(
-                                createUpdateSheetPropertiesRequest(
+                                updateSheetProperties(
                                     newClassName,
                                     code,
                                     sheetId,
@@ -93,10 +93,10 @@ function createSpreadsheet(port, token, className, code) {
             spreadsheetId = data.spreadsheetId
 
             requests = requests.concat(
-                createUpdateSheetPropertiesRequest(className, code, 0, '*')
+                updateSheetProperties(className, code, 0, '*')
             )
-            requests = requests.concat(createHeadersRequest(0))
-            return createInitializeCellsRequest(code, 0)
+            requests = requests.concat(createHeaders(0))
+            return initializeCells(code, 0)
         })
         .then(function (reqs) {
             port.postMessage({ progress: 0.6 })
@@ -125,9 +125,9 @@ async function updateSpreadsheet(port, token, className, code, spreadsheetId) {
                 const numSheets = await getNumSheets(token, spreadsheetId)
                 sheetId = numSheets
                 requests = requests.concat(
-                    createAddSheetRequest(className, code, sheetId)
+                    addSheet(className, code, sheetId)
                 )
-                requests = requests.concat(createHeadersRequest(sheetId))
+                requests = requests.concat(createHeaders(sheetId))
                 console.log(
                     `Creating new sheet for class ${className}, ID ${sheetId}`
                 )
@@ -141,11 +141,11 @@ async function updateSpreadsheet(port, token, className, code, spreadsheetId) {
             port.postMessage({ progress: 0.3 })
             if (meta == null) {
                 startRow = 1
-                return createInitializeCellsRequest(code, sheetId)
+                return initializeCells(code, sheetId)
             }
             startRow = meta.location.dimensionRange.startIndex
-            numRows = parseInt(meta.metadataValue)
-            return createUpdateCellsRequest(code, sheetId, startRow)
+            const numRows = parseInt(meta.metadataValue)
+            return updateCells(code, sheetId, startRow, numRows)
         })
         .then(function (reqs) {
             port.postMessage({ progress: 0.4 })
@@ -156,7 +156,7 @@ async function updateSpreadsheet(port, token, className, code, spreadsheetId) {
             port.postMessage({ progress: 0.65 })
             console.log('Update spreadsheet response:')
             console.log(data)
-            return createGroupRequest(
+            return collapseGroup(
                 token,
                 className,
                 code,

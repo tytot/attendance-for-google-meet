@@ -124,6 +124,7 @@
 
 .mdc-dialog .mdc-dialog__surface {
     max-width: none;
+    border-radius: 8px;
 }
 
 .mdc-list {

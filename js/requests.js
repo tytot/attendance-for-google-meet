@@ -1,4 +1,4 @@
-function createUpdateSheetPropertiesRequest(className, code, sheetId, fields) {
+function updateSheetProperties(className, code, sheetId, fields) {
     let requests = [
         {
             updateSheetProperties: {
@@ -15,11 +15,11 @@ function createUpdateSheetPropertiesRequest(className, code, sheetId, fields) {
             },
         },
     ]
-    requests.push(createSheetMetadataRequest(className, code, sheetId))
+    requests.push(createSheetMetadata(className, code, sheetId))
     return requests
 }
 
-function createAddSheetRequest(className, code, sheetId) {
+function addSheet(className, code, sheetId) {
     let requests = [
         {
             addSheet: {
@@ -35,11 +35,11 @@ function createAddSheetRequest(className, code, sheetId) {
             },
         },
     ]
-    requests.push(createSheetMetadataRequest(className, code, sheetId))
+    requests.push(createSheetMetadata(className, code, sheetId))
     return requests
 }
 
-function createSheetMetadataRequest(className, code, sheetId) {
+function createSheetMetadata(className, code, sheetId) {
     const request = {
         createDeveloperMetadata: {
             developerMetadata: {
@@ -56,7 +56,7 @@ function createSheetMetadataRequest(className, code, sheetId) {
     return request
 }
 
-function createDeleteSheetMetadataRequest(oldClassName) {
+function deleteSheetMetadata(oldClassName) {
     const request = {
         deleteDeveloperMetadata: {
             dataFilter: {
@@ -69,7 +69,7 @@ function createDeleteSheetMetadataRequest(oldClassName) {
     return request
 }
 
-function createHeadersRequest(sheetId) {
+function createHeaders(sheetId) {
     const color = {
         red: 0.75,
         green: 0.75,
@@ -261,7 +261,7 @@ function createHeadersRequest(sheetId) {
     return requests
 }
 
-function createInitializeCellsRequest(code, sheetId) {
+function initializeCells(code, sheetId) {
     sheetId = parseInt(sheetId)
     const color = {
         red: 0.75,
@@ -296,31 +296,6 @@ function createInitializeCellsRequest(code, sheetId) {
                     },
                 },
                 {
-                    addDimensionGroup: {
-                        range: {
-                            sheetId: sheetId,
-                            dimension: 'ROWS',
-                            startIndex: 2,
-                            endIndex: 1 + rows.length,
-                        },
-                    },
-                },
-                {
-                    updateDimensionGroup: {
-                        dimensionGroup: {
-                            range: {
-                                sheetId: sheetId,
-                                dimension: 'ROWS',
-                                startIndex: 2,
-                                endIndex: 1 + rows.length,
-                            },
-                            depth: 1,
-                            collapsed: false,
-                        },
-                        fields: 'collapsed',
-                    },
-                },
-                {
                     mergeCells: {
                         range: {
                             sheetId: sheetId,
@@ -351,15 +326,16 @@ function createInitializeCellsRequest(code, sheetId) {
                     },
                 },
             ]
+            requests = requests.concat(addGroup(sheetId, 1, rows.length))
             requests = requests.concat(
-                createBordersRequest(sheetId, 1, rows.length, color)
+                createBorders(sheetId, 1, rows.length, color)
             )
             resolve(requests)
         })
     })
 }
 
-function createUpdateCellsRequest(code, sheetId, startRow) {
+function updateCells(code, sheetId, startRow, numRows) {
     sheetId = parseInt(sheetId)
     const color = {
         red: 0.75,
@@ -368,45 +344,83 @@ function createUpdateCellsRequest(code, sheetId, startRow) {
         alpha: 1,
     }
 
+    let requests = []
     return new Promise((resolve) => {
         generateAttendanceRows(code).then(function (rows) {
-            let requests = [
-                {
-                    updateCells: {
-                        rows: rows,
-                        fields: '*',
-                        start: {
+            requests.push({
+                deleteDimensionGroup: {
+                    range: {
+                        sheetId: sheetId,
+                        dimension: 'ROWS',
+                        startIndex: startRow + 1,
+                        endIndex: startRow + numRows,
+                    },
+                },
+            })
+            if (rows.length > numRows) {
+                requests.push({
+                    insertDimension: {
+                        range: {
                             sheetId: sheetId,
-                            rowIndex: startRow,
-                            columnIndex: 0,
+                            dimension: 'ROWS',
+                            startIndex: startRow + numRows,
+                            endIndex: startRow + rows.length,
+                        },
+                        inheritFromBefore: true,
+                    },
+                })
+            } else if (rows.length < numRows) {
+                requests.push({
+                    deleteDimension: {
+                        range: {
+                            sheetId: sheetId,
+                            dimension: 'ROWS',
+                            startIndex: startRow + rows.length,
+                            endIndex: startRow + numRows,
                         },
                     },
-                },
-                {
-                    updateDimensionGroup: {
-                        dimensionGroup: {
-                            range: {
-                                sheetId: sheetId,
-                                dimension: 'ROWS',
-                                startIndex: startRow + 1,
-                                endIndex: startRow + rows.length,
-                            },
-                            depth: 1,
-                            collapsed: false,
-                        },
-                        fields: 'collapsed',
+                })
+            }
+            requests.push({
+                updateCells: {
+                    rows: rows,
+                    fields: '*',
+                    start: {
+                        sheetId: sheetId,
+                        rowIndex: startRow,
+                        columnIndex: 0,
                     },
                 },
-            ]
+            })
+            requests = requests.concat(addGroup(sheetId, startRow, rows.length))
             requests = requests.concat(
-                createBordersRequest(sheetId, startRow, rows.length, color)
+                createBorders(sheetId, startRow, rows.length, color)
             )
+            if (rows.length !== numRows) {
+                requests.push({
+                    updateDeveloperMetadata: {
+                        dataFilters: [
+                            {
+                                developerMetadataLookup: {
+                                    metadataKey: code,
+                                },
+                            },
+                        ],
+                        developerMetadata: {
+                            metadataKey: code,
+                            metadataValue: rows.length.toString(),
+                            visibility: 'DOCUMENT',
+                        },
+                        fields: 'metadataValue',
+                    },
+                })
+            }
             resolve(requests)
         })
     })
 }
 
-function createBordersRequest(sheetId, startRow, numRows, color) {
+function createBorders(sheetId, startRow, numRows, color) {
     const requests = [
         {
             updateBorders: {
@@ -454,7 +468,7 @@ function createBordersRequest(sheetId, startRow, numRows, color) {
     return requests
 }
 
-function createResizeRequest(sheetId) {
+function autoResize(sheetId) {
     const request = {
         autoResizeDimensions: {
             dimensions: {
@@ -468,7 +482,38 @@ function createResizeRequest(sheetId) {
     return request
 }
 
-function createGroupRequest(token, className, code, spreadsheetId, sheetId) {
+function addGroup(sheetId, startRow, numRows) {
+    const requests = [
+        {
+            addDimensionGroup: {
+                range: {
+                    sheetId: sheetId,
+                    dimension: 'ROWS',
+                    startIndex: startRow + 1,
+                    endIndex: startRow + numRows,
+                },
+            },
+        },
+        {
+            updateDimensionGroup: {
+                dimensionGroup: {
+                    range: {
+                        sheetId: sheetId,
+                        dimension: 'ROWS',
+                        startIndex: startRow + 1,
+                        endIndex: startRow + numRows,
+                    },
+                    depth: 1,
+                    collapsed: false,
+                },
+                fields: 'collapsed',
+            },
+        },
+    ]
+    return requests
+}
+
+function collapseGroup(token, className, code, spreadsheetId, sheetId) {
     return new Promise((resolve) => {
         getMetaByKey(className, token, spreadsheetId).then(function (meta) {
             const activeCode = meta.metadataValue
@@ -589,7 +634,9 @@ function generateAttendanceRows(code) {
                     minsPresent = 0
 
                 for (const entry in rawData) {
-                    if (entry.toLocaleUpperCase() === name.toLocaleUpperCase()) {
+                    if (
+                        entry.toLocaleUpperCase() === name.toLocaleUpperCase()
+                    ) {
                         const timestamps = rawData[entry]
                         const l = timestamps.length
                         if (l > 0) {
@@ -853,7 +900,7 @@ function getNumSheets(token, spreadsheetId) {
 }
 
 function batchUpdate(token, requests, spreadsheetId, sheetId) {
-    requests.push(createResizeRequest(sheetId))
+    requests.push(autoResize(sheetId))
     console.log('Executing batch update...')
     console.log(requests)
     return new Promise((resolve, reject) => {

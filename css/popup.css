@@ -1,14 +1,8 @@
 @font-face {
-    font-family: 'OpenSans';
+    font-family: 'Inter';
     font-style: normal;
     font-weight: 400;
-    src: url(../fonts/opensans/OpenSans-Regular.eot);
-    src: url(../fonts/opensans/OpenSans-Regular.ttf)
-            format('truetype'),
-        url(../fonts/opensans/OpenSans-Regular.woff)
-            format('woff'),
-        url(../fonts/opensans/OpenSans-Regular.woff2)
-            format('woff2');
+    src: url(../fonts/inter/Inter.var.woff2) format('woff2');
 }
 
 html {
@@ -27,7 +21,7 @@ h5,
 h6,
 p,
 summary {
-    font-family: 'OpenSans', Roboto, Arial, sans-serif;
+    font-family: 'Inter', Arial, sans-serif;
 }
 
 details {

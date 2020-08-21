@@ -294,8 +294,8 @@ function prepareChips(_cardView, defaultView, editView) {
         const input = stuTextField.value.trimLeft()
         if (input.includes('\n') || input.includes(',')) {
             let names = input
-                .split(/\r?\n|\t|,/)
-                .map((name) => name.trim().replace(/  +/g, ' '))
+                .split(/\r?\n|,/)
+                .map((name) => name.trim().replace(/\\s+/g, ' '))
                 .filter((name) => name !== '')
             for (const name of names) {
                 nameArray.push(name)
@@ -306,12 +306,12 @@ function prepareChips(_cardView, defaultView, editView) {
             stuTextField.value = getNewFieldValue() + input
         }
     })
-    document
-        .getElementsByClassName('mdc-text-field__input')[1]
-        .addEventListener('scroll', function () {
-            const scrollY = element.scrollTop
-            chipSetEl.style.top = '-' + scrollY + 'px'
-        })
+
+    const input = document.getElementsByClassName('mdc-text-field__input')[1]
+    input.addEventListener('scroll', function () {
+        const scrollY = input.scrollTop
+        chipSetEl.style.top = '-' + scrollY + 'px'
+    })
 }
 
 function addDefaultEventListeners(
@@ -360,7 +360,7 @@ function addDefaultEventListeners(
 }
 
 function getNewFieldValue() {
-    const chipRows = (chipSetEl.offsetHeight - 26) / 40
+    const chipRows = (chipSetEl.offsetHeight - 8) / 40
 
     let newValue = ''
     for (let i = 0; i < chipRows - 1; i++) {
@@ -378,7 +378,7 @@ function getNewFieldValue() {
         }
         lastHeight = top
         const text = chip.querySelector('.mdc-chip__text').innerHTML
-        for (let i = 0; i < text.length + 5; i++) {
+        for (let i = 0; i < text.length + 7; i++) {
             counter++
         }
     }
@@ -390,7 +390,7 @@ function recalibrate(name) {
     const lines = stuTextField.value.split('\n')
     let lastLine = lines.pop()
     let counter = 0
-    while (counter < name.length + 5) {
+    while (counter < name.length + 7) {
         if (lastLine.charAt(0) !== ' ') {
             break
         }

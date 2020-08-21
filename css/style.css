@@ -17,6 +17,16 @@
             format('truetype');
 }
 
+@font-face {
+    font-family: 'Bruh Mono';
+    font-style: normal;
+    font-weight: 300;
+    src: url(chrome-extension://gioogehddfnceeihfoeencjbhggblkkd/fonts/mono/BruhMono.woff2)
+            format('woff2'),
+        url(chrome-extension://gioogehddfnceeihfoeencjbhggblkkd/fonts/mono/BruhMono.woff)
+            format('woff');
+}
+
 .material-icons {
     font-family: 'Material Icons';
     font-weight: normal;
@@ -193,12 +203,12 @@
 
 .mdc-text-field--textarea .mdc-text-field__input {
     line-height: 40px;
-    font-size: 16px;
-    font-family: Consolas, 'Liberation Mono', Menlo, Courier,
-        monospace;
+    font-size: 12px;
+    font-family: 'Bruh Mono', Menlo, Courier, monospace;
     letter-spacing: normal;
     margin-top: 6px !important;
     margin-bottom: 6px !important;
+    z-index: 1;
 }
 
 .mdc-chip-set {
@@ -208,18 +218,14 @@
 }
 
 .mdc-chip {
-    padding-left: 9px;
-    padding-right: 9px;
-    z-index: 1;
-}
-
-.mdc-chip__text {
-    font-size: 16px;
-    font-family: Consolas, 'Liberation Mono', Menlo, Courier,
-        monospace;
+    font-size: 12px;
+    font-family: 'Bruh Mono', Menlo, Courier, monospace;
     letter-spacing: normal;
+    padding-left: 1.5ch;
+    padding-right: 1.5ch;
+    z-index: 2;
 }
 
 .mdc-notched-outline {
-    z-index: 2;
+    z-index: 3;
 }

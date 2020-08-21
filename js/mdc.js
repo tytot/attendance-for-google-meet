@@ -40,6 +40,8 @@ const MDCSnackbar = mdc.snackbar.MDCSnackbar
 const snackbar = new MDCSnackbar(document.querySelector('.mdc-snackbar'))
 snackbar.timeoutMs = -1
 
+const exportButton = document.getElementById('export')
+
 const MDCLinearProgress = mdc.linearProgress.MDCLinearProgress
 const linearProgress = new MDCLinearProgress(
     document.querySelector('#progress-bar')
@@ -49,9 +51,11 @@ let port = chrome.runtime.connect()
 port.onMessage.addListener(function (msg) {
     linearProgress.progress = msg.progress
     if (msg.done) {
+        exportButton.disabled = false
         const error = msg.error
         if (error) {
             snackbar.labelText = error
+            snackbar.actionButtonText = 'OK'
         } else {
             snackbar.labelText = 'Successfully exported to Google Sheet!'
             snackbar.actionButtonText = 'Open'
@@ -66,8 +70,9 @@ port.onMessage.addListener(function (msg) {
     }
 })
 
-document.getElementById('export').addEventListener('click', function () {
+exportButton.addEventListener('click', function () {
     port.postMessage({ data: 'export', code: getMeetCode() })
+    exportButton.disabled = true
     console.log('Exporting...')
 })
 
@@ -204,7 +209,7 @@ function prepareChips(_cardView, defaultView, editView) {
         document.getElementById(cardView).hidden = true
         document.getElementById(editView).hidden = false
         nameArray = []
-        editClass('', [])
+        editClass('')
     })
 
     document
@@ -263,6 +268,15 @@ function prepareChips(_cardView, defaultView, editView) {
                                 document.getElementById(editView).hidden = true
                                 delete cardTitle.adding
                             } else {
+                                if (className !== initClassName) {
+                                    port.postMessage({
+                                        data: 'rename',
+                                        code: getMeetCode(),
+                                        oldClassName: initClassName,
+                                        newClassName: className
+                                    })
+                                }
+
                                 cardTitle.innerText = className
                                 document.getElementById(
                                     defaultView
@@ -295,7 +309,7 @@ function prepareChips(_cardView, defaultView, editView) {
         if (input.includes('\n') || input.includes(',')) {
             let names = input
                 .split(/\r?\n|,/)
-                .map((name) => name.trim().replace(/\\s+/g, ' '))
+                .map((name) => name.trim().replace(/\s+/g, ' '))
                 .filter((name) => name !== '')
             for (const name of names) {
                 nameArray.push(name)
@@ -355,7 +369,7 @@ function addDefaultEventListeners(
         document.getElementById(defaultView).hidden = true
         document.getElementById(editView).hidden = false
         nameArray = Array.from(classEl.roster)
-        editClass(classEl.name, classEl.roster)
+        editClass(classEl.name)
     })
 }
 

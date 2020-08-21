@@ -10,11 +10,9 @@ chrome.runtime.onMessage.addListener(function (message, callback) {
 
 chrome.runtime.onConnect.addListener(function (port) {
     port.onMessage.addListener(function (msg) {
-        if (msg.data == 'export') {
-            const code = msg.code
-            chrome.identity.getAuthToken({ interactive: true }, function (
-                token
-            ) {
+        const code = msg.code
+        chrome.identity.getAuthToken({ interactive: true }, function (token) {
+            if (msg.data === 'export') {
                 chrome.storage.local.get(['spreadsheet-id', code], function (
                     result
                 ) {
@@ -28,8 +26,40 @@ chrome.runtime.onConnect.addListener(function (port) {
                     }
                     port.postMessage({ progress: 0 })
                 })
-            })
-        }
+            } else if (msg.data === 'rename') {
+                chrome.storage.local.get('spreadsheet-id', function (result) {
+                    const id = result['spreadsheet-id']
+                    const oldClassName = msg.oldClassName
+                    const newClassName = msg.newClassName
+
+                    let requests = [
+                        createDeleteSheetMetadataRequest(oldClassName),
+                    ]
+                    getMetaByKey(oldClassName, token, id)
+                        .then(function (meta) {
+                            const sheetId = meta.location.sheetId
+                            requests = requests.concat(
+                                createUpdateSheetPropertiesRequest(
+                                    newClassName,
+                                    code,
+                                    sheetId,
+                                    'title'
+                                )
+                            )
+                            return batchUpdate(token, requests, id, sheetId)
+                        })
+                        .then(function (data) {
+                            console.log(
+                                `Renamed sheet ${oldClassName} to ${newClassName}`
+                            )
+                            console.log(data)
+                        })
+                        .catch(function (error) {
+                            console.log(error)
+                        })
+                })
+            }
+        })
     })
 })
 
@@ -63,7 +93,7 @@ function createSpreadsheet(port, token, className, code) {
             spreadsheetId = data.spreadsheetId
 
             requests = requests.concat(
-                createUpdateSheetPropertiesRequest(className, code, 0)
+                createUpdateSheetPropertiesRequest(className, code, 0, '*')
             )
             requests = requests.concat(createHeadersRequest(0))
             return createInitializeCellsRequest(code, 0)
@@ -86,8 +116,7 @@ function createSpreadsheet(port, token, className, code) {
 async function updateSpreadsheet(port, token, className, code, spreadsheetId) {
     let requests = []
     let sheetId = null,
-        startRow = null,
-        numRows = null
+        startRow = null
     console.log('Updating spreadsheet...')
     getMetaByKey(className, token, spreadsheetId)
         .then(async function (meta) {

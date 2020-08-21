@@ -1,5 +1,5 @@
 .prettierrc
-# fonts/*
-# css/material-components.min.css
-# js/material-components.min.js
-# js/marked.min.js
+fonts/*
+css/material-components.min.css
+js/material-components.min.js
+js/marked.min.js

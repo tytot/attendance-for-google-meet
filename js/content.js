@@ -97,9 +97,11 @@ function updateRosterStatus(attendance, roster) {
     const rosterStatus = document.getElementById('roster-status')
     rosterStatus.innerHTML = ''
     let entries = []
+
+    const bigRoster = roster.map((name) => name.toLocaleUpperCase())
     for (const name in attendance) {
         const arr = attendance[name]
-        if (roster.includes(name)) {
+        if (bigRoster.includes(name.toLocaleUpperCase())) {
             if (arr.length % 2 === 1) {
                 entries.push({
                     name: name,
@@ -130,8 +132,11 @@ function updateRosterStatus(attendance, roster) {
             })
         }
     }
+    const bigAttendance = Object.keys(attendance).map((key) =>
+        key.toLocaleUpperCase()
+    )
     for (const name of roster) {
-        if (!attendance.hasOwnProperty(name)) {
+        if (!bigAttendance.includes(name.toLocaleUpperCase())) {
             entries.push({
                 name: name,
                 color: 'red',
@@ -214,7 +219,7 @@ function openSpreadsheet() {
         const url = `https://docs.google.com/spreadsheets/d/${id}`
         chrome.runtime.sendMessage({
             data: 'open-sheet',
-            url: url
+            url: url,
         })
     })
 }

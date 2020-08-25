@@ -144,17 +144,17 @@ function addChip(name) {
     chipEl.setAttribute('role', 'row')
     chipEl.innerHTML = `<div class="mdc-chip__ripple"></div>
     <span role="gridcell">
-        <span
-            role="button"
-            tabindex="0"
-            class="mdc-chip__primary-action"
-        >
-            <span class="mdc-chip__text"
-                >${name}</span
-            >
+        <span role="button" tabindex="0" class="mdc-chip__primary-action">
+            <span class="mdc-chip__text">${name}</span>
         </span>
         <span role="gridcell">
-        <i class="material-icons mdc-chip__icon mdc-chip__icon--trailing" tabindex="0" role="button" style="margin-left: 0;">cancel</i>
+            <i
+                class="material-icons mdc-chip__icon mdc-chip__icon--trailing"
+                tabindex="0"
+                role="button"
+                style="margin-left: 0;"
+                >cancel</i
+            >
         </span>
     </span>`
     chipSetEl.appendChild(chipEl)
@@ -163,11 +163,16 @@ function addChip(name) {
     chipEl
         .querySelector('.mdc-chip__icon')
         .addEventListener('click', function () {
-            const i = nameArray.indexOf(name)
-            chipSet.chips[i].beginExit()
-            nameArray.splice(i, 1)
-            recalibrate(name)
+            removeChip(name)
         })
+}
+
+function removeChip(name = nameArray[nameArray.length - 1]) {
+    const i = nameArray.indexOf(name)
+    const chip = chipSet.chips[i]
+    chip.beginExit()
+    nameArray.splice(i, 1)
+    stuTextField.value = getNewFieldValue(true)
 }
 
 function editClass(className) {
@@ -273,7 +278,7 @@ function prepareChips(_cardView, defaultView, editView) {
                                         data: 'rename',
                                         code: getMeetCode(),
                                         oldClassName: initClassName,
-                                        newClassName: className
+                                        newClassName: className,
                                     })
                                 }
 
@@ -305,19 +310,30 @@ function prepareChips(_cardView, defaultView, editView) {
         })
 
     stuTextFieldEl.addEventListener('input', function (event) {
-        const input = stuTextField.value.trimLeft()
-        if (input.includes('\n') || input.includes(',')) {
-            let names = input
-                .split(/\r?\n|,/)
-                .map((name) => name.trim().replace(/\s+/g, ' '))
-                .filter((name) => name !== '')
-            for (const name of names) {
-                nameArray.push(name)
-                addChip(name)
-            }
-            stuTextField.value = getNewFieldValue()
+        const rawInput = stuTextField.value
+        const input = rawInput.trimLeft()
+        const newValue = getNewFieldValue()
+        if (rawInput + ' ' === newValue) {
+            const chips = chipSet.chips
+            const chipAction = chips[chips.length - 1].root.querySelector(
+                '.mdc-chip__primary-action'
+            )
+            chipAction.focus()
+            stuTextField.value = newValue
         } else {
-            stuTextField.value = getNewFieldValue() + input
+            if (input.includes('\n') || input.includes(',')) {
+                let names = input
+                    .split(/\r?\n|,/)
+                    .map((name) => name.trim().replace(/\s+/g, ' '))
+                    .filter((name) => name !== '')
+                for (const name of names) {
+                    nameArray.push(name)
+                    addChip(name)
+                }
+                stuTextField.value = getNewFieldValue()
+            } else {
+                stuTextField.value = newValue + input
+            }
         }
     })
 
@@ -327,6 +343,24 @@ function prepareChips(_cardView, defaultView, editView) {
         chipSetEl.style.top = '-' + scrollY + 'px'
     })
 }
+
+document.addEventListener('keydown', function (event) {
+    if (event.keyCode === 8 || event.key === 'Backspace') {
+        const chips = chipSet.chips
+        const chipAction = chips[chips.length - 1].root.querySelector(
+            '.mdc-chip__primary-action'
+        )
+        const chipClose = chips[chips.length - 1].root.querySelector(
+            '.mdc-chip__icon--trailing'
+        )
+        const activeEl = document.activeElement
+        if (activeEl === chipAction) {
+            chipClose.focus()
+        } else if (activeEl === chipClose) {
+            removeChip()
+        }
+    }
+})
 
 function addDefaultEventListeners(
     classEl,
@@ -373,7 +407,7 @@ function addDefaultEventListeners(
     })
 }
 
-function getNewFieldValue() {
+function getNewFieldValue(removal = false) {
     const chipRows = (chipSetEl.offsetHeight - 8) / 40
 
     let newValue = ''
@@ -381,9 +415,12 @@ function getNewFieldValue() {
         newValue += ' '.repeat(100) + '\n'
     }
 
-    const chips = chipSetEl.getElementsByClassName('mdc-chip')
     let lastHeight = -1
     let counter = 0
+    let chips = chipSet.chips.map((chip) => chip.root)
+    if (removal) {
+        chips.pop()
+    }
     for (let i = chips.length - 1; i >= 0; i--) {
         const chip = chips[i]
         const top = chip.getBoundingClientRect().top
@@ -398,21 +435,6 @@ function getNewFieldValue() {
     }
     newValue += ' '.repeat(Math.max(0, counter - 1))
     return newValue
-}
-
-function recalibrate(name) {
-    const lines = stuTextField.value.split('\n')
-    let lastLine = lines.pop()
-    let counter = 0
-    while (counter < name.length + 7) {
-        if (lastLine.charAt(0) !== ' ') {
-            break
-        }
-        lastLine = lastLine.substr(1)
-        counter++
-    }
-    lines.push(lastLine)
-    stuTextField.value = lines.join('\n')
 }
 
 for (const button of document.getElementsByClassName('mdc-button')) {

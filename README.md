@@ -16,6 +16,23 @@ Our Google Chrome extension, Attendance for Google Meet, streamlines the entire 
 
 ## Usage
 
+### Sorting the Spreadsheet
+
+#### With a Filter
+1. Select the rows that you want to sort, **including the gray header row**
+2. Data → Create a filter
+3. Sort the range by clicking the filter symbol for a column and choosing a sort option
+4. Data → Turn off filter
+
+![Sorting with a filter](/img/sorting_spreadsheet.gif "Sorting with a Filter")
+
+#### Without a Filter
+1. Select the rows that you want to sort, **excluding the gray header row**
+2. Data → Sort range
+3. Sort the range by choosing the column to sort by and sorting preference
+
+![Sorting without a filter](/img/sorting_spreadsheet_alt.gif "Sorting without a Filter")
+
 ## Privacy
 
 Your privacy is important to us. It is Attendance for Google Meet Chrome Extension's policy to respect your privacy regarding any information we may collect from you across our extension and other sites we own and operate.

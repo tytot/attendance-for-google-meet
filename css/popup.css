@@ -6,11 +6,15 @@
 }
 
 html {
-    width: 500px;
+    width: 600px;
 }
 
 body {
     margin: 12px;
+}
+
+img {
+    width: 100%;
 }
 
 h1,

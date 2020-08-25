@@ -144,7 +144,7 @@ function createHeaders(sheetId) {
                                     },
                                 },
                                 note:
-                                    'When the student left the meeting, or empty if the student is in the meeting.',
+                                    'When the student left the meeting, or empty if the student was in the meeting at time of export.',
                             },
                             {
                                 userEnteredValue: {

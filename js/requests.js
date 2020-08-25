@@ -312,7 +312,6 @@ function initializeCells(code, sheetId) {
                         developerMetadata: {
                             metadataId: hashCode(code),
                             metadataKey: code,
-                            metadataValue: rows.length.toString(),
                             location: {
                                 dimensionRange: {
                                     sheetId: sheetId,
@@ -335,7 +334,7 @@ function initializeCells(code, sheetId) {
     })
 }
 
-function updateCells(code, sheetId, startRow, numRows) {
+function updateCells(token, code, spreadsheetId, sheetId, startRow) {
     sheetId = parseInt(sheetId)
     const color = {
         red: 0.75,
@@ -345,78 +344,70 @@ function updateCells(code, sheetId, startRow, numRows) {
     }
 
     let requests = []
-    return new Promise((resolve) => {
-        generateAttendanceRows(code).then(function (rows) {
-            requests.push({
-                deleteDimensionGroup: {
-                    range: {
-                        sheetId: sheetId,
-                        dimension: 'ROWS',
-                        startIndex: startRow + 1,
-                        endIndex: startRow + numRows,
-                    },
-                },
+    let numRows = null
+    return new Promise((resolve, reject) => {
+        getRowCountByStartRow(token, spreadsheetId, sheetId, startRow)
+            .then(function (nRows) {
+                numRows = nRows
+                return generateAttendanceRows(code)
             })
-            if (rows.length > numRows) {
+            .then(function (rows) {
                 requests.push({
-                    insertDimension: {
+                    deleteDimensionGroup: {
                         range: {
                             sheetId: sheetId,
                             dimension: 'ROWS',
-                            startIndex: startRow + numRows,
-                            endIndex: startRow + rows.length,
-                        },
-                        inheritFromBefore: true,
-                    },
-                })
-            } else if (rows.length < numRows) {
-                requests.push({
-                    deleteDimension: {
-                        range: {
-                            sheetId: sheetId,
-                            dimension: 'ROWS',
-                            startIndex: startRow + rows.length,
+                            startIndex: startRow + 1,
                             endIndex: startRow + numRows,
                         },
                     },
                 })
-            }
-            requests.push({
-                updateCells: {
-                    rows: rows,
-                    fields: '*',
-                    start: {
-                        sheetId: sheetId,
-                        rowIndex: startRow,
-                        columnIndex: 0,
-                    },
-                },
-            })
-            requests = requests.concat(addGroup(sheetId, startRow, rows.length))
-            requests = requests.concat(
-                createBorders(sheetId, startRow, rows.length, color)
-            )
-            if (rows.length !== numRows) {
-                requests.push({
-                    updateDeveloperMetadata: {
-                        dataFilters: [
-                            {
-                                developerMetadataLookup: {
-                                    metadataKey: code,
-                                },
+                if (rows.length > numRows) {
+                    requests.push({
+                        insertDimension: {
+                            range: {
+                                sheetId: sheetId,
+                                dimension: 'ROWS',
+                                startIndex: startRow + numRows,
+                                endIndex: startRow + rows.length,
                             },
-                        ],
-                        developerMetadata: {
-                            metadataKey: code,
-                            metadataValue: rows.length.toString(),
-                            visibility: 'DOCUMENT',
+                            inheritFromBefore: true,
                         },
-                        fields: 'metadataValue',
+                    })
+                } else if (rows.length < numRows) {
+                    requests.push({
+                        deleteDimension: {
+                            range: {
+                                sheetId: sheetId,
+                                dimension: 'ROWS',
+                                startIndex: startRow + rows.length,
+                                endIndex: startRow + numRows,
+                            },
+                        },
+                    })
+                }
+                requests.push({
+                    updateCells: {
+                        rows: rows,
+                        fields: '*',
+                        start: {
+                            sheetId: sheetId,
+                            rowIndex: startRow,
+                            columnIndex: 0,
+                        },
                     },
                 })
-            }
-            resolve(requests)
-        })
+                requests = requests.concat(
+                    addGroup(sheetId, startRow, rows.length)
+                )
+                requests = requests.concat(
+                    createBorders(sheetId, startRow, rows.length, color)
+                )
+                resolve(requests)
+            })
+            .catch(function (error) {
+                reject(error)
+            })
     })
 }
 
@@ -515,13 +506,24 @@ function addGroup(sheetId, startRow, numRows) {
 
 function collapseGroup(token, className, code, spreadsheetId, sheetId) {
     return new Promise((resolve) => {
-        getMetaByKey(className, token, spreadsheetId).then(function (meta) {
-            const activeCode = meta.metadataValue
+        getMetaByKey(className, token, spreadsheetId).then(function (
+            classMeta
+        ) {
+            const activeCode = classMeta.metadataValue
             if (code !== activeCode) {
-                getMetaByKey(activeCode, token, spreadsheetId).then(function (
+                getMetaByKey(activeCode, token, spreadsheetId).then(async function (
                     meta
                 ) {
-                    const numRows = parseInt(meta.metadataValue)
+                    const startRow = meta.location.dimensionRange.startIndex
+                    const numRows = await getRowCountByStartRow(
+                        token,
+                        spreadsheetId,
+                        sheetId,
+                        startRow
+                    )
+                    if (numRows == undefined) {
+                        resolve(null)
+                    }
                     const requests = [
                         {
                             updateDeveloperMetadata: {
@@ -727,7 +729,6 @@ function generateAttendanceRows(code) {
                     ],
                 })
             }
-
             resolve(rowData)
         })
     })
@@ -866,8 +867,7 @@ function getMetaByKey(key, token, spreadsheetId) {
     })
 }
 
-function getNumSheets(token, spreadsheetId) {
-    console.log(`Getting index of new sheet...`)
+function getSpreadsheet(token, spreadsheetId) {
     return new Promise((resolve, reject) => {
         const init = {
             method: 'GET',
@@ -891,11 +891,33 @@ function getNumSheets(token, spreadsheetId) {
                 )
             })
             .then(function (data) {
-                resolve(data.sheets.length)
+                resolve(data)
             })
             .catch(function (error) {
                 reject(error)
             })
+    })
+}
+
+function getRowCountByStartRow(token, spreadsheetId, sheetId, startRow) {
+    return new Promise((resolve, reject) => {
+        getSpreadsheet(token, spreadsheetId).then(function (spreadsheet) {
+            for (const sheet of spreadsheet.sheets) {
+                if (sheet.properties.sheetId === sheetId) {
+                    for (const group of sheet.rowGroups) {
+                        if (group.range.startIndex === startRow + 1) {
+                            numRows = group.range.endIndex - startRow
+                            resolve(numRows)
+                        }
+                    }
+                }
+            }
+            reject(
+                new Error(
+                    'An error occurred while updating the spreadsheet. Please try again later.'
+                )
+            )
+        })
     })
 }
 

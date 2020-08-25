@@ -122,7 +122,8 @@ async function updateSpreadsheet(port, token, className, code, spreadsheetId) {
         .then(async function (meta) {
             port.postMessage({ progress: 0.15 })
             if (meta == null) {
-                const numSheets = await getNumSheets(token, spreadsheetId)
+                const spreadsheet = await getSpreadsheet(token, spreadsheetId)
+                const numSheets = spreadsheet.sheets.length
                 sheetId = numSheets
                 requests = requests.concat(
                     addSheet(className, code, sheetId)
@@ -144,8 +145,7 @@ async function updateSpreadsheet(port, token, className, code, spreadsheetId) {
                 return initializeCells(code, sheetId)
             }
             startRow = meta.location.dimensionRange.startIndex
-            const numRows = parseInt(meta.metadataValue)
-            return updateCells(code, sheetId, startRow, numRows)
+            return updateCells(token, code, spreadsheetId, sheetId, startRow)
         })
         .then(function (reqs) {
             port.postMessage({ progress: 0.4 })

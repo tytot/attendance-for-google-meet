@@ -2,11 +2,72 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <link rel="stylesheet" href="../css/popup.css">
-        <script src="../js/marked.min.js"></script>
-        <script src="../js/popup.js"></script>
+        <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css?family=Inter"
+        />
+        <link
+            href="https://fonts.googleapis.com/css?family=Cookie"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="../css/popup.css" />
+        <link href="../css/material-components.min.css" rel="stylesheet" />
+        <script src="../js/material-components.min.js"></script>
     </head>
     <body>
-        <div id="markdown"></div>
+        <div id="header">
+            <img id="logo" src="../img/icon48.png" alt="Logo" />
+            <div id="title">Attendance for Google Meet</div>
+            <div id="meta">
+                <p id="version">Version 1.0.0</p>
+                <p>By Tyler Lin and Adit Bala</p>
+            </div>
+        </div>
+        <div id="content">
+            <a
+                class="bmc-button"
+                target="_blank"
+                href="https://www.buymeacoffee.com/tylerlin"
+                ><img
+                    src="https://cdn.buymeacoffee.com/buttons/bmc-new-btn-logo.svg"
+                    alt="Buy me a coffee"
+                /><span style="margin-left: 5px; font-size: 24px !important;"
+                    >Buy us a coffee!</span
+                ></a
+            >
+            <div>
+                <button
+                    id="docs"
+                    class="mdc-button mdc-button--raised mdc-ripple-surface"
+                >
+                    <div class="mdc-button__ripple"></div>
+                    <i
+                        class="material-icons mdc-button__icon"
+                        aria-hidden="true"
+                        >info</i
+                    >
+                    <span class="mdc-button__label">Documentation</span>
+                </button>
+            </div>
+            <div>
+                <button
+                    id="contact"
+                    class="mdc-button mdc-button--raised mdc-ripple-surface"
+                >
+                    <div class="mdc-button__ripple"></div>
+                    <i
+                        class="material-icons mdc-button__icon"
+                        aria-hidden="true"
+                        >contact_mail</i
+                    >
+                    <span class="mdc-button__label">Contact Us</span>
+                </button>
+            </div>
+        </div>
+        <script src="../js/popup.js"></script>
     </body>
 </html>

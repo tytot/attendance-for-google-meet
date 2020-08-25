@@ -4,7 +4,7 @@
 
 In the era of COVID-19, virtual classes have become the norm. For teachers, however, taking attendance in these virtual classes is often a pain. They must keep track of when students join and leave among side conversations and distracting visuals. Many teachers at our school complain about the difficulty of taking virtual attendance, claiming that existing Google Chrome extensions are buggy and unreliable.
 
-Our Google Chrome extension, Attendance for Google Meet, streamlines the entire process of taking attendance in a Google Meet. All teachers have to do is enter a Google Meet, enter the name of the class and their students. At any time, teachers may click on the attendance button to view each student's status (present, absent, previously present, or not on list), and export the data to a beautifully formatted Google Spreadsheet in their own Google Drive.
+Our Google Chrome extension, Attendance for Google Meet, streamlines the entire process of taking attendance in a Google Meet. All teachers have to do is enter the name of the class and a list of their students. At any time, teachers may click on the attendance button to view each student's status (present, absent, previously present, or not on list), and export the data to a beautifully formatted Google Spreadsheet in their own Google Drive.
 
 ## Installation
 

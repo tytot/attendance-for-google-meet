@@ -22,9 +22,22 @@ for (const button of document.getElementsByClassName('mdc-button')) {
     new MDCRipple(button)
 }
 
-document.querySelector("#docs").addEventListener('click', function () {
-    chrome.tabs.create({ url: 'https://github.com/tytot/attendance-for-google-meet#attendance-for-google-meet' })
+document.querySelector('#open').addEventListener('click', function () {
+    chrome.storage.local.get('spreadsheet-id', function (result) {
+        const id = result['spreadsheet-id']
+        const url = `https://docs.google.com/spreadsheets/d/${id}`
+        chrome.tabs.create({ url: url })
+    })
 })
-document.querySelector("#contact").addEventListener('click', function () {
-    chrome.tabs.create({ url: 'mailto:tyleradit@gmail.com?subject=Regarding%20the%20Attendance%20for%20Google%20Meet%20Chrome%20Extension' })
+document.querySelector('#docs').addEventListener('click', function () {
+    chrome.tabs.create({
+        url:
+            'https://github.com/tytot/attendance-for-google-meet#attendance-for-google-meet',
+    })
+})
+document.querySelector('#contact').addEventListener('click', function () {
+    chrome.tabs.create({
+        url:
+            'mailto:tyleradit@gmail.com?subject=Regarding%20the%20Attendance%20for%20Google%20Meet%20Chrome%20Extension',
+    })
 })

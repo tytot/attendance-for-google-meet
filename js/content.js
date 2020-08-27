@@ -147,41 +147,74 @@ function updateRosterStatus(attendance, roster) {
             })
         }
     }
-
-    if (sortMethod === 'firstName') {
-        var compare = (a, b) => {
-            const aFirstName = a.name.split(' ')[0]
-            const bFirstName = b.name.split(' ')[0]
-            return aFirstName.localeCompare(bFirstName)
-        }
-    } else if (sortMethod === 'lastName') {
-        compare = (a, b) => {
-            const aName = a.name.split(' ')
-            const bName = b.name.split(' ')
-            const aLastName = aName[aName.length - 1]
-            const bLastName = bName[bName.length - 1]
-            return aLastName.localeCompare(bLastName)
-        }
-    } else if (sortMethod === 'presentFirst') {
-        compare = (a, b) => {
-            return b.index - a.index
-        }
-    } else {
-        compare = (a, b) => {
-            if (a.index === -1) {
-                a.index = 3
-            }
-            if (b.index === -1) {
-                b.index = 3
-            }
-            return a.index - b.index
-        }
+    let single = false
+    if (entries.length === 1) {
+        single = true
     }
-    entries.sort(compare)
+
+    if (!single) {
+        if (sortMethod === 'firstName') {
+            var compare = (a, b) => {
+                const aFirstName = a.name.split(' ')[0]
+                const bFirstName = b.name.split(' ')[0]
+                return aFirstName.localeCompare(bFirstName)
+            }
+        } else if (sortMethod === 'lastName') {
+            compare = (a, b) => {
+                const aName = a.name.split(' ')
+                const bName = b.name.split(' ')
+                const aLastName = aName[aName.length - 1]
+                const bLastName = bName[bName.length - 1]
+                return aLastName.localeCompare(bLastName)
+            }
+        } else if (sortMethod === 'presentFirst') {
+            compare = (a, b) => {
+                return b.index - a.index
+            }
+        } else {
+            compare = (a, b) => {
+                if (a.index === -1) {
+                    a.index = 3
+                }
+                if (b.index === -1) {
+                    b.index = 3
+                }
+                return a.index - b.index
+            }
+        }
+        entries.sort(compare)
+    }
+
     for (const entry of entries) {
+        if (!single) {
+            if (entry.index === -1) {
+                var metaIcon = 'add'
+                var metaTooltip = 'Add to Class'
+            } else {
+                metaIcon = 'remove'
+                metaTooltip = 'Remove from Class'
+            }
+            var meta = `<div class="mdc-list-item__meta">
+                    <button
+                        class="mdc-icon-button material-icons"
+                        aria-label="${metaTooltip}"
+                        jscontroller="VXdfxd"
+                        jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                        tabindex="0"
+                        data-tooltip="${metaTooltip}"
+                        data-tooltip-vertical-offset="-12"
+                        data-tooltip-horizontal-offset="0"
+                    >
+                        ${metaIcon}
+                    </button>
+                </div>`
+        } else {
+            meta = ''
+        }
         rosterStatus.insertAdjacentHTML(
             'beforeend',
-            `<li class="mdc-list-item mdc-ripple-surface" tabindex="0">
+            `<li class="mdc-list-divider" role="separator"></li>
+            <li class="mdc-list-item" tabindex="0">
                 <span
                     class="mdc-list-item__graphic material-icons ${entry.color}"
                     jscontroller="VXdfxd"
@@ -194,7 +227,6 @@ function updateRosterStatus(attendance, roster) {
                 >
                     ${entry.icon}
                 </span>
-
                 <span class="mdc-list-item__text">
                     <span class="mdc-list-item__primary-text">
                         ${entry.name}
@@ -203,10 +235,46 @@ function updateRosterStatus(attendance, roster) {
                         ${entry.text}
                     </span>
                 </span>
-            </li>
-            <li class="mdc-list-divider" role="separator"></li>`
+                ${meta}
+            </li>`
         )
+        const metaButton = rosterStatus.lastChild.querySelector(
+            '.mdc-icon-button'
+        )
+        if (!single) {
+            if (entry.index === -1) {
+                metaButton.addEventListener('click', function () {
+                    addStudent(entry.name)
+                })
+            } else {
+                metaButton.addEventListener('click', function () {
+                    removeStudent(entry.name)
+                })
+            }
+        }
     }
+}
+
+function addStudent(name) {
+    chrome.storage.local.get(null, function (result) {
+        const code = getMeetCode()
+        const className = result[code].class
+        let res = result.rosters
+        res[className].push(name)
+        chrome.storage.local.set({ rosters: res })
+        updateRosterStatus(result[code].attendance, res[className])
+    })
+}
+
+function removeStudent(name) {
+    chrome.storage.local.get(null, function (result) {
+        const code = getMeetCode()
+        const className = result[getMeetCode()].class
+        let res = result.rosters
+        res[className] = res[className].filter((n) => n !== name)
+        chrome.storage.local.set({ rosters: res })
+        updateRosterStatus(result[code].attendance, res[className])
+    })
 }
 
 function getMeetCode() {
@@ -270,7 +338,6 @@ function getClassHTML(className) {
             </button>
             <button
                 class="mdc-icon-button material-icons delete-class"
-                aria-haspopup="menu"
                 aria-label="Delete"
                 jscontroller="VXdfxd"
                 jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"

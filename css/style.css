@@ -172,6 +172,10 @@
     width: 100%;
 }
 
+#roster-status .mdc-list-item {
+    cursor: default;
+}
+
 .mdc-list-item__graphic {
     margin-right: 16px;
 }

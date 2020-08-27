@@ -24,14 +24,14 @@ Our Google Chrome extension, Attendance for Google Meet, streamlines the entire 
 3. Sort the range by clicking the filter symbol for a column and choosing a sort option
 4. Data → Turn off filter
 
-![Sorting with a filter](/img/sorting_spreadsheet.gif "Sorting with a Filter")
+![Sorting with a filter](/img/gif/sorting_spreadsheet.gif "Sorting with a Filter")
 
 #### Without a Filter
 1. Select the rows that you want to sort, **excluding the gray header row**
 2. Data → Sort range
 3. Sort the range by choosing the column to sort by and sorting preference
 
-![Sorting without a filter](/img/sorting_spreadsheet_alt.gif "Sorting without a Filter")
+![Sorting without a filter](/img/gif/sorting_spreadsheet_alt.gif "Sorting without a Filter")
 
 ## Privacy
 

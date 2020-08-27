@@ -32,7 +32,7 @@ document.querySelector('#open').addEventListener('click', function () {
 document.querySelector('#docs').addEventListener('click', function () {
     chrome.tabs.create({
         url:
-            'https://github.com/tytot/attendance-for-google-meet#attendance-for-google-meet',
+            'https://github.com/tytot/attendance-for-google-meet#usage',
     })
 })
 document.querySelector('#contact').addEventListener('click', function () {

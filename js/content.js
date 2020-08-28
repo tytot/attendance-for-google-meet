@@ -188,10 +188,10 @@ function updateRosterStatus(attendance, roster) {
     for (const entry of entries) {
         if (!single) {
             if (entry.index === -1) {
-                var metaIcon = 'add'
+                var metaIcon = 'add_circle'
                 var metaTooltip = 'Add to Class'
             } else {
-                metaIcon = 'remove'
+                metaIcon = 'remove_circle'
                 metaTooltip = 'Remove from Class'
             }
             var meta = `<div class="mdc-list-item__meta">
@@ -735,7 +735,7 @@ aria-label="Attendance management"
                 data-tooltip-vertical-offset="-12"
                 data-tooltip-horizontal-offset="0"
             >
-                settings
+                sort
             </button>
             <button
                 class="mdc-icon-button medium-button material-icons right close-card"

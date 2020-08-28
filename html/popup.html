@@ -28,6 +28,139 @@
             </div>
         </div>
         <div id="content">
+            <div class="mdc-snackbar">
+                <div class="mdc-snackbar__surface">
+                    <div
+                        class="mdc-snackbar__label"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        Success.
+                    </div>
+                    <div class="mdc-snackbar__actions">
+                        <button
+                            class="mdc-icon-button mdc-snackbar__dismiss material-icons"
+                            aria-label="Close"
+                        >
+                            close
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="reset-dialog" class="mdc-dialog">
+                <div class="mdc-dialog__container">
+                    <div
+                        class="mdc-dialog__surface"
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="reset-dialog-title"
+                        aria-describedby="reset-dialog-content"
+                    >
+                        <h2 class="mdc-dialog__title" id="reset-dialog-title">
+                            Are you sure?
+                        </h2>
+                        <div
+                            class="mdc-dialog__content"
+                            id="reset-dialog-content"
+                        >
+                            <p>
+                                By default, the extension generates a
+                                spreadsheet for you the first time you export.
+                                That spreadsheet gets updated whenever you
+                                export afterwards.
+                            </p>
+                            <p>
+                                This option will generate a brand new
+                                spreadsheet, and all future exports will update
+                                the new spreadsheet. Choose this option if you
+                                want to use a new spreadsheet for a new
+                                quarter/semester/school year or if your current
+                                spreadsheet causes errors when you try to
+                                export.
+                            </p>
+                            <p>
+                                Be warned that you cannot export to your current
+                                spreadsheet after you decide to use a new one.
+                                Do you want to proceed?
+                            </p>
+                        </div>
+                        <div class="mdc-dialog__actions">
+                            <button
+                                type="button"
+                                class="mdc-button mdc-dialog__button"
+                                data-mdc-dialog-action="close"
+                            >
+                                <div class="mdc-button__ripple"></div>
+                                <span class="mdc-button__label">No</span>
+                            </button>
+                            <button
+                                type="button"
+                                id="confirm-reset"
+                                class="mdc-button mdc-dialog__button"
+                                data-mdc-dialog-action="accept"
+                            >
+                                <div class="mdc-button__ripple"></div>
+                                <span class="mdc-button__label">Yes</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mdc-dialog__scrim"></div>
+            </div>
+            <div id="clear-dialog" class="mdc-dialog">
+                <div class="mdc-dialog__container">
+                    <div
+                        class="mdc-dialog__surface"
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="clear-dialog-title"
+                        aria-describedby="clear-dialog-content"
+                    >
+                        <h2 class="mdc-dialog__title" id="clear-dialog-title">
+                            Are you sure?
+                        </h2>
+                        <div
+                            class="mdc-dialog__content"
+                            id="clear-dialog-content"
+                        >
+                            <p>
+                                This option will wipe your class lists and
+                                attendance data from Google Chrome's local
+                                storage.
+                            </p>
+                            <p>
+                                Choose this option if you consistently encounter
+                                errors when attempting to export. You will have
+                                to re-enter your classes.
+                            </p>
+                            <p>
+                                This option does not affect your spreadsheet. Do
+                                you want to proceed?
+                            </p>
+                        </div>
+                        <div class="mdc-dialog__actions">
+                            <button
+                                type="button"
+                                class="mdc-button mdc-dialog__button"
+                                data-mdc-dialog-action="close"
+                            >
+                                <div class="mdc-button__ripple"></div>
+                                <span class="mdc-button__label">No</span>
+                            </button>
+                            <button
+                                type="button"
+                                id="confirm-clear"
+                                class="mdc-button mdc-dialog__button"
+                                data-mdc-dialog-action="accept"
+                            >
+                                <div class="mdc-button__ripple"></div>
+                                <span class="mdc-button__label">Yes</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mdc-dialog__scrim"></div>
+            </div>
             <a
                 class="bmc-button"
                 target="_blank"
@@ -35,15 +168,12 @@
                 ><img
                     src="https://cdn.buymeacoffee.com/buttons/bmc-new-btn-logo.svg"
                     alt="Buy me a coffee"
-                /><span style="margin-left: 5px; font-size: 24px !important;"
+                /><span style="margin-left: 5px; font-size: 24px !important"
                     >Buy us a coffee!</span
                 ></a
             >
             <div>
-                <button
-                    id="open"
-                    class="mdc-button mdc-button--raised mdc-ripple-surface"
-                >
+                <button id="open" class="mdc-button mdc-button--raised">
                     <div class="mdc-button__ripple"></div>
                     <i
                         class="material-icons mdc-button__icon"
@@ -54,10 +184,7 @@
                 </button>
             </div>
             <div>
-                <button
-                    id="docs"
-                    class="mdc-button mdc-button--raised mdc-ripple-surface"
-                >
+                <button id="docs" class="mdc-button mdc-button--outlined">
                     <div class="mdc-button__ripple"></div>
                     <i
                         class="material-icons mdc-button__icon"
@@ -68,10 +195,7 @@
                 </button>
             </div>
             <div>
-                <button
-                    id="contact"
-                    class="mdc-button mdc-button--raised mdc-ripple-surface"
-                >
+                <button id="contact" class="mdc-button mdc-button--outlined">
                     <div class="mdc-button__ripple"></div>
                     <i
                         class="material-icons mdc-button__icon"
@@ -80,6 +204,42 @@
                     >
                     <span class="mdc-button__label">Contact Us</span>
                 </button>
+            </div>
+            <hr class="solid" />
+            <div>
+                <button id="expand" class="mdc-button">
+                    <div class="mdc-button__ripple"></div>
+                    <span class="mdc-button__label">Show Advanced</span>
+                </button>
+            </div>
+            <div id="more-options" hidden>
+                <hr class="dashed" />
+                <div>
+                    <button id="reset" class="mdc-button mdc-button--outlined">
+                        <div class="mdc-button__ripple"></div>
+                        <i
+                            class="material-icons mdc-button__icon"
+                            aria-hidden="true"
+                            >layers_clear</i
+                        >
+                        <span class="mdc-button__label"
+                            >Reset Default Spreadsheet</span
+                        >
+                    </button>
+                </div>
+                <div>
+                    <button id="clear" class="mdc-button mdc-button--outlined">
+                        <div class="mdc-button__ripple"></div>
+                        <i
+                            class="material-icons mdc-button__icon"
+                            aria-hidden="true"
+                            >delete</i
+                        >
+                        <span class="mdc-button__label"
+                            >Clear Local Storage</span
+                        >
+                    </button>
+                </div>
             </div>
         </div>
         <script src="../js/popup.js"></script>

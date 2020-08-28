@@ -1,3 +1,7 @@
+:root {
+    --mdc-theme-primary: #058d80 !important;
+}
+
 html {
     min-width: 320px;
 }
@@ -7,8 +11,8 @@ body {
     margin: 0;
     background: repeating-linear-gradient(
         45deg,
-        #FFFEF2,
-        #FFFEF2 15px,
+        #fffef2,
+        #fffef2 15px,
         #fff7e0 1px,
         #fff7e0 16px
     );
@@ -53,18 +57,54 @@ body {
     font-style: italic;
 }
 
-#content {
-    margin: 16px;
+.mdc-dialog__content {
+    text-align: left;
 }
 
-.mdc-button {
+.mdc-button--raised,
+.mdc-button--outlined {
     margin-top: 4px;
     margin-bottom: 4px;
-    background-color: #058d80 !important;
 }
 
-.mdc-button__label {
+.mdc-button--outlined {
+    background-color: white !important;
+}
+
+hr.solid {
+    margin-block-start: 8px;
+    margin-block-end: 0;
+    border-top: 1px solid var(--mdc-theme-primary);
+}
+
+hr.dashed {
+    margin-block-start: 0;
+    margin-block-end: 8px;
+    border-top: 1px dashed var(--mdc-theme-primary);
+}
+
+#more-options {
+    margin-bottom: 8px;
+}
+
+#expand {
+    width: 100%;
+}
+
+#expand .mdc-button__ripple {
+    border-radius: 0;
+}
+
+#open .mdc-button__label,
+#docs .mdc-button__label,
+#contact .mdc-button__label {
     width: 160px;
+}
+
+#expand .mdc-button__label,
+#reset .mdc-button__label,
+#clear .mdc-button__label {
+    width: 240px;
 }
 
 .bmc-button img {

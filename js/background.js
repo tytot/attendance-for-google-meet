@@ -1,9 +1,9 @@
 chrome.runtime.onMessage.addListener(function (message, callback) {
-    if (message.data === 'mdc') {
+    if (message.data === 'instantiate') {
         chrome.tabs.executeScript({
-            file: 'js/mdc.js',
+            file: 'js/attendance.js',
         })
-    } else if (message.data === 'open-sheet') {
+    } else if (message.data === 'open-url') {
         chrome.tabs.create({ url: message.url })
     }
 })

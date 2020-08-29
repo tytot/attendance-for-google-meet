@@ -26,11 +26,42 @@ function toTimeString(timestamp) {
     }).format(new Date(timestamp * 1000))
 }
 
-function compare(a, b) {
-    const aName = a.split(' ')
-    const bName = b.split(' ')
-    const aLastName = aName[aName.length - 1]
-    const bLastName = bName[bName.length - 1]
+function getFirstName(fullName) {
+    const names = fullName.split(' ')
+    if (names.length === 1) {
+        var fName = fullName
+    } else {
+        for (var i = 1; i < names.length - 1; i++) {
+            const name = names[i]
+            if (name.charAt(0) === name.charAt(0).toLowerCase()) {
+                break
+            }
+        }
+        var fName = names.slice(0, i).join(' ')
+    }
+    return fName
+}
 
-    return aLastName.localeCompare(bLastName)
+function getLastName(fullName) {
+    const names = fullName.split(' ')
+    if (names.length === 1) {
+        var lName = ''
+    } else {
+        for (var i = 1; i < names.length - 1; i++) {
+            const name = names[i]
+            if (name.charAt(0) === name.charAt(0).toLowerCase()) {
+                break
+            }
+        }
+        var lName = names.slice(i).join(' ')
+    }
+    return lName
+}
+
+function compareFirst(a, b) {
+    return getFirstName(a).localeCompare(getFirstName(b))
+}
+
+function compareLast(a, b) {
+    return getLastName(a).localeCompare(getLastName(b))
 }

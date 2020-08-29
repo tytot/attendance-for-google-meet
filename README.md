@@ -33,6 +33,8 @@ Our Google Chrome extension, Attendance for Google Meet, streamlines the entire 
 
 ![Sorting without a filter](/img/gif/sorting_spreadsheet_alt.gif "Sorting without a Filter")
 
+### Troubleshooting
+
 ## Privacy
 
 Your privacy is important to us. It is Attendance for Google Meet Chrome Extension's policy to respect your privacy regarding any information we may collect from you across our extension and other sites we own and operate.

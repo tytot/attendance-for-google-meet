@@ -118,12 +118,16 @@
     color: #bababa;
 }
 
-.mdc-dialog .mdc-dialog__content {
+#select .mdc-dialog__content {
     padding: 0px;
 }
 
-.mdc-dialog .mdc-dialog__surface {
+#select .mdc-dialog__surface {
     max-width: none;
+    border-radius: 8px;
+}
+
+#delete-dialog .mdc-dialog__surface  {
     border-radius: 8px;
 }
 

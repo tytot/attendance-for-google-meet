@@ -1,5 +1,3 @@
 - Help/tutorial
 - Refactor to use only async/await
 - Troubleshooting
-- Snackbars for deleting class, saving class, adding/removing people
-- Smarter last names

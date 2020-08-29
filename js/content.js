@@ -1,540 +1,15 @@
-function storeNames(names) {
-    const code = getMeetCode()
-    chrome.storage.local.get(null, function (result) {
-        const timestamp = ~~(Date.now() / 1000)
-
-        let res = result[code]
-        if (res == undefined) {
-            res = {
-                attendance: {},
-                'start-timestamp': timestamp,
-            }
-        }
-        let currentData = res.attendance
-        res.timestamp = timestamp
-
-        for (const name of names) {
-            if (currentData[name] == undefined) {
-                currentData[name] = [timestamp]
-            } else if (currentData[name].length % 2 === 0) {
-                currentData[name].push(timestamp)
-            }
-            if (names.includes(name)) {
-                if (currentData[name].length % 2 === 0) {
-                    currentData[name].push(timestamp)
-                }
-            } else {
-                if (currentData[name].length % 2 === 1) {
-                    currentData[name].push(timestamp)
-                }
-            }
-        }
-        for (const name in currentData) {
-            if (!names.includes(name) && currentData[name]) {
-                if (currentData[name].length % 2 === 1) {
-                    currentData[name].push(timestamp)
-                }
-            }
-        }
-
-        const className = res.class
-        if (className) {
-            updateRosterStatus(currentData, result.rosters[className])
-        }
-
-        chrome.storage.local.set({ [code]: res })
-
-        for (const key in result) {
-            const data = result[key]
-            if (data.hasOwnProperty('timestamp')) {
-                if (timestamp - data.timestamp >= 86400) {
-                    chrome.storage.local.remove([key])
-                }
-            }
-        }
-    })
-}
-
-function getVisibleAttendees(container, names) {
-    const labels = document.getElementsByClassName('cS7aqe NkoVdd')
-    for (const label of labels) {
-        const name = label.innerHTML
-        if (
-            !names.includes(name) &&
-            !name.endsWith(' (You)') &&
-            !name.endsWith(' (Your Presentation)') &&
-            !name.endsWith(' (Presentation)')
-        ) {
-            names.push(name)
-        }
-    }
-    container.scrollTop = 56 * names.length
-}
-
-function takeAttendance() {
-    const container = document.getElementsByClassName(
-        'HALYaf tmIkuc s2gQvd KKjvXb'
-    )[0]
-    let lastNumNames = 0
-    let names = []
-    getVisibleAttendees(container, names)
-    while (names.length !== lastNumNames) {
-        lastNumNames = names.length
-        setTimeout(function () {
-            getVisibleAttendees(container, names)
-        }, 100)
-    }
-    container.scrollTop = 0
-    storeNames(names)
-}
-
-let sortMethod = 'lastName'
-function setSortMethod(method) {
-    sortMethod = method
-}
-
-function updateRosterStatus(attendance, roster) {
-    const rosterStatus = document.getElementById('roster-status')
-    rosterStatus.innerHTML = ''
-    let entries = []
-
-    const bigRoster = roster.map((name) => name.toLocaleUpperCase())
-    for (const name in attendance) {
-        const arr = attendance[name]
-        if (bigRoster.includes(name.toLocaleUpperCase())) {
-            if (arr.length % 2 === 1) {
-                entries.push({
-                    name: name,
-                    color: 'green',
-                    tooltip: 'Present',
-                    icon: 'check_circle',
-                    text: `Joined at ${toTimeString(arr[0])}`,
-                    index: 2,
-                })
-            } else {
-                entries.push({
-                    name: name,
-                    color: 'yellow',
-                    tooltip: 'Previously Present',
-                    icon: 'watch_later',
-                    text: `Last seen at ${toTimeString(arr[arr.length - 1])}`,
-                    index: 1,
-                })
-            }
-        } else {
-            entries.push({
-                name: name,
-                color: 'gray',
-                tooltip: 'Not on List',
-                icon: 'error',
-                text: `Joined at ${toTimeString(arr[0])}`,
-                index: -1,
-            })
-        }
-    }
-    const bigAttendance = Object.keys(attendance).map((key) =>
-        key.toLocaleUpperCase()
-    )
-    for (const name of roster) {
-        if (!bigAttendance.includes(name.toLocaleUpperCase())) {
-            entries.push({
-                name: name,
-                color: 'red',
-                tooltip: 'Absent',
-                icon: 'cancel',
-                text: 'Not here',
-                index: 0,
-            })
-        }
-    }
-    let single = false
-    if (entries.length === 1) {
-        single = true
-    }
-
-    if (!single) {
-        if (sortMethod === 'firstName') {
-            var compare = (a, b) => {
-                const aFirstName = a.name.split(' ')[0]
-                const bFirstName = b.name.split(' ')[0]
-                return aFirstName.localeCompare(bFirstName)
-            }
-        } else if (sortMethod === 'lastName') {
-            compare = (a, b) => {
-                const aName = a.name.split(' ')
-                const bName = b.name.split(' ')
-                const aLastName = aName[aName.length - 1]
-                const bLastName = bName[bName.length - 1]
-                return aLastName.localeCompare(bLastName)
-            }
-        } else if (sortMethod === 'presentFirst') {
-            compare = (a, b) => {
-                return b.index - a.index
-            }
-        } else {
-            compare = (a, b) => {
-                if (a.index === -1) {
-                    a.index = 3
-                }
-                if (b.index === -1) {
-                    b.index = 3
-                }
-                return a.index - b.index
-            }
-        }
-        entries.sort(compare)
-    }
-
-    for (const entry of entries) {
-        if (!single) {
-            if (entry.index === -1) {
-                var metaIcon = 'add_circle'
-                var metaTooltip = 'Add to Class'
-            } else {
-                metaIcon = 'remove_circle'
-                metaTooltip = 'Remove from Class'
-            }
-            var meta = `<div class="mdc-list-item__meta">
-                    <button
-                        class="mdc-icon-button material-icons"
-                        aria-label="${metaTooltip}"
-                        jscontroller="VXdfxd"
-                        jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
-                        tabindex="0"
-                        data-tooltip="${metaTooltip}"
-                        data-tooltip-vertical-offset="-12"
-                        data-tooltip-horizontal-offset="0"
-                    >
-                        ${metaIcon}
-                    </button>
-                </div>`
-        } else {
-            meta = ''
-        }
-        rosterStatus.insertAdjacentHTML(
-            'beforeend',
-            `<li class="mdc-list-divider" role="separator"></li>
-            <li class="mdc-list-item" tabindex="0">
-                <span
-                    class="mdc-list-item__graphic material-icons ${entry.color}"
-                    jscontroller="VXdfxd"
-                    jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
-                    tabindex="0"
-                    aria-label="${entry.tooltip}"
-                    data-tooltip="${entry.tooltip}"
-                    data-tooltip-vertical-offset="-12"
-                    data-tooltip-horizontal-offset="0"
-                >
-                    ${entry.icon}
-                </span>
-                <span class="mdc-list-item__text">
-                    <span class="mdc-list-item__primary-text">
-                        ${entry.name}
-                    </span>
-                    <span class="mdc-list-item__secondary-text">
-                        ${entry.text}
-                    </span>
-                </span>
-                ${meta}
-            </li>`
-        )
-        const metaButton = rosterStatus.lastChild.querySelector(
-            '.mdc-icon-button'
-        )
-        if (!single) {
-            if (entry.index === -1) {
-                metaButton.addEventListener('click', function () {
-                    addStudent(entry.name)
-                })
-            } else {
-                metaButton.addEventListener('click', function () {
-                    removeStudent(entry.name)
-                })
-            }
-        }
-    }
-}
-
-function addStudent(name) {
-    chrome.storage.local.get(null, function (result) {
-        const code = getMeetCode()
-        const className = result[code].class
-        let res = result.rosters
-        res[className].push(name)
-        chrome.storage.local.set({ rosters: res })
-        updateRosterStatus(result[code].attendance, res[className])
-    })
-}
-
-function removeStudent(name) {
-    chrome.storage.local.get(null, function (result) {
-        const code = getMeetCode()
-        const className = result[getMeetCode()].class
-        let res = result.rosters
-        res[className] = res[className].filter((n) => n !== name)
-        chrome.storage.local.set({ rosters: res })
-        updateRosterStatus(result[code].attendance, res[className])
-    })
-}
-
-function getMeetCode() {
-    return document.title.substring(7)
-}
-
-function openSpreadsheet() {
-    chrome.storage.local.get('spreadsheet-id', function (result) {
-        const id = result['spreadsheet-id']
-        const url = `https://docs.google.com/spreadsheets/d/${id}`
-        chrome.runtime.sendMessage({
-            data: 'open-sheet',
-            url: url,
-        })
-    })
-}
-
-function showCard() {
-    document.getElementsByClassName('NzPR9b')[0].style.borderRadius = '0px'
-    const attendanceButton = document.getElementById('attendance')
-    attendanceButton.classList.remove('IeuGXd')
-    document.getElementById('card').style.visibility = 'visible'
-}
-
-function hideCard() {
-    document.getElementsByClassName('NzPR9b')[0].style.borderRadius =
-        '0 0 0 8px'
-    const attendanceButton = document.getElementById('attendance')
-    attendanceButton.classList.add('IeuGXd')
-    document.getElementById('card').style.visibility = 'hidden'
-}
-
-function getClassHTML(className) {
-    return `<li
-        class="mdc-list-item mdc-list-item--class"
-        role="option"
-        tabindex="0"
-    >
-        <span class="mdc-list-item__ripple"></span>
-        <span
-            class="mdc-list-item__graphic material-icons"
-            aria-hidden="true"
-        >
-            perm_identity
-        </span>
-        <span class="mdc-list-item__text class-entry">
-            ${className}
-        </span>
-        <div class="mdc-list-item__meta">
-            <button
-                class="mdc-icon-button material-icons edit-class"
-                aria-label="Edit"
-                jscontroller="VXdfxd"
-                jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
-                tabindex="0"
-                data-tooltip="Edit"
-                data-tooltip-vertical-offset="-12"
-                data-tooltip-horizontal-offset="0"
-            >
-                edit
-            </button>
-            <button
-                class="mdc-icon-button material-icons delete-class"
-                aria-label="Delete"
-                jscontroller="VXdfxd"
-                jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
-                tabindex="0"
-                data-tooltip="Delete"
-                data-tooltip-vertical-offset="-12"
-                data-tooltip-horizontal-offset="0"
-            >
-                delete
-            </button>
-        </div>
-    </li>`
-}
-
-function initializeClasses() {
-    return new Promise((resolve) => {
-        chrome.storage.local.get('rosters', function (result) {
-            let res = result['rosters']
-            if (res == undefined) {
-                res = {}
-                chrome.storage.local.set({ rosters: res })
-            }
-
-            const classList = document.getElementById('class-list')
-            let classes = []
-            for (const className in res) {
-                classList.insertAdjacentHTML(
-                    'beforeend',
-                    getClassHTML(className)
-                )
-                const classEl = classList.lastChild
-                classEl.name = className
-                classEl.roster = res[className]
-                classes.push(classEl)
-            }
-            resolve(classes)
-        })
-    })
-}
-
-function addClass(className, roster, set = false) {
-    return new Promise((resolve) => {
-        chrome.storage.local.get(null, function (result) {
-            let res = result['rosters']
-            res[className] = roster
-            chrome.storage.local.set({ rosters: res })
-            if (set) {
-                const code = getMeetCode()
-                result[code].class = className
-                chrome.storage.local.set({ [code]: result[code] })
-            }
-
-            const classList = document.getElementById('class-list')
-            classList.insertAdjacentHTML('beforeend', getClassHTML(className))
-            const classEl = classList.lastChild
-            classEl.name = className
-            classEl.roster = res[className]
-
-            resolve(classEl)
-        })
-    })
-}
-
-function deleteClass(className) {
-    return new Promise((resolve) => {
-        chrome.storage.local.get('rosters', function (result) {
-            let res = result['rosters']
-            delete res[className]
-            chrome.storage.local.set({ rosters: res })
-
-            const classList = document.getElementById('class-list')
-            const classEls = classList.getElementsByTagName('li')
-            for (const classEl of classEls) {
-                if (classEl.name === className) {
-                    classList.removeChild(classEl)
-                }
-            }
-            resolve()
-        })
-    })
-}
-
-const peopleObserver = new MutationObserver(function (mutations, me) {
-    const container = document.getElementsByClassName(
-        'HALYaf tmIkuc s2gQvd KKjvXb'
-    )[0]
-    if (!container) {
-        document.getElementsByClassName('gV3Svc')[1].click()
-        tabObserver.observe(document.getElementsByClassName('mKBhCf')[0], {
-            childList: true,
-            subtree: true,
-        })
-    } else {
-        listObserver.observe(
-            document.getElementsByClassName('HALYaf tmIkuc s2gQvd KKjvXb')[0],
-            {
-                childList: true,
-                subtree: true,
-            }
-        )
-    }
-})
-
-const tabObserver = new MutationObserver(function (mutations, me) {
-    const numAttendees =
-        parseInt(
-            document.querySelector("[jsname='EydYod']").textContent.slice(1, -1)
-        ) - 1
-    const names = document.getElementsByClassName('cS7aqe NkoVdd')
-    if (numAttendees === 0) {
-        takeAttendance()
-        me.disconnect()
-    } else {
-        if (names[1] != undefined) {
-            listObserver.observe(
-                document.getElementsByClassName(
-                    'HALYaf tmIkuc s2gQvd KKjvXb'
-                )[0],
-                {
-                    childList: true,
-                    subtree: true,
-                }
-            )
-            me.disconnect()
-        }
-    }
-})
-
-const closedObserver = new MutationObserver(function (mutations, me) {
-    if (
-        !document.getElementsByClassName(
-            'VfPpkd-Bz112c-LgbsSe yHy1rc eT1oJ IWtuld wBYOYb'
-        )[0]
-    ) {
-        document.getElementById('card').style.borderRadius = '0 0 0 8px'
-        me.disconnect()
-    }
-})
-
-const listObserver = new MutationObserver(function (mutations, me) {
-    takeAttendance()
-    me.disconnect()
-})
-
-const trayObserver = new MutationObserver(function (mutations, me) {
-    const tray = document.getElementsByClassName('lvE3se')[0]
-    if (tray) {
-        const trayWidth = tray.offsetWidth
-        document.getElementById('card').style.width = trayWidth + 'px'
-    }
-})
-
 const readyObserver = new MutationObserver(function (mutations, me) {
     if (document.getElementsByClassName('wnPUne N0PJ8e')[0]) {
+        document.body.insertAdjacentHTML('afterbegin', confirmDeleteDialogHTML)
         document.body.insertAdjacentHTML('afterbegin', selectDialogHTML)
         document.body.insertAdjacentHTML('afterbegin', snackbarHTML)
 
         const bar = document.getElementsByClassName('NzPR9b')[0]
         bar.insertAdjacentHTML('afterbegin', buttonHTML)
 
-        const attendanceButton = document.getElementById('attendance')
-        attendanceButton.addEventListener('click', showCard)
-        attendanceButton.addEventListener('keydown', function (event) {
-            if (event.key === 'Enter' || event.keyCode === 13) {
-                showCard()
-            }
-        })
-
         const screen = document.getElementsByClassName('crqnQb')[0]
         screen.insertAdjacentHTML('afterbegin', cardHTML)
 
-        for (const closeButton of document.getElementsByClassName(
-            'close-card'
-        )) {
-            closeButton.addEventListener('click', hideCard)
-        }
-
-        for (let i = 1; i <= 2; i++) {
-            document
-                .getElementsByClassName('uArJ5e UQuaGc kCyAyd kW31ib foXzLb')
-                [i].addEventListener('click', () => {
-                    document.getElementById('card').style.borderRadius =
-                        '8px 0 0 8px'
-                    closedObserver.observe(
-                        document.getElementsByClassName('mKBhCf')[0],
-                        {
-                            childList: true,
-                            subtree: true,
-                        }
-                    )
-                })
-        }
-
-        trayObserver.observe(document.getElementsByClassName('lvE3se')[0], {
-            childList: true,
-            subtree: true,
-        })
         window.addEventListener('resize', () => {
             const trayWidth = document.getElementsByClassName('lvE3se')[0]
                 .offsetWidth
@@ -549,14 +24,8 @@ const readyObserver = new MutationObserver(function (mutations, me) {
 
         me.disconnect()
         chrome.runtime.sendMessage({
-            data: 'mdc',
+            data: 'instantiate',
         })
-        peopleObserver.observe(
-            document.getElementsByClassName('wnPUne N0PJ8e')[0],
-            {
-                childList: true,
-            }
-        )
     }
 })
 
@@ -665,22 +134,22 @@ aria-label="Attendance management"
                     <ul class="mdc-list mdc-list--dense">
                         <li
                             class="mdc-list-item mdc-ripple-surface"
-                            id="firstName"
-                            role="menuitem"
-                            tabindex="0"
-                        >
-                            <span class="mdc-list-item__text"
-                                >Sort by First Name (A - Z)</span
-                            >
-                        </li>
-                        <li
-                            class="mdc-list-item mdc-ripple-surface"
                             id="lastName"
                             role="menuitem"
                             tabindex="0"
                         >
                             <span class="mdc-list-item__text"
                                 >Sort by Last Name (A - Z)</span
+                            >
+                        </li>
+                        <li
+                            class="mdc-list-item mdc-ripple-surface"
+                            id="firstName"
+                            role="menuitem"
+                            tabindex="0"
+                        >
+                            <span class="mdc-list-item__text"
+                                >Sort by First Name (A - Z)</span
                             >
                         </li>
                         <li
@@ -1111,6 +580,48 @@ const selectDialogHTML = `<div class="mdc-dialog" id="select">
     <div class="mdc-dialog__scrim"></div>
 </div>`
 
+const confirmDeleteDialogHTML = `<div id="delete-dialog" class="mdc-dialog">
+    <div class="mdc-dialog__container">
+        <div
+            class="mdc-dialog__surface"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
+            aria-describedby="delete-dialog-content"
+        >
+            <h2 class="mdc-dialog__title" id="delete-dialog-title">
+                Confirm Deletion
+            </h2>
+            <div
+                class="mdc-dialog__content"
+                id="delete-dialog-content"
+            >
+                Are you sure you want to delete this class?
+            </div>
+            <div class="mdc-dialog__actions">
+                <button
+                    type="button"
+                    class="mdc-button mdc-dialog__button"
+                    data-mdc-dialog-action="close"
+                >
+                    <div class="mdc-button__ripple"></div>
+                    <span class="mdc-button__label">No</span>
+                </button>
+                <button
+                    type="button"
+                    id="confirm-delete"
+                    class="mdc-button mdc-dialog__button"
+                    data-mdc-dialog-action="accept"
+                >
+                    <div class="mdc-button__ripple"></div>
+                    <span class="mdc-button__label">Yes</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="mdc-dialog__scrim"></div>
+</div>`
+
 const buttonHTML = `<div 
     id="attendance"
     jsshadow=""
@@ -1164,17 +675,38 @@ const snackbarHTML = `<div class="mdc-snackbar">
         An error occurred. Please try again later.
     </div>
     <div class="mdc-snackbar__actions">
-        <button type="button" class="mdc-button mdc-snackbar__action">
-        <div class="mdc-button__ripple"></div>
-        <span class="mdc-button__label">OK</span>
+        <button type="button"
+            id="snackbar-help"
+            class="mdc-button mdc-snackbar__action"
+            style="display:none;"
+        >
+            <div class="mdc-button__ripple"></div>
+            <span class="mdc-button__label">Help</span>
+        </button>
+        <button 
+            type="button" 
+            id="snackbar-open"
+            class="mdc-button mdc-snackbar__action"
+            style="display:none;"
+        >
+            <div class="mdc-button__ripple"></div>
+            <span class="mdc-button__label">Open</span>
+        </button>
+        <button 
+            type="button" 
+            id="snackbar-undo"
+            class="mdc-button mdc-snackbar__action"
+            style="display:none;"
+        >
+            <div class="mdc-button__ripple"></div>
+            <span class="mdc-button__label">Undo</span>
+        </button>
+        <button
+            class="mdc-icon-button mdc-snackbar__dismiss material-icons"
+            aria-label="Close"
+        >
+            close
         </button>
     </div>
     </div>
 </div>`
-
-function toTimeString(timestamp) {
-    return new Intl.DateTimeFormat(undefined, {
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        timeStyle: 'short',
-    }).format(new Date(timestamp * 1000))
-}

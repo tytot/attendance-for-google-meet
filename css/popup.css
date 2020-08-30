@@ -57,8 +57,13 @@ body {
     font-style: italic;
 }
 
+.mdc-dialog__title {
+    font-family: 'Inter', Arial, sans-serif !important;
+}
+
 .mdc-dialog__content {
     text-align: left;
+    font-family: 'Inter', Arial, sans-serif !important;
 }
 
 .mdc-button--raised,
@@ -80,11 +85,15 @@ hr.solid {
 hr.dashed {
     margin-block-start: 0;
     margin-block-end: 8px;
-    border-top: 1px dashed var(--mdc-theme-primary);
+    border-top: 1px dotted var(--mdc-theme-primary);
 }
 
 #more-options {
     margin-bottom: 8px;
+}
+
+#expand-bkg {
+    background-color: #fffef2
 }
 
 #expand {

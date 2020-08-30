@@ -522,9 +522,9 @@ function updateRosterStatus(attendance, rosters, className) {
             '.mdc-icon-button'
         )
         if (!single) {
-            removeSnackbarButtons()
             if (entry.index === -1) {
                 metaButton.addEventListener('click', function () {
+                    removeSnackbarButtons()
                     rostersCache = rosters
                     addStudent(entry.name)
                     snackbar.labelText = `Added ${entry.name} to class.`
@@ -533,6 +533,7 @@ function updateRosterStatus(attendance, rosters, className) {
                 })
             } else {
                 metaButton.addEventListener('click', function () {
+                    removeSnackbarButtons()
                     rostersCache = rosters
                     removeStudent(entry.name)
                     snackbar.labelText = `Removed ${entry.name} from class.`

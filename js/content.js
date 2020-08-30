@@ -589,7 +589,7 @@ const confirmDeleteDialogHTML = `<div id="delete-dialog" class="mdc-dialog">
             aria-labelledby="delete-dialog-title"
             aria-describedby="delete-dialog-content"
         >
-            <h2 class="mdc-dialog__title" id="delete-dialog-title">
+            <h2 class="mdc-dialog__title CkXZgc" id="delete-dialog-title">
                 Confirm Deletion
             </h2>
             <div

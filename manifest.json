@@ -1,7 +1,7 @@
 {
-    "name": "Attendance for Google Meet",
+    "name": "Attendance for Google Meet™",
     "version": "1.0",
-    "description": "Records Google Meet attendance and exports to Google Sheets.",
+    "description": "Records Google Meet™ attendance and exports to Google Sheets™.",
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgu3DFNTJ4W9qEZwA4GjeTn4kj0dXRooOfJdu6BAv041ZWGAx6Nowcj7cd9K4JfCzOGlNpMkXaWX8pXQD004n7oeg2AKqbgO7cKo2EDgLKYKDy+Uq/Mjb/bS8sQaa6kzTVhP8tJg19/DR01EJ0/Y8//2I6OnnhskWMhIZNt2bUGQTG9Pk/i5cRcGNcW1pkv6quTU+n49lU969guaRyK8ER5BUBn1qLzv6g61LDubtYkWAuxkx7KEBUtByGpAeh/xk7aQtuSEEBjhagwfL+aXYRVeecH732gRWzP9yepE8ZHJYNdMfsSq2Pg/KSgj83KO2rZhxGI0RgsIJPOMThh5+hwIDAQAB",
     "web_accessible_resources": ["fonts/*", "js/attendance.js"],
     "background": {
@@ -11,10 +11,10 @@
     "browser_action": {
         "default_popup": "html/popup.html",
         "default_icon": {
-            "16": "img/icons/icon16.png",
-            "32": "img/icons/icon32.png",
-            "48": "img/icons/icon48.png",
-            "128": "img/icons/icon128.png"
+            "16": "img/logos/icon16.png",
+            "32": "img/logos/icon32.png",
+            "48": "img/logos/icon48.png",
+            "128": "img/logos/icon128.png"
         }
     },
     "content_scripts": [
@@ -35,10 +35,10 @@
         "scopes": ["https://www.googleapis.com/auth/drive.file"]
     },
     "icons": {
-        "16": "img/icons/icon16.png",
-        "32": "img/icons/icon32.png",
-        "48": "img/icons/icon48.png",
-        "128": "img/icons/icon128.png"
+        "16": "img/logos/icon16.png",
+        "32": "img/logos/icon32.png",
+        "48": "img/logos/icon48.png",
+        "128": "img/logos/icon128.png"
     },
     "manifest_version": 2
 }

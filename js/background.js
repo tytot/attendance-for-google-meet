@@ -66,7 +66,7 @@ chrome.runtime.onConnect.addListener(function (port) {
 function createSpreadsheet(port, token, className, code) {
     const body = {
         properties: {
-            title: 'Attendance for Google Meet',
+            title: 'Attendance for Google Meet™',
             spreadsheetTheme: getSpreadsheetTheme(),
         },
     }

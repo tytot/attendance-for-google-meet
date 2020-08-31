@@ -203,7 +203,7 @@ port.onMessage.addListener(function (msg) {
             snackbar.labelText = error
             sbHelp.style.display = 'inline-flex'
         } else {
-            snackbar.labelText = 'Successfully exported to Google Sheets!'
+            snackbar.labelText = 'Successfully exported to Google Sheets™!'
             sbOpen.style.display = 'inline-flex'
         }
         snackbar.open()
@@ -275,6 +275,7 @@ for (const button of document.getElementsByClassName('mdc-button')) {
     new MDCRipple(button)
 }
 
+let currentHandler = null
 let rostersCache = null
 
 function getMeetCode() {
@@ -285,6 +286,40 @@ function removeSnackbarButtons() {
     sbHelp.style.display = 'none'
     sbOpen.style.display = 'none'
     sbUndo.style.display = 'none'
+}
+
+function takeAttendance() {
+    if (currentHandler) {
+        currentHandler.restart()
+    } else {
+        currentHandler = attendanceHandler()
+        currentHandler.promise.then(() => {
+            currentHandler = null
+        })
+    }
+}
+
+function attendanceHandler() {
+    let names = []
+    const container = document.getElementsByClassName(
+        'HALYaf tmIkuc s2gQvd KKjvXb'
+    )[0]
+    const promise = new Promise(async (resolve, reject) => {
+        let lastNumNames = 0
+        await getVisibleAttendees(container, names)
+        while (names.length !== lastNumNames) {
+            lastNumNames = names.length
+            await getVisibleAttendees(container, names, 100)
+        }
+        container.scrollTop = 0
+        storeNames(names)
+        resolve()
+    })
+    const restart = () => {
+        names = []
+        container.scrollTop = 0
+    }
+    return { promise, restart }
 }
 
 function storeNames(names) {
@@ -344,37 +379,26 @@ function storeNames(names) {
     })
 }
 
-function getVisibleAttendees(container, names) {
-    const labels = document.getElementsByClassName('cS7aqe NkoVdd')
-    for (const label of labels) {
-        const name = label.innerHTML
-        if (
-            !names.includes(name) &&
-            !name.endsWith(' (You)') &&
-            !name.endsWith(' (Your Presentation)') &&
-            !name.endsWith(' (Presentation)')
-        ) {
-            names.push(name)
-        }
-    }
-    container.scrollTop = 56 * names.length
-}
+function getVisibleAttendees(container, names, delay) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const labels = document.getElementsByClassName('cS7aqe NkoVdd')
+            for (const label of labels) {
+                const name = label.innerHTML
+                if (
+                    !names.includes(name) &&
+                    !name.endsWith(' (You)') &&
+                    !name.endsWith(' (Your Presentation)') &&
+                    !name.endsWith(' (Presentation)')
+                ) {
+                    names.push(name)
+                }
+            }
+            container.scrollTop = 56 * names.length
 
-function takeAttendance() {
-    const container = document.getElementsByClassName(
-        'HALYaf tmIkuc s2gQvd KKjvXb'
-    )[0]
-    let lastNumNames = 0
-    let names = []
-    getVisibleAttendees(container, names)
-    while (names.length !== lastNumNames) {
-        lastNumNames = names.length
-        setTimeout(function () {
-            getVisibleAttendees(container, names)
-        }, 100)
-    }
-    container.scrollTop = 0
-    storeNames(names)
+            resolve()
+        }, delay)
+    })
 }
 
 function updateRosterStatus(attendance, rosters, className) {
@@ -462,7 +486,6 @@ function updateRosterStatus(attendance, rosters, className) {
             }
         }
         entries.sort(compare)
-        console.log(entries)
     }
 
     for (const entry of entries) {

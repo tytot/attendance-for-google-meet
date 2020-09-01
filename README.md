@@ -17,10 +17,10 @@ Our Google Chrome extension, Attendance for Google Meet™, streamlines the enti
 ## Usage
 
 ### Adding a Class
-To add a class, click ![Add Class](/img/icons/add-class.png "Add Class") on the Select Class screen. You will be presented with the Edit Class screen, as described below, with a blank title and a blank student list.
+To add a class, click ![Add Class](/img/caps/add-class.png "Add Class") on the Select Class screen. You will be presented with the Edit Class screen, as described below, with a blank title and a blank student list.
 
 ### Editing a Class
-To edit a class, click ![Edit icon](/img/icons/edit.svg "Edit Icon") next to the class or ![Edit Class](/img/icons/edit-class.png "Edit Class") when viewing the class.
+To edit a class, click ![Edit icon](/img/caps/edit.svg "Edit Icon") next to the class or ![Edit Class](/img/caps/edit-class.png "Edit Class") when viewing the class.
 
 These bring you to the Edit Class screen, in which you can enter the class name and students.
 
@@ -32,20 +32,43 @@ If you have a spreadsheet with the list of the students in your class, you can c
 
 ![Pasting student names](/img/gif/pasting_names.gif "Pasting Student Names")
 
-Click ![Remove name icon](/img/icons/cancel.svg "Remove Name Icon") to remove a name.
+Click ![Remove name icon](/img/caps/cancel.svg "Remove Name Icon") to remove a name.
 
-Finally, save your class by clicking the green save button or ![Save Class](/img/icons/save-class.png "Save Class").
+Finally, save your class by clicking the green save button or ![Save Class](/img/caps/save-class.png "Save Class").
 
 ### Deleting a Class
-To delete a class, click ![Delete icon](/img/icons/delete.svg "Delete Icon") next to the class to bring up a confirmation screen.
+To delete a class, click ![Delete icon](/img/caps/delete.svg "Delete Icon") next to the class to bring up a confirmation screen.
+
+### Viewing Class Attendance
+The extension displays attendance through a list of entries, as shown below.
+
+![Viewing class attendance](/img/caps/class-view.png "Viewing Class Attendance")
+
+Each entry has a colored symbol on the left representing the student's status.
+
+- Green: Present
+- Yellow: Previously Present
+- Red: Absent
+- Gray: Present, but Not on List
+
+Additional information is provided below each name.
 
 ### Adding and Removing Students
-Rather than bulk edit a whole class, you can easily add or remove single students from your class by clicking on ![Add student icon](/img/icons/add_circle.svg "Add Student Icon") or ![Remove student icon](/img/icons/remove_circle.svg "Remove Student Icon") next to a student's name. 
+Rather than bulk edit a whole class, you can easily add or remove single students from your class by clicking on ![Add student icon](/img/caps/add_circle.svg "Add Student Icon") or ![Remove student icon](/img/caps/remove_circle.svg "Remove Student Icon") next to a student's name. 
 
 ![Adding/removing students](/img/gif/adding-removing_students.gif "Adding/Removing Students")
 
 This feature is especially helpful if there is a student present and in your class who is not on your list, in which case you may simply add him or her.
 
+### Sorting Students
+To sort the students on an attendance list, click ![Sort icon](/img/caps/sort.svg "Sort Icon") to bring up a list of options.
+By default, the extension sorts by Last Name (A-Z).
+
+### Exporting to a Spreadsheet
+Click the green export button. 
+
+If you encounter an error, see
+[Troubleshooting](#troubleshooting).
 ### Sorting the Spreadsheet
 
 #### With a Filter

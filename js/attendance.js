@@ -100,6 +100,15 @@ peopleObserver.observe(document.getElementsByClassName('wnPUne N0PJ8e')[0], {
     childList: true,
 })
 
+for (const helpButton of document.querySelectorAll('[aria-label="Help"]')) {
+    helpButton.addEventListener('click', function () {
+        chrome.runtime.sendMessage({
+            data: 'open-url',
+            url: 'https://github.com/tytot/attendance-for-google-meet#usage',
+        })
+    })
+}
+
 const attendanceButton = document.getElementById('attendance')
 attendanceButton.addEventListener('click', showCard)
 attendanceButton.addEventListener('keydown', function (event) {

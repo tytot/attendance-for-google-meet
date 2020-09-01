@@ -108,13 +108,13 @@ hr.dashed {
 #open .mdc-button__label,
 #docs .mdc-button__label,
 #contact .mdc-button__label {
-    width: 160px;
+    width: 200px;
 }
 
 #expand .mdc-button__label,
 #reset .mdc-button__label,
 #clear .mdc-button__label {
-    width: 240px;
+    width: 280px;
 }
 
 .bmc-button img {

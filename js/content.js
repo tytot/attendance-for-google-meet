@@ -81,7 +81,7 @@ aria-label="Attendance management"
             </button>
         </div>
         <div class="mdc-list-divider" role="separator"></div>
-        <div>
+        <div class="class-content">
             <ul class="mdc-list" id="class-list" role="listbox"></ul>
             <button class="mdc-button" id="add-class">
                 <div class="mdc-button__ripple"></div>
@@ -450,7 +450,7 @@ const selectDialogHTML = `<div class="mdc-dialog" id="select">
             </div>
             <div class="mdc-list-divider" role="separator"></div>
             <div id="dialog-default-view">
-                <div class="mdc-dialog__content" id="dialog-content">
+                <div class="mdc-dialog__content class-content" id="dialog-content">
                     <ul class="mdc-list" id="class-list" role="listbox"></ul>
                     <button 
                         class="mdc-button" 

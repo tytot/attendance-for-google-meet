@@ -144,6 +144,11 @@
     font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
+.class-content {
+    max-height: 50vh;
+    overflow: auto;
+}
+
 #class-list {
     padding-bottom: 0;
 }

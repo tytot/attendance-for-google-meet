@@ -11,7 +11,7 @@ const readyObserver = new MutationObserver(function (mutations, me) {
         screen.insertAdjacentHTML('afterbegin', cardHTML)
 
         window.addEventListener('resize', () => {
-            const trayWidth = document.getElementsByClassName('lvE3se')[0]
+            const trayWidth = document.getElementsByClassName('NzPR9b')[0]
                 .offsetWidth
             document.getElementById('card').style.width = trayWidth + 'px'
         })

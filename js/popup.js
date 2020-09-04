@@ -2,20 +2,44 @@ const MDCRipple = mdc.ripple.MDCRipple
 for (const button of document.getElementsByClassName('mdc-button')) {
     new MDCRipple(button)
 }
+// const iconButtonRipple = new MDCRipple(document.querySelector('#lang'));
+// iconButtonRipple.unbounded = true;
+// const MDCMenu = mdc.menu.MDCMenu
+// const menu = new MDCMenu(document.querySelector('.mdc-menu'))
+// menu.setFixedPosition(true)
+// document.querySelector('#lang').addEventListener('click', function () {
+//     menu.open = true
+// })
+
 const MDCDialog = mdc.dialog.MDCDialog
 const resetDialog = new MDCDialog(document.querySelector('#reset-dialog'))
 const clearDialog = new MDCDialog(document.querySelector('#clear-dialog'))
 
 const MDCSnackbar = mdc.snackbar.MDCSnackbar
-const snackbar = new MDCSnackbar(document.querySelector('.mdc-snackbar'));
+const snackbar = new MDCSnackbar(document.querySelector('.mdc-snackbar'))
 
-document.querySelector('#open').addEventListener('click', function () {
-    chrome.storage.local.get('spreadsheet-id', function (result) {
-        const id = result['spreadsheet-id']
-        const url = `https://docs.google.com/spreadsheets/d/${id}`
-        chrome.tabs.create({ url: url })
-    })
+const MDCSwitch = mdc.switchControl.MDCSwitch
+const switchControl = new MDCSwitch(document.querySelector('.mdc-switch'))
+const openButton = document.querySelector('#open')
+
+let autoExport = false
+chrome.storage.local.get(['auto-export', 'spreadsheet-id'], function (result) {
+    if (result['auto-export']) {
+        switchControl.checked = true
+        autoExport = true
+    }
+
+    const id = result['spreadsheet-id']
+    if (id == undefined) {
+        openButton.disabled = true
+    } else {
+        openButton.addEventListener('click', function () {
+            const url = `https://docs.google.com/spreadsheets/d/${id}`
+            chrome.tabs.create({ url: url })
+        })
+    }
 })
+
 document.querySelector('#docs').addEventListener('click', function () {
     chrome.tabs.create({
         url: 'https://github.com/tytot/attendance-for-google-meet#usage',
@@ -26,6 +50,12 @@ document.querySelector('#contact').addEventListener('click', function () {
         url:
             'mailto:tyleradit@gmail.com?subject=Regarding%20the%20Attendance%20for%20Google%20Meet%20Chrome%20Extension',
     })
+})
+document.querySelector('#auto-export').addEventListener('click', function () {
+    if (switchControl.checked !== autoExport) {
+        autoExport = switchControl.checked
+        chrome.storage.local.set({ 'auto-export': switchControl.checked })
+    }
 })
 
 const moreOptions = document.querySelector('#more-options')
@@ -49,6 +79,7 @@ document.querySelector('#confirm-reset').addEventListener('click', function () {
     chrome.storage.local.remove('spreadsheet-id', function () {
         snackbar.labelText = 'Successfully reset default spreadsheet.'
         snackbar.open()
+        openButton.disabled = true
     })
 })
 

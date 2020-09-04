@@ -70,7 +70,7 @@ const closedObserver = new MutationObserver(function (mutations, me) {
 })
 
 const trayObserver = new MutationObserver(function (mutations, me) {
-    const tray = document.getElementsByClassName('lvE3se')[0]
+    const tray = document.getElementsByClassName('NzPR9b')[0]
     if (tray) {
         const trayWidth = tray.offsetWidth
         document.getElementById('card').style.width = trayWidth + 'px'
@@ -92,7 +92,7 @@ for (let i = 1; i <= 2; i++) {
         })
 }
 
-trayObserver.observe(document.getElementsByClassName('lvE3se')[0], {
+trayObserver.observe(document.getElementsByClassName('NzPR9b')[0], {
     childList: true,
     subtree: true,
 })
@@ -123,9 +123,20 @@ for (const closeButton of document.getElementsByClassName('close-card')) {
 
 const exportButton = document.getElementById('export')
 exportButton.addEventListener('click', function () {
-    port.postMessage({ data: 'export', code: getMeetCode() })
+    port.postMessage({ data: 'export', auto: false, code: getMeetCode() })
     exportButton.disabled = true
     console.log('Exporting...')
+})
+window.addEventListener('beforeunload', function () {
+    chrome.storage.local.get('auto-export', function (result) {
+        if (result['auto-export']) {
+            port.postMessage({
+                data: 'export',
+                auto: true,
+                code: getMeetCode(),
+            })
+        }
+    })
 })
 
 const classList = new MDCList(document.querySelector('#class-list'))
@@ -380,7 +391,7 @@ function storeNames(names) {
         for (const key in result) {
             const data = result[key]
             if (data.hasOwnProperty('timestamp')) {
-                if (timestamp - data.timestamp >= 86400) {
+                if (timestamp - data.timestamp >= 43200) {
                     chrome.storage.local.remove([key])
                 }
             }
@@ -563,7 +574,7 @@ function updateRosterStatus(attendance, rosters, className) {
                     sbUndo.style.display = 'inline-flex'
                     snackbar.open()
                 })
-            } else {
+            } else if (roster.length > 1) {
                 metaButton.addEventListener('click', function () {
                     removeSnackbarButtons()
                     rostersCache = rosters

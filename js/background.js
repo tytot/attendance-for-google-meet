@@ -1,3 +1,9 @@
+chrome.runtime.onInstalled.addListener(function (details) {
+    if (details.reason === 'install') {
+        chrome.storage.local.set({ 'auto-export': false })
+    }
+})
+
 chrome.runtime.onMessage.addListener(function (message, callback) {
     if (message.data === 'instantiate') {
         chrome.tabs.executeScript({
@@ -16,15 +22,19 @@ chrome.runtime.onConnect.addListener(function (port) {
                 chrome.storage.local.get(['spreadsheet-id', code], function (
                     result
                 ) {
+                    if (msg.auto) {
+                        port = null
+                    } else {
+                        port.postMessage({ progress: 0 })
+                    }
                     const id = result['spreadsheet-id']
                     const className = result[code].class
                     console.log('Meet code: ' + code)
                     if (id == undefined) {
-                        createSpreadsheet(port, token, className, code)
+                        createSpreadsheet(token, className, code, port)
                     } else {
-                        updateSpreadsheet(port, token, className, code, id)
+                        updateSpreadsheet(token, className, code, id, port)
                     }
-                    port.postMessage({ progress: 0 })
                 })
             } else if (msg.data === 'rename') {
                 chrome.storage.local.get('spreadsheet-id', function (result) {
@@ -32,9 +42,7 @@ chrome.runtime.onConnect.addListener(function (port) {
                     const oldClassName = msg.oldClassName
                     const newClassName = msg.newClassName
 
-                    let requests = [
-                        deleteSheetMetadata(oldClassName),
-                    ]
+                    let requests = [deleteSheetMetadata(oldClassName)]
                     getMetaByKey(oldClassName, token, id)
                         .then(function (meta) {
                             const sheetId = meta.location.sheetId
@@ -63,7 +71,7 @@ chrome.runtime.onConnect.addListener(function (port) {
     })
 })
 
-function createSpreadsheet(port, token, className, code) {
+function createSpreadsheet(token, className, code, port) {
     const body = {
         properties: {
             title: 'Attendance for Google Meet™',
@@ -85,7 +93,9 @@ function createSpreadsheet(port, token, className, code) {
     fetch('https://sheets.googleapis.com/v4/spreadsheets', init)
         .then((response) => response.json())
         .then(function (data) {
-            port.postMessage({ progress: 0.3 })
+            if (port != null) {
+                port.postMessage({ progress: 0.3 })
+            }
             console.log(
                 `Successfully created Attendance spreadsheet with id ${data.spreadsheetId}.`
             )
@@ -99,35 +109,45 @@ function createSpreadsheet(port, token, className, code) {
             return initializeCells(code, 0)
         })
         .then(function (reqs) {
-            port.postMessage({ progress: 0.6 })
+            if (port != null) {
+                port.postMessage({ progress: 0.6 })
+            }
             requests = requests.concat(reqs)
             return batchUpdate(token, requests, spreadsheetId, 0)
         })
         .then(function (data) {
-            port.postMessage({ done: true, progress: 1 })
+            if (port != null) {
+                port.postMessage({ done: true, progress: 1 })
+            }
             console.log('Initialize spreadsheet response:')
             console.log(data)
         })
         .catch(function (error) {
-            port.postMessage({ done: true, error: error.message, progress: 0 })
+            if (port != null) {
+                port.postMessage({
+                    done: true,
+                    error: error.message,
+                    progress: 0,
+                })
+            }
         })
 }
 
-async function updateSpreadsheet(port, token, className, code, spreadsheetId) {
+async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
     let requests = []
     let sheetId = null,
         startRow = null
     console.log('Updating spreadsheet...')
     getMetaByKey(className, token, spreadsheetId)
         .then(async function (meta) {
-            port.postMessage({ progress: 0.15 })
+            if (port != null) {
+                port.postMessage({ progress: 0.15 })
+            }
             if (meta == null) {
                 const spreadsheet = await getSpreadsheet(token, spreadsheetId)
                 const numSheets = spreadsheet.sheets.length
                 sheetId = numSheets
-                requests = requests.concat(
-                    addSheet(className, code, sheetId)
-                )
+                requests = requests.concat(addSheet(className, code, sheetId))
                 requests = requests.concat(createHeaders(sheetId))
                 console.log(
                     `Creating new sheet for class ${className}, ID ${sheetId}`
@@ -139,7 +159,9 @@ async function updateSpreadsheet(port, token, className, code, spreadsheetId) {
             }
         })
         .then(function (meta) {
-            port.postMessage({ progress: 0.3 })
+            if (port != null) {
+                port.postMessage({ progress: 0.3 })
+            }
             if (meta == null) {
                 startRow = 1
                 return initializeCells(code, sheetId)
@@ -148,24 +170,24 @@ async function updateSpreadsheet(port, token, className, code, spreadsheetId) {
             return updateCells(token, code, spreadsheetId, sheetId, startRow)
         })
         .then(function (reqs) {
-            port.postMessage({ progress: 0.4 })
+            if (port != null) {
+                port.postMessage({ progress: 0.4 })
+            }
             requests = requests.concat(reqs)
             return batchUpdate(token, requests, spreadsheetId)
         })
         .then(function (data) {
-            port.postMessage({ progress: 0.65 })
+            if (port != null) {
+                port.postMessage({ progress: 0.65 })
+            }
             console.log('Update spreadsheet response:')
             console.log(data)
-            return collapseGroup(
-                token,
-                className,
-                code,
-                spreadsheetId,
-                sheetId
-            )
+            return collapseGroup(token, className, code, spreadsheetId, sheetId)
         })
         .then(function (reqs) {
-            port.postMessage({ progress: 0.75 })
+            if (port != null) {
+                port.postMessage({ progress: 0.75 })
+            }
             if (reqs == null) {
                 return Promise.resolve()
             }
@@ -173,13 +195,21 @@ async function updateSpreadsheet(port, token, className, code, spreadsheetId) {
             return batchUpdate(token, requests, spreadsheetId, sheetId)
         })
         .then(function (data) {
-            port.postMessage({ done: true, progress: 1 })
+            if (port != null) {
+                port.postMessage({ done: true, progress: 1 })
+            }
             if (data) {
                 console.log('Update metadata and groups response:')
                 console.log(data)
             }
         })
         .catch(function (error) {
-            port.postMessage({ done: true, error: error.message, progress: 0 })
+            if (port != null) {
+                port.postMessage({
+                    done: true,
+                    error: error.message,
+                    progress: 0,
+                })
+            }
         })
 }

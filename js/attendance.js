@@ -66,7 +66,10 @@ const closedObserver = new MutationObserver(function (mutations, me) {
             'VfPpkd-Bz112c-LgbsSe yHy1rc eT1oJ IWtuld wBYOYb'
         )[0]
     ) {
-        document.getElementById('card').style.borderRadius = '0 0 0 8px'
+        const card = document.getElementById('card')
+        if (card) {
+            card.style.borderRadius = '0 0 0 8px'
+        }
         me.disconnect()
     }
 })
@@ -966,8 +969,10 @@ function prepareChips(_cardView, defaultView, editView) {
             chrome.storage.local.get(null, function (result) {
                 let res = result[getMeetCode()]
                 const className = res.class
-                document.getElementById(defaultView).hidden = true
-                document.getElementById(editView).hidden = false
+                try {
+                    document.getElementById(defaultView).hidden = true
+                    document.getElementById(editView).hidden = false
+                } catch {}
                 nameArray = Array.from(result.rosters[className])
                 editClass(className)
             })

@@ -17,15 +17,18 @@ const readyObserver = new MutationObserver(function (mutations, me) {
         })
         document.getElementById('card').style.visibility = 'hidden'
 
-        const showEveryone = document.querySelector(
-            '[aria-label="Show everyone"]'
-        )
-        showEveryone.classList.remove('IeuGXd')
-
-        me.disconnect()
-        chrome.runtime.sendMessage({
-            data: 'instantiate',
-        })
+        try {
+            const showEveryone = document.querySelector(
+                '[aria-label="Show everyone"]'
+            )
+            showEveryone.classList.remove('IeuGXd')
+        } catch {
+        } finally {
+            me.disconnect()
+            chrome.runtime.sendMessage({
+                data: 'instantiate',
+            })
+        }
     }
 })
 

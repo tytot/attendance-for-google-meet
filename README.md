@@ -1,5 +1,9 @@
 # Attendance for Google Meet™
 
+## Link
+
+https://chrome.google.com/webstore/detail/attendance-for-google-mee/gioogehddfnceeihfoeencjbhggblkkd
+
 ## Description
 
 In the era of COVID-19, virtual classes have become the norm. For teachers, however, taking attendance in these virtual classes is often a pain. They must keep track of when students join and leave among side conversations and distracting visuals. Many teachers at our school complain about the difficulty of taking virtual attendance, claiming that existing Google Chrome extensions are buggy and unreliable.

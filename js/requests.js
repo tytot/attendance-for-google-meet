@@ -15,7 +15,7 @@ function updateSheetProperties(className, code, sheetId, fields) {
             },
         },
     ]
-    requests.push(createSheetMetadata(className, code, sheetId))
+    requests.push(createSheetMetadata(className, sheetId))
     return requests
 }
 
@@ -35,17 +35,16 @@ function addSheet(className, code, sheetId) {
             },
         },
     ]
-    requests.push(createSheetMetadata(className, code, sheetId))
+    requests.push(createSheetMetadata(className, sheetId))
     return requests
 }
 
-function createSheetMetadata(className, code, sheetId) {
+function createSheetMetadata(className, sheetId) {
     const request = {
         createDeveloperMetadata: {
             developerMetadata: {
                 metadataId: hashCode(className),
                 metadataKey: className,
-                metadataValue: code,
                 location: {
                     sheetId: sheetId,
                 },
@@ -62,6 +61,19 @@ function deleteSheetMetadata(oldClassName) {
             dataFilter: {
                 developerMetadataLookup: {
                     metadataId: hashCode(oldClassName),
+                },
+            },
+        },
+    }
+    return request
+}
+
+function deleteCodeMetadata(code) {
+    const request = {
+        deleteDeveloperMetadata: {
+            dataFilter: {
+                developerMetadataLookup: {
+                    metadataKey: code,
                 },
             },
         },
@@ -310,7 +322,7 @@ function initializeCells(code, sheetId) {
                 {
                     createDeveloperMetadata: {
                         developerMetadata: {
-                            metadataId: hashCode(code),
+                            metadataId: hashCode(`${code}§${sheetId}`),
                             metadataKey: code,
                             location: {
                                 dimensionRange: {
@@ -504,70 +516,49 @@ function addGroup(sheetId, startRow, numRows) {
     return requests
 }
 
-function collapseGroup(token, className, code, spreadsheetId, sheetId) {
+function collapseGroup(token, code, spreadsheetId, sheetId) {
     return new Promise((resolve) => {
-        getMetaByKey(className, token, spreadsheetId).then(function (
-            classMeta
-        ) {
-            const activeCode = classMeta.metadataValue
-            if (code !== activeCode) {
-                getMetaByKey(activeCode, token, spreadsheetId).then(async function (
-                    meta
-                ) {
-                    const startRow = meta.location.dimensionRange.startIndex
-                    const numRows = await getRowCountByStartRow(
-                        token,
-                        spreadsheetId,
-                        sheetId,
-                        startRow
-                    )
-                    if (numRows == undefined) {
+        let spreadsheet = null
+        getSpreadsheet(token, spreadsheetId)
+            .then(function (ss) {
+                spreadsheet = ss
+                return getMetaByKey(
+                    `${code}§${sheetId}`,
+                    token,
+                    spreadsheetId
+                )
+            })
+            .then(function (meta) {
+                const startRow = meta.location.dimensionRange.startIndex
+                console.log(startRow)
+                let requests = []
+                for (const sheet of spreadsheet.sheets) {
+                    if (sheet.properties.sheetId === sheetId) {
+                        for (const rowGroup of sheet.rowGroups) {
+                            if (
+                                !rowGroup.collapsed &&
+                                rowGroup.range.startIndex !== startRow + 1
+                            ) {
+                                requests.push({
+                                    updateDimensionGroup: {
+                                        dimensionGroup: {
+                                            range: rowGroup.range,
+                                            depth: rowGroup.depth,
+                                            collapsed: true,
+                                        },
+                                        fields: 'collapsed',
+                                    },
+                                })
+                            }
+                        }
+                        if (requests.length > 0) {
+                            resolve(requests)
+                        }
                         resolve(null)
                     }
-                    const requests = [
-                        {
-                            updateDeveloperMetadata: {
-                                dataFilters: [
-                                    {
-                                        developerMetadataLookup: {
-                                            metadataKey: className,
-                                        },
-                                    },
-                                ],
-                                developerMetadata: {
-                                    metadataKey: className,
-                                    metadataValue: code,
-                                    visibility: 'DOCUMENT',
-                                },
-                                fields: 'metadataValue',
-                            },
-                        },
-                        {
-                            updateDimensionGroup: {
-                                dimensionGroup: {
-                                    range: {
-                                        sheetId: sheetId,
-                                        dimension: 'ROWS',
-                                        startIndex:
-                                            meta.location.dimensionRange
-                                                .startIndex + 1,
-                                        endIndex:
-                                            meta.location.dimensionRange
-                                                .startIndex + numRows,
-                                    },
-                                    depth: 1,
-                                    collapsed: true,
-                                },
-                                fields: 'collapsed',
-                            },
-                        },
-                    ]
-                    resolve(requests)
-                })
-            } else {
+                }
                 resolve(null)
-            }
-        })
+            })
     })
 }
 
@@ -911,17 +902,15 @@ function getRowCountByStartRow(token, spreadsheetId, sheetId, startRow) {
                     }
                 }
             }
-            reject(
-                new Error(
-                    'An error occurred while updating the spreadsheet. Please try again later.'
-                )
-            )
+            resolve(0)
         })
     })
 }
 
 function batchUpdate(token, requests, spreadsheetId, sheetId) {
-    requests.push(autoResize(sheetId))
+    if (sheetId) {
+        requests.push(autoResize(sheetId))
+    }
     console.log('Executing batch update...')
     console.log(requests)
     return new Promise((resolve, reject) => {

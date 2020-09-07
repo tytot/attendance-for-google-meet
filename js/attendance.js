@@ -7,6 +7,8 @@ const MDCLinearProgress = mdc.linearProgress.MDCLinearProgress
 const MDCTextField = mdc.textField.MDCTextField
 const MDCChipSet = mdc.chips.MDCChipSet
 
+let port = chrome.runtime.connect()
+
 const peopleObserver = new MutationObserver(function (mutations, me) {
     const container = document.getElementsByClassName(
         'HALYaf tmIkuc s2gQvd KKjvXb'
@@ -212,7 +214,6 @@ const linearProgress = new MDCLinearProgress(
     document.querySelector('#progress-bar')
 )
 linearProgress.progress = 0
-let port = chrome.runtime.connect()
 port.onMessage.addListener(function (msg) {
     linearProgress.progress = msg.progress
     if (msg.done) {
@@ -226,6 +227,7 @@ port.onMessage.addListener(function (msg) {
             snackbar.labelText = 'Successfully exported to Google Sheets™!'
             sbOpen.style.display = 'inline-flex'
         }
+        snackbar.close()
         snackbar.open()
     }
 })
@@ -346,6 +348,23 @@ function storeNames(names) {
     const code = getMeetCode()
     chrome.storage.local.get(null, function (result) {
         const timestamp = ~~(Date.now() / 1000)
+        let codesToDelete = []
+        for (const key in result) {
+            const data = result[key]
+            if (data.hasOwnProperty('timestamp')) {
+                if (timestamp - data.timestamp >= 43200) {
+                    chrome.storage.local.remove([key])
+                    delete result[key]
+                    codesToDelete.push(key)
+                }
+            }
+        }
+        if (codesToDelete.length > 0) {
+            port.postMessage({
+                data: 'delete-meta',
+                codes: codesToDelete
+            })
+        }
 
         let res = result[code]
         if (res == undefined) {
@@ -387,15 +406,6 @@ function storeNames(names) {
         }
 
         chrome.storage.local.set({ [code]: res })
-
-        for (const key in result) {
-            const data = result[key]
-            if (data.hasOwnProperty('timestamp')) {
-                if (timestamp - data.timestamp >= 43200) {
-                    chrome.storage.local.remove([key])
-                }
-            }
-        }
     })
 }
 
@@ -572,6 +582,7 @@ function updateRosterStatus(attendance, rosters, className) {
                     addStudent(entry.name)
                     snackbar.labelText = `Added ${entry.name} to class.`
                     sbUndo.style.display = 'inline-flex'
+                    snackbar.close()
                     snackbar.open()
                 })
             } else if (roster.length > 1) {
@@ -581,6 +592,7 @@ function updateRosterStatus(attendance, rosters, className) {
                     removeStudent(entry.name)
                     snackbar.labelText = `Removed ${entry.name} from class.`
                     sbUndo.style.display = 'inline-flex'
+                    snackbar.close()
                     snackbar.open()
                 })
             }
@@ -872,10 +884,17 @@ function prepareChips(_cardView, defaultView, editView) {
                 if (className === '') {
                     snackbar.labelText =
                         'Error: The class name cannot be empty.'
+                    snackbar.close()
+                    snackbar.open()
+                } else if (className.includes('§')) {
+                    snackbar.labelText =
+                        'Error: The class name cannot contain the character §.'
+                    snackbar.close()
                     snackbar.open()
                 } else if (nameArray.length === 0) {
                     snackbar.labelText =
                         'Error: You must have at least 1 student in a class.'
+                    snackbar.close()
                     snackbar.open()
                 } else if (
                     res.hasOwnProperty(className) &&
@@ -883,6 +902,7 @@ function prepareChips(_cardView, defaultView, editView) {
                 ) {
                     snackbar.labelText =
                         'Error: You already have a class with that name.'
+                    snackbar.close()
                     snackbar.open()
                 } else {
                     deleteClass(initClassName)
@@ -933,6 +953,7 @@ function prepareChips(_cardView, defaultView, editView) {
                             new MDCRipple(classEl)
 
                             snackbar.labelText = `Successfully saved class ${className}.`
+                            snackbar.close()
                             snackbar.open()
                         })
                 }

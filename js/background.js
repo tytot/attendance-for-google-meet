@@ -66,6 +66,18 @@ chrome.runtime.onConnect.addListener(function (port) {
                             console.log(error)
                         })
                 })
+            } else if (msg.data === 'delete-meta') {
+                chrome.storage.local.get('spreadsheet-id', function (result) {
+                    const id = result['spreadsheet-id']
+                    let requests = []
+                    for (const code of msg.codes) {
+                        requests.push(deleteCodeMetadata(code))
+                    }
+                    batchUpdate(token, requests, id).then(function (data) {
+                        console.log('Deleted metadata response:')
+                        console.log(data)
+                    })
+                })
             }
         })
     })
@@ -152,10 +164,10 @@ async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
                 console.log(
                     `Creating new sheet for class ${className}, ID ${sheetId}`
                 )
-                return getMetaByKey(code, token, spreadsheetId)
+                return getMetaByKey(`${code}§${sheetId}`, token, spreadsheetId)
             } else {
                 sheetId = meta.location.sheetId
-                return getMetaByKey(code, token, spreadsheetId)
+                return getMetaByKey(`${code}§${sheetId}`, token, spreadsheetId)
             }
         })
         .then(function (meta) {
@@ -174,7 +186,7 @@ async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
                 port.postMessage({ progress: 0.4 })
             }
             requests = requests.concat(reqs)
-            return batchUpdate(token, requests, spreadsheetId)
+            return batchUpdate(token, requests, spreadsheetId, sheetId)
         })
         .then(function (data) {
             if (port != null) {
@@ -182,7 +194,7 @@ async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
             }
             console.log('Update spreadsheet response:')
             console.log(data)
-            return collapseGroup(token, className, code, spreadsheetId, sheetId)
+            return collapseGroup(token, code, spreadsheetId, sheetId)
         })
         .then(function (reqs) {
             if (port != null) {

@@ -8,6 +8,7 @@ const MDCTextField = mdc.textField.MDCTextField
 const MDCChipSet = mdc.chips.MDCChipSet
 
 let port = chrome.runtime.connect()
+let pOpened = false
 
 const peopleObserver = new MutationObserver(function (mutations, me) {
     const container = document.getElementsByClassName(
@@ -15,6 +16,7 @@ const peopleObserver = new MutationObserver(function (mutations, me) {
     )[0]
     if (!container) {
         document.getElementsByClassName('gV3Svc')[1].click()
+        pOpened = true
         tabObserver.observe(document.getElementsByClassName('mKBhCf')[0], {
             childList: true,
             subtree: true,
@@ -320,6 +322,10 @@ function takeAttendance() {
         currentHandler = attendanceHandler()
         currentHandler.promise.then(() => {
             currentHandler = null
+            if (pOpened) {
+                document.querySelector('[jscontroller="soHxf"]').click()
+                pOpened = false
+            }
         })
     }
 }
@@ -331,18 +337,19 @@ function attendanceHandler() {
     )[0]
     const promise = new Promise(async (resolve, reject) => {
         let lastNumNames = 0
-        await getVisibleAttendees(container, names)
+        await getVisibleAttendees(container, names, 100)
         while (names.length !== lastNumNames) {
             lastNumNames = names.length
             await getVisibleAttendees(container, names, 100)
         }
         container.scrollTop = 0
+        console.log('Obtained names:')
+        console.log(names)
         storeNames(names)
         resolve()
     })
     const restart = () => {
         names = []
-        container.scrollTop = 0
     }
     return { promise, restart }
 }
@@ -365,7 +372,7 @@ function storeNames(names) {
         if (codesToDelete.length > 0) {
             port.postMessage({
                 data: 'delete-meta',
-                codes: codesToDelete
+                codes: codesToDelete,
             })
         }
 
@@ -415,6 +422,7 @@ function storeNames(names) {
 function getVisibleAttendees(container, names, delay) {
     return new Promise((resolve) => {
         setTimeout(() => {
+            container.scrollTop = 56 * names.length
             const labels = document.getElementsByClassName('cS7aqe NkoVdd')
             for (const label of labels) {
                 const name = label.innerHTML
@@ -427,7 +435,6 @@ function getVisibleAttendees(container, names, delay) {
                     names.push(name)
                 }
             }
-            container.scrollTop = 56 * names.length
 
             resolve()
         }, delay)

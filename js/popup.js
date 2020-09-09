@@ -23,7 +23,7 @@ const switchControl = new MDCSwitch(document.querySelector('.mdc-switch'))
 const openButton = document.querySelector('#open')
 
 let autoExport = false
-chrome.storage.local.get(['auto-export', 'spreadsheet-id'], function (result) {
+chrome.storage.sync.get(['auto-export', 'spreadsheet-id'], function (result) {
     if (result['auto-export']) {
         switchControl.checked = true
         autoExport = true
@@ -54,7 +54,7 @@ document.querySelector('#contact').addEventListener('click', function () {
 document.querySelector('#auto-export').addEventListener('click', function () {
     if (switchControl.checked !== autoExport) {
         autoExport = switchControl.checked
-        chrome.storage.local.set({ 'auto-export': switchControl.checked })
+        chrome.storage.sync.set({ 'auto-export': switchControl.checked })
     }
 })
 
@@ -76,7 +76,7 @@ document.querySelector('#reset').addEventListener('click', function () {
     resetDialog.open()
 })
 document.querySelector('#confirm-reset').addEventListener('click', function () {
-    chrome.storage.local.remove('spreadsheet-id', function () {
+    chrome.storage.sync.remove('spreadsheet-id', function () {
         snackbar.labelText = 'Successfully reset default spreadsheet.'
         snackbar.open()
         openButton.disabled = true
@@ -87,10 +87,10 @@ document.querySelector('#clear').addEventListener('click', function () {
     clearDialog.open()
 })
 document.querySelector('#confirm-clear').addEventListener('click', function () {
-    chrome.storage.local.get(null, function (result) {
+    chrome.storage.sync.get(null, function (result) {
         for (const key in result) {
             if (key !== 'spreadsheet-id') {
-                chrome.storage.local.remove(key)
+                chrome.storage.sync.remove(key)
             }
         }
         snackbar.labelText = 'Successfully cleared storage.'

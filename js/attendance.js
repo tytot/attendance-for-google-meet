@@ -141,7 +141,7 @@ exportButton.addEventListener('click', function () {
     console.log('Exporting...')
 })
 window.addEventListener('beforeunload', function () {
-    chrome.storage.local.get('auto-export', function (result) {
+    chrome.storage.sync.get('auto-export', function (result) {
         if (result['auto-export']) {
             port.postMessage({
                 data: 'export',
@@ -254,10 +254,10 @@ document.getElementById('later').addEventListener('click', () => {
 selectButton.addEventListener('click', () => {
     const className = classList.listElements[classList.selectedIndex].name
     const code = getMeetCode()
-    chrome.storage.local.get(code, function (result) {
+    chrome.storage.sync.get(code, function (result) {
         let res = result[code]
         res.class = className
-        chrome.storage.local.set({ [code]: res })
+        chrome.storage.sync.set({ [code]: res })
         document.getElementById('class-label').innerText = className
     })
 })
@@ -359,14 +359,14 @@ function attendanceHandler() {
 
 function storeNames(names) {
     const code = getMeetCode()
-    chrome.storage.local.get(null, function (result) {
+    chrome.storage.sync.get(null, function (result) {
         const timestamp = ~~(Date.now() / 1000)
         let codesToDelete = []
         for (const key in result) {
             const data = result[key]
             if (data.hasOwnProperty('timestamp')) {
                 if (timestamp - data.timestamp >= 43200) {
-                    chrome.storage.local.remove([key])
+                    chrome.storage.sync.remove([key])
                     delete result[key]
                     codesToDelete.push(key)
                 }
@@ -418,7 +418,7 @@ function storeNames(names) {
             updateRosterStatus(currentData, result.rosters, className)
         }
 
-        chrome.storage.local.set({ [code]: res })
+        chrome.storage.sync.set({ [code]: res })
     })
 }
 
@@ -624,7 +624,7 @@ function troubleshoot() {
 }
 
 function openSpreadsheet() {
-    chrome.storage.local.get('spreadsheet-id', function (result) {
+    chrome.storage.sync.get('spreadsheet-id', function (result) {
         const id = result['spreadsheet-id']
         const url = `https://docs.google.com/spreadsheets/d/${id}`
         chrome.runtime.sendMessage({
@@ -696,11 +696,11 @@ function getClassHTML(className) {
 
 function initializeClasses() {
     return new Promise((resolve) => {
-        chrome.storage.local.get('rosters', function (result) {
+        chrome.storage.sync.get('rosters', function (result) {
             let res = result['rosters']
             if (res == undefined) {
                 res = {}
-                chrome.storage.local.set({ rosters: res })
+                chrome.storage.sync.set({ rosters: res })
             }
 
             const classList = document.getElementById('class-list')
@@ -725,7 +725,7 @@ function undo() {
         if (rostersCache == null) {
             resolve()
         }
-        chrome.storage.local.set({ rosters: rostersCache }, function () {
+        chrome.storage.sync.set({ rosters: rostersCache }, function () {
             forceStatusUpdate()
             snackbar.labelText = 'Undo successful.'
             removeSnackbarButtons()
@@ -737,14 +737,14 @@ function undo() {
 
 function addClass(className, roster, set = false) {
     return new Promise((resolve) => {
-        chrome.storage.local.get(null, function (result) {
+        chrome.storage.sync.get(null, function (result) {
             let res = result['rosters']
             res[className] = roster
-            chrome.storage.local.set({ rosters: res })
+            chrome.storage.sync.set({ rosters: res })
             if (set) {
                 const code = getMeetCode()
                 result[code].class = className
-                chrome.storage.local.set({ [code]: result[code] })
+                chrome.storage.sync.set({ [code]: result[code] })
             }
 
             const classList = document.getElementById('class-list')
@@ -760,10 +760,10 @@ function addClass(className, roster, set = false) {
 
 function deleteClass(className) {
     return new Promise((resolve) => {
-        chrome.storage.local.get('rosters', function (result) {
+        chrome.storage.sync.get('rosters', function (result) {
             let res = result['rosters']
             delete res[className]
-            chrome.storage.local.set({ rosters: res })
+            chrome.storage.sync.set({ rosters: res })
 
             const classList = document.getElementById('class-list')
             const classEls = classList.getElementsByTagName('li')
@@ -778,29 +778,29 @@ function deleteClass(className) {
 }
 
 function addStudent(name) {
-    chrome.storage.local.get(null, function (result) {
+    chrome.storage.sync.get(null, function (result) {
         const code = getMeetCode()
         const className = result[code].class
         let res = result.rosters
         res[className].push(name)
-        chrome.storage.local.set({ rosters: res })
+        chrome.storage.sync.set({ rosters: res })
         updateRosterStatus(result[code].attendance, res, className)
     })
 }
 
 function removeStudent(name) {
-    chrome.storage.local.get(null, function (result) {
+    chrome.storage.sync.get(null, function (result) {
         const code = getMeetCode()
         const className = result[getMeetCode()].class
         let res = result.rosters
         res[className] = res[className].filter((n) => n !== name)
-        chrome.storage.local.set({ rosters: res })
+        chrome.storage.sync.set({ rosters: res })
         updateRosterStatus(result[code].attendance, res, className)
     })
 }
 
 function forceStatusUpdate() {
-    chrome.storage.local.get(null, function (result) {
+    chrome.storage.sync.get(null, function (result) {
         const res = result[getMeetCode()]
         const className = res.class
         if (className) {
@@ -894,7 +894,7 @@ function prepareChips(_cardView, defaultView, editView) {
             const className = classTextField.value
             const initClassName = classTextField.initValue
 
-            chrome.storage.local.get('rosters', function (result) {
+            chrome.storage.sync.get('rosters', function (result) {
                 let res = result['rosters']
                 removeSnackbarButtons()
                 if (className === '') {
@@ -979,7 +979,7 @@ function prepareChips(_cardView, defaultView, editView) {
     document
         .getElementById('edit-roster')
         .addEventListener('click', function () {
-            chrome.storage.local.get(null, function (result) {
+            chrome.storage.sync.get(null, function (result) {
                 let res = result[getMeetCode()]
                 const className = res.class
                 try {
@@ -1041,10 +1041,10 @@ function addDefaultEventListeners(
                 !target.classList.contains('delete-class')
             ) {
                 const code = getMeetCode()
-                chrome.storage.local.get(getMeetCode(), function (result) {
+                chrome.storage.sync.get(getMeetCode(), function (result) {
                     let res = result[code]
                     res.class = classEl.name
-                    chrome.storage.local.set({ [code]: res })
+                    chrome.storage.sync.set({ [code]: res })
 
                     document.getElementById(cardView).hidden = true
                     document.getElementById(defaultView).hidden = false

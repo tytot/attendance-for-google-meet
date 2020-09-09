@@ -530,7 +530,6 @@ function collapseGroup(token, code, spreadsheetId, sheetId) {
             })
             .then(function (meta) {
                 const startRow = meta.location.dimensionRange.startIndex
-                console.log(startRow)
                 let requests = []
                 for (const sheet of spreadsheet.sheets) {
                     if (sheet.properties.sheetId === sheetId) {
@@ -564,7 +563,7 @@ function collapseGroup(token, code, spreadsheetId, sheetId) {
 
 function generateAttendanceRows(code) {
     return new Promise((resolve) => {
-        chrome.storage.local.get(null, function (result) {
+        chrome.storage.sync.get(null, function (result) {
             const startUnix = result[code]['start-timestamp']
             const unix = ~~(Date.now() / 1000)
             const roster = result.rosters[result[code].class]

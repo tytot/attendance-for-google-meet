@@ -1,6 +1,19 @@
 chrome.runtime.onInstalled.addListener(function (details) {
     if (details.reason === 'install') {
-        chrome.storage.local.set({ 'auto-export': false })
+        chrome.storage.sync.set({ 'auto-export': false })
+    } else if (details.reason === 'update') {
+        const pv = details.previousVersion
+        if (
+            pv === '1.0.3' ||
+            pv === '1.0.2' ||
+            pv === '1.0.1' ||
+            pv === '1.0.0'
+        ) {
+            chrome.storage.local.get(null, function (data) {
+                chrome.storage.sync.set(data)
+                chrome.storage.local.clear()
+            })
+        }
     }
 })
 
@@ -19,7 +32,7 @@ chrome.runtime.onConnect.addListener(function (port) {
         const code = msg.code
         chrome.identity.getAuthToken({ interactive: true }, function (token) {
             if (msg.data === 'export') {
-                chrome.storage.local.get(['spreadsheet-id', code], function (
+                chrome.storage.sync.get(['spreadsheet-id', code], function (
                     result
                 ) {
                     if (msg.auto) {
@@ -37,7 +50,7 @@ chrome.runtime.onConnect.addListener(function (port) {
                     }
                 })
             } else if (msg.data === 'rename') {
-                chrome.storage.local.get('spreadsheet-id', function (result) {
+                chrome.storage.sync.get('spreadsheet-id', function (result) {
                     const id = result['spreadsheet-id']
                     const oldClassName = msg.oldClassName
                     const newClassName = msg.newClassName
@@ -67,7 +80,7 @@ chrome.runtime.onConnect.addListener(function (port) {
                         })
                 })
             } else if (msg.data === 'delete-meta') {
-                chrome.storage.local.get('spreadsheet-id', function (result) {
+                chrome.storage.sync.get('spreadsheet-id', function (result) {
                     const id = result['spreadsheet-id']
                     let requests = []
                     for (const code of msg.codes) {
@@ -111,7 +124,7 @@ function createSpreadsheet(token, className, code, port) {
             console.log(
                 `Successfully created Attendance spreadsheet with id ${data.spreadsheetId}.`
             )
-            chrome.storage.local.set({ 'spreadsheet-id': data.spreadsheetId })
+            chrome.storage.sync.set({ 'spreadsheet-id': data.spreadsheetId })
             spreadsheetId = data.spreadsheetId
 
             requests = requests.concat(

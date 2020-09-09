@@ -1,5 +1,11 @@
 # Attendance for Google Meet™
 
+## Annoucements
+
+### - 9/9
+
+Google Meet has updated and broke our code, but we have fixed the solution and it will be updated in the chrome store in a few days, sorry for the inconvenience.
+
 ## Link
 
 https://chrome.google.com/webstore/detail/attendance-for-google-mee/gioogehddfnceeihfoeencjbhggblkkd

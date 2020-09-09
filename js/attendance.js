@@ -8,35 +8,16 @@ const MDCTextField = mdc.textField.MDCTextField
 const MDCChipSet = mdc.chips.MDCChipSet
 
 let port = chrome.runtime.connect()
-let pOpened = false
+let pOpened = true
+let rostersCache = null
+let numAttendees = 0
 
-const peopleObserver = new MutationObserver(function (mutations, me) {
-    const container = document.getElementsByClassName(
-        'HALYaf tmIkuc s2gQvd KKjvXb'
-    )[0]
-    if (!container) {
-        document.getElementsByClassName('gV3Svc')[1].click()
-        pOpened = true
-        tabObserver.observe(document.getElementsByClassName('mKBhCf')[0], {
-            childList: true,
-            subtree: true,
-        })
-    } else {
-        listObserver.observe(
-            document.getElementsByClassName('HALYaf tmIkuc s2gQvd KKjvXb')[0],
-            {
-                childList: true,
-                subtree: true,
-            }
-        )
-    }
+const listObserver = new MutationObserver(function (mutations, me) {
+    takeAttendance()
+    me.disconnect()
 })
 
 const tabObserver = new MutationObserver(function (mutations, me) {
-    const numAttendees =
-        parseInt(
-            document.querySelector("[jsname='EydYod']").textContent.slice(1, -1)
-        ) - 1
     const names = document.getElementsByClassName('cS7aqe NkoVdd')
     if (numAttendees === 0) {
         takeAttendance()
@@ -57,10 +38,40 @@ const tabObserver = new MutationObserver(function (mutations, me) {
     }
 })
 
-const listObserver = new MutationObserver(function (mutations, me) {
-    takeAttendance()
-    me.disconnect()
+document.getElementsByClassName('gV3Svc')[1].click()
+tabObserver.observe(document.getElementsByClassName('mKBhCf')[0], {
+    childList: true,
+    subtree: true,
 })
+
+setInterval(function () {
+    let count =
+        parseInt(document.querySelector("[jscontroller='FTBAv']").innerHTML) - 1
+    if (count !== numAttendees) {
+        numAttendees = count
+        const container = document.getElementsByClassName(
+            'HALYaf tmIkuc s2gQvd KKjvXb'
+        )[0]
+        if (!container) {
+            document.getElementsByClassName('gV3Svc')[1].click()
+            pOpened = true
+            tabObserver.observe(document.getElementsByClassName('mKBhCf')[0], {
+                childList: true,
+                subtree: true,
+            })
+        } else {
+            listObserver.observe(
+                document.getElementsByClassName(
+                    'HALYaf tmIkuc s2gQvd KKjvXb'
+                )[0],
+                {
+                    childList: true,
+                    subtree: true,
+                }
+            )
+        }
+    }
+}, 5000)
 
 const closedObserver = new MutationObserver(function (mutations, me) {
     if (
@@ -76,15 +87,13 @@ const closedObserver = new MutationObserver(function (mutations, me) {
     }
 })
 
+resizeCard()
+window.addEventListener('resize', resizeCard)
 const trayObserver = new MutationObserver(function (mutations, me) {
-    const tray = document.getElementsByClassName('NzPR9b')[0]
-    if (tray) {
-        const trayWidth = tray.offsetWidth
-        document.getElementById('card').style.width = trayWidth + 'px'
-    }
+    resizeCard()
 })
 
-for (let i = 1; i <= 2; i++) {
+for (let i = 2; i <= 3; i++) {
     document
         .getElementsByClassName('uArJ5e UQuaGc kCyAyd kW31ib foXzLb')
         [i].addEventListener('click', () => {
@@ -102,9 +111,6 @@ for (let i = 1; i <= 2; i++) {
 trayObserver.observe(document.getElementsByClassName('NzPR9b')[0], {
     childList: true,
     subtree: true,
-})
-peopleObserver.observe(document.getElementsByClassName('wnPUne N0PJ8e')[0], {
-    childList: true,
 })
 
 for (const helpButton of document.querySelectorAll('[aria-label="Help"]')) {
@@ -302,11 +308,16 @@ for (const button of document.getElementsByClassName('mdc-button')) {
     new MDCRipple(button)
 }
 
-let currentHandler = null
-let rostersCache = null
-
 function getMeetCode() {
     return document.title.substring(7)
+}
+
+function resizeCard() {
+    const tray = document.getElementsByClassName('NzPR9b')[0]
+    if (tray) {
+        const trayWidth = tray.offsetWidth
+        document.getElementById('card').style.width = trayWidth + 'px'
+    }
 }
 
 function removeSnackbarButtons() {
@@ -316,31 +327,27 @@ function removeSnackbarButtons() {
 }
 
 function takeAttendance() {
-    if (currentHandler) {
-        currentHandler.restart()
-    } else {
-        currentHandler = attendanceHandler()
-        currentHandler.promise.then(() => {
-            currentHandler = null
-            if (pOpened) {
+    attendanceHandler().then(() => {
+        if (pOpened) {
+            setTimeout(function () {
                 document.querySelector('[jscontroller="soHxf"]').click()
-                pOpened = false
-            }
-        })
-    }
+            }, 500)
+            pOpened = false
+        }
+    })
 }
 
 function attendanceHandler() {
-    let names = []
-    const container = document.getElementsByClassName(
-        'HALYaf tmIkuc s2gQvd KKjvXb'
-    )[0]
-    const promise = new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve) => {
+        let names = []
         let lastNumNames = 0
-        await getVisibleAttendees(container, names, 100)
+        const container = document.getElementsByClassName(
+            'HALYaf tmIkuc s2gQvd KKjvXb'
+        )[0]
+        await getVisibleAttendees(names, 100)
         while (names.length !== lastNumNames) {
             lastNumNames = names.length
-            await getVisibleAttendees(container, names, 100)
+            await getVisibleAttendees(names, 100)
         }
         container.scrollTop = 0
         console.log('Obtained names:')
@@ -348,10 +355,6 @@ function attendanceHandler() {
         storeNames(names)
         resolve()
     })
-    const restart = () => {
-        names = []
-    }
-    return { promise, restart }
 }
 
 function storeNames(names) {
@@ -419,9 +422,12 @@ function storeNames(names) {
     })
 }
 
-function getVisibleAttendees(container, names, delay) {
+function getVisibleAttendees(names, delay) {
     return new Promise((resolve) => {
         setTimeout(() => {
+            const container = document.getElementsByClassName(
+                'HALYaf tmIkuc s2gQvd KKjvXb'
+            )[0]
             container.scrollTop = 56 * names.length
             const labels = document.getElementsByClassName('cS7aqe NkoVdd')
             for (const label of labels) {

@@ -1,34 +1,8 @@
 const readyObserver = new MutationObserver(function (mutations, me) {
-    if (document.getElementsByClassName('wnPUne N0PJ8e')[0]) {
-        document.body.insertAdjacentHTML('afterbegin', confirmDeleteDialogHTML)
-        document.body.insertAdjacentHTML('afterbegin', selectDialogHTML)
-        document.body.insertAdjacentHTML('afterbegin', snackbarHTML)
-
-        const bar = document.getElementsByClassName('NzPR9b')[0]
-        bar.insertAdjacentHTML('afterbegin', buttonHTML)
-
-        const screen = document.getElementsByClassName('crqnQb')[0]
-        screen.insertAdjacentHTML('afterbegin', cardHTML)
-
-        window.addEventListener('resize', () => {
-            const trayWidth = document.getElementsByClassName('NzPR9b')[0]
-                .offsetWidth
-            document.getElementById('card').style.width = trayWidth + 'px'
-        })
-        document.getElementById('card').style.visibility = 'hidden'
-
-        try {
-            const showEveryone = document.querySelector(
-                '[aria-label="Show everyone"]'
-            )
-            showEveryone.classList.remove('IeuGXd')
-        } catch {
-        } finally {
-            me.disconnect()
-            chrome.runtime.sendMessage({
-                data: 'instantiate',
-            })
-        }
+    const time = document.querySelector('[jsname="W5i7Bf"]')
+    if (time && time.innerHTML.includes(':')) {
+        setTimeout(initialize, 2000)
+        me.disconnect()
     }
 })
 
@@ -36,6 +10,35 @@ readyObserver.observe(document.getElementsByClassName('crqnQb')[0], {
     childList: true,
     subtree: true,
 })
+
+function initialize() {
+    document.body.insertAdjacentHTML(
+        'afterbegin',
+        confirmDeleteDialogHTML
+    )
+    document.body.insertAdjacentHTML('afterbegin', selectDialogHTML)
+    document.body.insertAdjacentHTML('afterbegin', snackbarHTML)
+
+    const bar = document.getElementsByClassName('NzPR9b')[0]
+    bar.insertAdjacentHTML('afterbegin', buttonHTML)
+
+    const screen = document.getElementsByClassName('crqnQb')[0]
+    screen.insertAdjacentHTML('afterbegin', cardHTML)
+
+    document.getElementById('card').style.visibility = 'hidden'
+
+    try {
+        const showEveryone = document.querySelector(
+            '[aria-label="Show everyone"]'
+        )
+        showEveryone.classList.remove('IeuGXd')
+    } catch {
+    } finally {
+        chrome.runtime.sendMessage({
+            data: 'instantiate',
+        })
+    }
+}
 
 const cardHTML = `<div
 class="mdc-card"

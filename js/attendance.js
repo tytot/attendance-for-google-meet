@@ -93,19 +93,16 @@ const trayObserver = new MutationObserver(function (mutations, me) {
     resizeCard()
 })
 
-for (let i = 2; i <= 3; i++) {
-    document
-        .getElementsByClassName('uArJ5e UQuaGc kCyAyd kW31ib foXzLb')
-        [i].addEventListener('click', () => {
-            document.getElementById('card').style.borderRadius = '8px 0 0 8px'
-            closedObserver.observe(
-                document.getElementsByClassName('mKBhCf')[0],
-                {
-                    childList: true,
-                    subtree: true,
-                }
-            )
+let bigButtons = [...document.querySelector(".NzPR9b").children]
+bigButtons = bigButtons.filter(child => child.classList.contains('uArJ5e'))
+for (let i = bigButtons.length - 2; i <= bigButtons.length - 1; i++) {
+    bigButtons[i].addEventListener('click', () => {
+        document.getElementById('card').style.borderRadius = '8px 0 0 8px'
+        closedObserver.observe(document.getElementsByClassName('mKBhCf')[0], {
+            childList: true,
+            subtree: true,
         })
+    })
 }
 
 trayObserver.observe(document.getElementsByClassName('NzPR9b')[0], {
@@ -344,10 +341,11 @@ function attendanceHandler() {
         const container = document.getElementsByClassName(
             'HALYaf tmIkuc s2gQvd KKjvXb'
         )[0]
-        await getVisibleAttendees(names, 100)
+        container.scrollTop = 0
+        await getVisibleAttendees(names, 200)
         while (names.length !== lastNumNames) {
             lastNumNames = names.length
-            await getVisibleAttendees(names, 100)
+            await getVisibleAttendees(names, 200)
         }
         container.scrollTop = 0
         console.log('Obtained names:')
@@ -428,7 +426,6 @@ function getVisibleAttendees(names, delay) {
             const container = document.getElementsByClassName(
                 'HALYaf tmIkuc s2gQvd KKjvXb'
             )[0]
-            container.scrollTop = 56 * names.length
             const labels = document.getElementsByClassName('cS7aqe NkoVdd')
             for (const label of labels) {
                 const name = label.innerHTML
@@ -441,6 +438,7 @@ function getVisibleAttendees(names, delay) {
                     names.push(name)
                 }
             }
+            container.scrollTop = 56 * names.length
 
             resolve()
         }, delay)

@@ -2,6 +2,10 @@
 
 ## Annoucements
 
+#### 9/10
+
+Google Meet hath updated once again and broke our code, but we have fixed the issue. The extension is updated in the Chrome Web Store now and sorry for any inconveniences this may have caused.
+
 #### 9/9
 
 Google Meet updated and broke our code, but we have fixed the issue. The extension will be updated in the Chrome Web Store in a few days; sorry for the inconvenience.

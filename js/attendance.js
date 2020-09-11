@@ -25,9 +25,7 @@ const tabObserver = new MutationObserver(function (mutations, me) {
     } else {
         if (names[1] != undefined) {
             listObserver.observe(
-                document.getElementsByClassName(
-                    'HALYaf tmIkuc s2gQvd KKjvXb'
-                )[0],
+                document.getElementsByClassName('HALYaf tmIkuc s2gQvd')[0],
                 {
                     childList: true,
                     subtree: true,
@@ -50,7 +48,7 @@ setInterval(function () {
     if (count !== numAttendees) {
         numAttendees = count
         const container = document.getElementsByClassName(
-            'HALYaf tmIkuc s2gQvd KKjvXb'
+            'HALYaf tmIkuc s2gQvd'
         )[0]
         if (!container) {
             document.getElementsByClassName('gV3Svc')[1].click()
@@ -60,15 +58,10 @@ setInterval(function () {
                 subtree: true,
             })
         } else {
-            listObserver.observe(
-                document.getElementsByClassName(
-                    'HALYaf tmIkuc s2gQvd KKjvXb'
-                )[0],
-                {
-                    childList: true,
-                    subtree: true,
-                }
-            )
+            listObserver.observe(container, {
+                childList: true,
+                subtree: true,
+            })
         }
     }
 }, 5000)
@@ -93,8 +86,8 @@ const trayObserver = new MutationObserver(function (mutations, me) {
     resizeCard()
 })
 
-let bigButtons = [...document.querySelector(".NzPR9b").children]
-bigButtons = bigButtons.filter(child => child.classList.contains('uArJ5e'))
+let bigButtons = [...document.querySelector('.NzPR9b').children]
+bigButtons = bigButtons.filter((child) => child.classList.contains('uArJ5e'))
 for (let i = bigButtons.length - 2; i <= bigButtons.length - 1; i++) {
     bigButtons[i].addEventListener('click', () => {
         document.getElementById('card').style.borderRadius = '8px 0 0 8px'
@@ -339,17 +332,15 @@ function attendanceHandler() {
         let names = []
         let lastNumNames = 0
         const container = document.getElementsByClassName(
-            'HALYaf tmIkuc s2gQvd KKjvXb'
+            'HALYaf tmIkuc s2gQvd'
         )[0]
         container.scrollTop = 0
-        await getVisibleAttendees(names, 200)
+        await getVisibleAttendees(container, names, 200)
         while (names.length !== lastNumNames) {
             lastNumNames = names.length
-            await getVisibleAttendees(names, 200)
+            await getVisibleAttendees(container, names, 200)
         }
         container.scrollTop = 0
-        console.log('Obtained names:')
-        console.log(names)
         storeNames(names)
         resolve()
     })
@@ -420,12 +411,9 @@ function storeNames(names) {
     })
 }
 
-function getVisibleAttendees(names, delay) {
+function getVisibleAttendees(container, names, delay) {
     return new Promise((resolve) => {
         setTimeout(() => {
-            const container = document.getElementsByClassName(
-                'HALYaf tmIkuc s2gQvd KKjvXb'
-            )[0]
             const labels = document.getElementsByClassName('cS7aqe NkoVdd')
             for (const label of labels) {
                 const name = label.innerHTML
@@ -520,11 +508,8 @@ function updateRosterStatus(attendance, rosters, className) {
             }
         } else {
             compare = (a, b) => {
-                if (a.index === -1) {
-                    a.index = 3
-                }
-                if (b.index === -1) {
-                    b.index = 3
+                if (a.index === -1 || b.index === -1) {
+                    return b.index - a.index
                 }
                 return a.index - b.index
             }
@@ -537,11 +522,12 @@ function updateRosterStatus(attendance, rosters, className) {
             if (entry.index === -1) {
                 var metaIcon = 'add_circle'
                 var metaTooltip = 'Add to Class'
-            } else {
+            } else if (roster.length > 1) {
                 metaIcon = 'remove_circle'
                 metaTooltip = 'Remove from Class'
             }
-            var meta = `<div class="mdc-list-item__meta">
+            if (metaIcon) {
+                var meta = `<div class="mdc-list-item__meta">
                     <button
                         class="mdc-icon-button material-icons"
                         aria-label="${metaTooltip}"
@@ -555,6 +541,9 @@ function updateRosterStatus(attendance, rosters, className) {
                         ${metaIcon}
                     </button>
                 </div>`
+            } else {
+                meta = ''
+            }
         } else {
             meta = ''
         }
@@ -892,7 +881,7 @@ function prepareChips(_cardView, defaultView, editView) {
             const className = classTextField.value
             const initClassName = classTextField.initValue
 
-            chrome.storage.sync.get('rosters', function (result) {
+            chrome.storage.sync.get('rosters', async function (result) {
                 let res = result['rosters']
                 removeSnackbarButtons()
                 if (className === '') {
@@ -919,57 +908,49 @@ function prepareChips(_cardView, defaultView, editView) {
                     snackbar.close()
                     snackbar.open()
                 } else {
-                    deleteClass(initClassName)
-                        .then(() => {
-                            delete classTextField.initValue
-                            return addClass(
-                                className,
-                                nameArray,
-                                !selectDialog.isOpen
-                            )
-                        })
-                        .then((classEl) => {
-                            addDefaultEventListeners(
-                                classEl,
-                                cardView,
-                                defaultView,
-                                editView,
-                                _cardView
-                            )
-                            if (selectButton) {
-                                selectButton.disabled = true
-                            }
+                    await deleteClass(initClassName)
+                    delete classTextField.initValue
+                    const classEl = await addClass(
+                        className,
+                        nameArray,
+                        !selectDialog.isOpen
+                    )
+                    addDefaultEventListeners(
+                        classEl,
+                        cardView,
+                        defaultView,
+                        editView,
+                        _cardView
+                    )
+                    if (selectButton) {
+                        selectButton.disabled = true
+                    }
 
-                            const cardTitle = document.getElementById(
-                                'class-label'
-                            )
-                            if (cardTitle.adding) {
-                                document.getElementById(cardView).hidden = false
-                                document.getElementById(editView).hidden = true
-                                delete cardTitle.adding
-                            } else {
-                                if (className !== initClassName) {
-                                    port.postMessage({
-                                        data: 'rename',
-                                        code: getMeetCode(),
-                                        oldClassName: initClassName,
-                                        newClassName: className,
-                                    })
-                                }
+                    const cardTitle = document.getElementById('class-label')
+                    if (cardTitle.adding) {
+                        document.getElementById(cardView).hidden = false
+                        document.getElementById(editView).hidden = true
+                        delete cardTitle.adding
+                    } else {
+                        if (className !== initClassName) {
+                            port.postMessage({
+                                data: 'rename',
+                                code: getMeetCode(),
+                                oldClassName: initClassName,
+                                newClassName: className,
+                            })
+                        }
 
-                                cardTitle.innerText = className
-                                document.getElementById(
-                                    defaultView
-                                ).hidden = false
-                                document.getElementById(editView).hidden = true
-                                forceStatusUpdate()
-                            }
-                            new MDCRipple(classEl)
+                        cardTitle.innerText = className
+                        document.getElementById(defaultView).hidden = false
+                        document.getElementById(editView).hidden = true
+                        forceStatusUpdate()
+                    }
+                    new MDCRipple(classEl)
 
-                            snackbar.labelText = `Successfully saved class ${className}.`
-                            snackbar.close()
-                            snackbar.open()
-                        })
+                    snackbar.labelText = `Successfully saved class ${className}.`
+                    snackbar.close()
+                    snackbar.open()
                 }
             })
         })

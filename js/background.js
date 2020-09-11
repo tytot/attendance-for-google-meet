@@ -50,53 +50,58 @@ chrome.runtime.onConnect.addListener(function (port) {
                     }
                 })
             } else if (msg.data === 'rename') {
-                chrome.storage.sync.get('spreadsheet-id', function (result) {
+                chrome.storage.sync.get('spreadsheet-id', async function (
+                    result
+                ) {
                     const id = result['spreadsheet-id']
                     const oldClassName = msg.oldClassName
                     const newClassName = msg.newClassName
 
                     let requests = [deleteSheetMetadata(oldClassName)]
-                    getMetaByKey(oldClassName, token, id)
-                        .then(function (meta) {
-                            const sheetId = meta.location.sheetId
-                            requests = requests.concat(
-                                updateSheetProperties(
-                                    newClassName,
-                                    code,
-                                    sheetId,
-                                    'title'
-                                )
+                    try {
+                        const meta = await getMetaByKey(oldClassName, token, id)
+                        const sheetId = meta.location.sheetId
+                        requests = requests.concat(
+                            updateSheetProperties(
+                                newClassName,
+                                code,
+                                sheetId,
+                                'title'
                             )
-                            return batchUpdate(token, requests, id, sheetId)
-                        })
-                        .then(function (data) {
-                            console.log(
-                                `Renamed sheet ${oldClassName} to ${newClassName}`
-                            )
-                            console.log(data)
-                        })
-                        .catch(function (error) {
-                            console.log(error)
-                        })
+                        )
+                        const data = await batchUpdate(
+                            token,
+                            requests,
+                            id,
+                            sheetId
+                        )
+                        console.log(
+                            `Renamed sheet ${oldClassName} to ${newClassName}`
+                        )
+                        console.log(data)
+                    } catch (error) {
+                        console.log(error)
+                    }
                 })
             } else if (msg.data === 'delete-meta') {
-                chrome.storage.sync.get('spreadsheet-id', function (result) {
+                chrome.storage.sync.get('spreadsheet-id', async function (
+                    result
+                ) {
                     const id = result['spreadsheet-id']
                     let requests = []
                     for (const code of msg.codes) {
                         requests.push(deleteCodeMetadata(code))
                     }
-                    batchUpdate(token, requests, id).then(function (data) {
-                        console.log('Deleted metadata response:')
-                        console.log(data)
-                    })
+                    const data = await batchUpdate(token, requests, id)
+                    console.log('Deleted metadata response:')
+                    console.log(data)
                 })
             }
         })
     })
 })
 
-function createSpreadsheet(token, className, code, port) {
+async function createSpreadsheet(token, className, code, port) {
     const body = {
         properties: {
             title: 'Attendance for Google Meet™',
@@ -115,126 +120,124 @@ function createSpreadsheet(token, className, code, port) {
     let spreadsheetId = null
     let requests = []
     console.log('Creating new attendance spreadsheet...')
-    fetch('https://sheets.googleapis.com/v4/spreadsheets', init)
-        .then((response) => response.json())
-        .then(function (data) {
-            if (port != null) {
-                port.postMessage({ progress: 0.3 })
-            }
-            console.log(
-                `Successfully created Attendance spreadsheet with id ${data.spreadsheetId}.`
-            )
-            chrome.storage.sync.set({ 'spreadsheet-id': data.spreadsheetId })
-            spreadsheetId = data.spreadsheetId
 
-            requests = requests.concat(
-                updateSheetProperties(className, code, 0, '*')
-            )
-            requests = requests.concat(createHeaders(0))
-            return initializeCells(code, 0)
+    try {
+        const newSpreadsheet = await (
+            await fetch('https://sheets.googleapis.com/v4/spreadsheets', init)
+        ).json()
+        if (port != null) {
+            port.postMessage({ progress: 0.3 })
+        }
+        console.log(
+            `Successfully created Attendance spreadsheet with id ${newSpreadsheet.spreadsheetId}.`
+        )
+        chrome.storage.sync.set({
+            'spreadsheet-id': newSpreadsheet.spreadsheetId,
         })
-        .then(function (reqs) {
-            if (port != null) {
-                port.postMessage({ progress: 0.6 })
-            }
-            requests = requests.concat(reqs)
-            return batchUpdate(token, requests, spreadsheetId, 0)
-        })
-        .then(function (data) {
-            if (port != null) {
-                port.postMessage({ done: true, progress: 1 })
-            }
-            console.log('Initialize spreadsheet response:')
-            console.log(data)
-        })
-        .catch(function (error) {
-            if (port != null) {
-                port.postMessage({
-                    done: true,
-                    error: error.message,
-                    progress: 0,
-                })
-            }
-        })
+        spreadsheetId = newSpreadsheet.spreadsheetId
+        requests = requests.concat(
+            updateSheetProperties(className, code, 0, '*')
+        )
+        requests = requests.concat(createHeaders(0))
+        const icReqs = await initializeCells(code, 0)
+        if (port != null) {
+            port.postMessage({ progress: 0.6 })
+        }
+        requests = requests.concat(icReqs)
+        const data = await batchUpdate(token, requests, spreadsheetId, 0)
+        if (port != null) {
+            port.postMessage({ done: true, progress: 1 })
+        }
+        console.log('Initialize spreadsheet response:')
+        console.log(data)
+    } catch (error) {
+        if (port != null) {
+            port.postMessage({
+                done: true,
+                error: error.message,
+                progress: 0,
+            })
+        }
+    }
 }
 
 async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
     let requests = []
-    let sheetId = null,
-        startRow = null
     console.log('Updating spreadsheet...')
-    getMetaByKey(className, token, spreadsheetId)
-        .then(async function (meta) {
-            if (port != null) {
-                port.postMessage({ progress: 0.15 })
+
+    try {
+        const classMeta = await getMetaByKey(className, token, spreadsheetId)
+        if (port != null) {
+            port.postMessage({ progress: 0.15 })
+        }
+        if (classMeta == null) {
+            const spreadsheet = await getSpreadsheet(token, spreadsheetId)
+            var sheetId = 0
+            for (const sheet of spreadsheet.sheets) {
+                newSheetId = sheet.properties.sheetId
+                if (newSheetId > sheetId) {
+                    sheetId = newSheetId
+                }
             }
-            if (meta == null) {
-                const spreadsheet = await getSpreadsheet(token, spreadsheetId)
-                const numSheets = spreadsheet.sheets.length
-                sheetId = numSheets
-                requests = requests.concat(addSheet(className, code, sheetId))
-                requests = requests.concat(createHeaders(sheetId))
-                console.log(
-                    `Creating new sheet for class ${className}, ID ${sheetId}`
-                )
-                return getMetaByKey(`${code}§${sheetId}`, token, spreadsheetId)
-            } else {
-                sheetId = meta.location.sheetId
-                return getMetaByKey(`${code}§${sheetId}`, token, spreadsheetId)
-            }
-        })
-        .then(function (meta) {
-            if (port != null) {
-                port.postMessage({ progress: 0.3 })
-            }
-            if (meta == null) {
-                startRow = 1
-                return initializeCells(code, sheetId)
-            }
-            startRow = meta.location.dimensionRange.startIndex
-            return updateCells(token, code, spreadsheetId, sheetId, startRow)
-        })
-        .then(function (reqs) {
-            if (port != null) {
-                port.postMessage({ progress: 0.4 })
-            }
-            requests = requests.concat(reqs)
-            return batchUpdate(token, requests, spreadsheetId, sheetId)
-        })
-        .then(function (data) {
-            if (port != null) {
-                port.postMessage({ progress: 0.65 })
-            }
-            console.log('Update spreadsheet response:')
+            sheetId++
+            requests = requests.concat(addSheet(className, code, sheetId))
+            requests = requests.concat(createHeaders(sheetId))
+            console.log(
+                `Creating new sheet for class ${className}, ID ${sheetId}`
+            )
+        } else {
+            sheetId = classMeta.location.sheetId
+        }
+        const codeMeta = await getMetaByKey(
+            `${code}§${sheetId}`,
+            token,
+            spreadsheetId
+        )
+        if (port != null) {
+            port.postMessage({ progress: 0.3 })
+        }
+        if (codeMeta == null) {
+            var startRow = 1
+            var icReqs = await initializeCells(code, sheetId)
+        } else {
+            startRow = codeMeta.location.dimensionRange.startIndex
+            icReqs = await updateCells(
+                token,
+                code,
+                spreadsheetId,
+                sheetId,
+                startRow
+            )
+        }
+        if (port != null) {
+            port.postMessage({ progress: 0.4 })
+        }
+        requests = requests.concat(icReqs)
+        let data = await batchUpdate(token, requests, spreadsheetId, sheetId)
+        if (port != null) {
+            port.postMessage({ progress: 0.65 })
+        }
+        console.log('Update spreadsheet response:')
+        console.log(data)
+        const cgReqs = await collapseGroup(token, code, spreadsheetId, sheetId)
+        if (port != null) {
+            port.postMessage({ progress: 0.75 })
+        }
+        if (cgReqs) {
+            data = await batchUpdate(token, cgReqs, spreadsheetId, sheetId)
+            console.log('Update metadata and groups response:')
             console.log(data)
-            return collapseGroup(token, code, spreadsheetId, sheetId)
-        })
-        .then(function (reqs) {
-            if (port != null) {
-                port.postMessage({ progress: 0.75 })
-            }
-            if (reqs == null) {
-                return Promise.resolve()
-            }
-            requests = reqs
-            return batchUpdate(token, requests, spreadsheetId, sheetId)
-        })
-        .then(function (data) {
-            if (port != null) {
-                port.postMessage({ done: true, progress: 1 })
-            }
-            if (data) {
-                console.log('Update metadata and groups response:')
-                console.log(data)
-            }
-        })
-        .catch(function (error) {
-            if (port != null) {
-                port.postMessage({
-                    done: true,
-                    error: error.message,
-                    progress: 0,
-                })
-            }
-        })
+        }
+        if (port != null) {
+            port.postMessage({ done: true, progress: 1 })
+        }
+    } catch (error) {
+        if (port != null) {
+            port.postMessage({
+                done: true,
+                error: error.message,
+                progress: 0,
+            })
+        }
+    }
 }

@@ -10,20 +10,21 @@ function hashCode(s) {
 }
 
 function dateTimeString(startTimestamp, timestamp) {
-    const date = new Intl.DateTimeFormat(undefined, {
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        dateStyle: 'short',
-    }).format(new Date(startTimestamp * 1000))
+    const date = new Date(startTimestamp * 1000).toLocaleDateString()
     return `${date}, ${toTimeString(startTimestamp)} — ${toTimeString(
         timestamp
     )}`
 }
 
 function toTimeString(timestamp) {
-    return new Intl.DateTimeFormat(undefined, {
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        timeStyle: 'short',
-    }).format(new Date(timestamp * 1000))
+    try {
+        return new Date(timestamp * 1000).toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: 'numeric',
+        })
+    } catch (e) {
+        return new Date(timestamp * 1000).toLocaleTimeString()
+    }
 }
 
 function getFirstName(fullName) {

@@ -1,7 +1,7 @@
 const readyObserver = new MutationObserver(function (mutations, me) {
     const time = document.querySelector('[jsname="W5i7Bf"]')
     if (time && time.innerHTML.includes(':')) {
-        setTimeout(initialize, 2000)
+        setTimeout(initialize, 2500)
         me.disconnect()
     }
 })
@@ -12,32 +12,42 @@ readyObserver.observe(document.getElementsByClassName('crqnQb')[0], {
 })
 
 function initialize() {
-    document.body.insertAdjacentHTML(
-        'afterbegin',
-        confirmDeleteDialogHTML
+    chrome.runtime.sendMessage(
+        {
+            data: 'check-active',
+        },
+        function (response) {
+            console.log('Initializing extension...')
+            if (response.ready) {
+                document.body.insertAdjacentHTML(
+                    'afterbegin',
+                    confirmDeleteDialogHTML
+                )
+                document.body.insertAdjacentHTML('afterbegin', selectDialogHTML)
+                document.body.insertAdjacentHTML('afterbegin', snackbarHTML)
+
+                const bar = document.getElementsByClassName('NzPR9b')[0]
+                bar.insertAdjacentHTML('afterbegin', buttonHTML)
+
+                const screen = document.getElementsByClassName('crqnQb')[0]
+                screen.insertAdjacentHTML('afterbegin', cardHTML)
+
+                document.getElementById('card').style.visibility = 'hidden'
+
+                try {
+                    const showEveryone = document.querySelector(
+                        '[aria-label="Show everyone"]'
+                    )
+                    showEveryone.classList.remove('IeuGXd')
+                } catch {
+                } finally {
+                    chrome.runtime.sendMessage({
+                        data: 'instantiate',
+                    })
+                }
+            }
+        }
     )
-    document.body.insertAdjacentHTML('afterbegin', selectDialogHTML)
-    document.body.insertAdjacentHTML('afterbegin', snackbarHTML)
-
-    const bar = document.getElementsByClassName('NzPR9b')[0]
-    bar.insertAdjacentHTML('afterbegin', buttonHTML)
-
-    const screen = document.getElementsByClassName('crqnQb')[0]
-    screen.insertAdjacentHTML('afterbegin', cardHTML)
-
-    document.getElementById('card').style.visibility = 'hidden'
-
-    try {
-        const showEveryone = document.querySelector(
-            '[aria-label="Show everyone"]'
-        )
-        showEveryone.classList.remove('IeuGXd')
-    } catch {
-    } finally {
-        chrome.runtime.sendMessage({
-            data: 'instantiate',
-        })
-    }
 }
 
 const cardHTML = `<div

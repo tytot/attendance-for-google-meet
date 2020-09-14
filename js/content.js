@@ -1,7 +1,7 @@
 const readyObserver = new MutationObserver(function (mutations, me) {
     const time = document.querySelector('[jsname="W5i7Bf"]')
     if (time && time.innerHTML.includes(':')) {
-        setTimeout(initialize, 2500)
+        setTimeout(initialize, 2000)
         me.disconnect()
     }
 })
@@ -17,7 +17,6 @@ function initialize() {
             data: 'check-active',
         },
         function (response) {
-            console.log('Initializing extension...')
             if (response.ready) {
                 document.body.insertAdjacentHTML(
                     'afterbegin',
@@ -41,10 +40,23 @@ function initialize() {
                     showEveryone.classList.remove('IeuGXd')
                 } catch {
                 } finally {
-                    chrome.runtime.sendMessage({
-                        data: 'instantiate',
-                    })
+                    instantiate()
                 }
+            }
+        }
+    )
+}
+
+function instantiate() {
+    chrome.runtime.sendMessage(
+        {
+            data: 'instantiate',
+        },
+        function (result) {
+            if (result[0] === 'Done') {
+                console.log('Successfully initialized extension')
+            } else {
+                setTimeout(instantiate, 4000)
             }
         }
     )

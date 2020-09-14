@@ -12,11 +12,6 @@ let pOpened = true
 let rostersCache = null
 let numAttendees = 0
 
-const listObserver = new MutationObserver(function (mutations, me) {
-    takeAttendance()
-    me.disconnect()
-})
-
 const tabObserver = new MutationObserver(function (mutations, me) {
     const names = document.getElementsByClassName('cS7aqe NkoVdd')
     if (numAttendees === 0) {
@@ -24,13 +19,7 @@ const tabObserver = new MutationObserver(function (mutations, me) {
         me.disconnect()
     } else {
         if (names[1] != undefined) {
-            listObserver.observe(
-                document.getElementsByClassName('HALYaf tmIkuc s2gQvd')[0],
-                {
-                    childList: true,
-                    subtree: true,
-                }
-            )
+            takeAttendance()
             me.disconnect()
         }
     }
@@ -42,7 +31,7 @@ tabObserver.observe(document.getElementsByClassName('mKBhCf')[0], {
     subtree: true,
 })
 
-setInterval(function () {
+setInterval(async function () {
     let count =
         parseInt(document.querySelector("[jscontroller='FTBAv']").innerHTML) - 1
     if (count !== numAttendees) {
@@ -58,10 +47,8 @@ setInterval(function () {
                 subtree: true,
             })
         } else {
-            listObserver.observe(container, {
-                childList: true,
-                subtree: true,
-            })
+            await clickPeople()
+            takeAttendance()
         }
     }
 }, 5000)
@@ -298,6 +285,8 @@ for (const button of document.getElementsByClassName('mdc-button')) {
     new MDCRipple(button)
 }
 
+;('Done')
+
 function getMeetCode() {
     return document.title.substring(7)
 }
@@ -314,6 +303,13 @@ function removeSnackbarButtons() {
     sbHelp.style.display = 'none'
     sbOpen.style.display = 'none'
     sbUndo.style.display = 'none'
+}
+
+function clickPeople() {
+    return new Promise((resolve) => {
+        document.querySelector('[jsname="AznF2e"]').click()
+        setTimeout(resolve, 200)
+    })
 }
 
 function takeAttendance() {

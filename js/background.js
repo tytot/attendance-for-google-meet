@@ -19,9 +19,15 @@ chrome.runtime.onInstalled.addListener(function (details) {
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if (message.data === 'instantiate') {
-        chrome.tabs.executeScript({
-            file: 'js/attendance.js',
-        })
+        chrome.tabs.executeScript(
+            {
+                file: 'js/attendance.js',
+            },
+            function (result) {
+                sendResponse(result)
+            }
+        )
+        return true
     } else if (message.data === 'open-url') {
         chrome.tabs.create({ url: message.url })
     } else if (message.data === 'check-active') {

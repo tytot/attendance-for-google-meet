@@ -9,6 +9,7 @@ const MDCChipSet = mdc.chips.MDCChipSet
 
 let port = chrome.runtime.connect()
 let pOpened = true
+let pClicked = false
 let rostersCache = null
 let numAttendees = 0
 
@@ -307,7 +308,11 @@ function removeSnackbarButtons() {
 
 function clickPeople() {
     return new Promise((resolve) => {
-        document.querySelector('[jsname="AznF2e"]').click()
+        const peopleTab = document.querySelector('.Z9zn3b')
+        if (peopleTab.getAttribute('aria-selected') === 'false') {
+            pClicked = true
+        }
+        peopleTab.click()
         setTimeout(resolve, 200)
     })
 }
@@ -319,6 +324,11 @@ function takeAttendance() {
                 document.querySelector('[jscontroller="soHxf"]').click()
             }, 500)
             pOpened = false
+        } else if (pClicked) {
+            setTimeout(function () {
+                document.querySelector('.diMUPd').click()
+            }, 500)
+            pClicked = false
         }
     })
 }
@@ -978,9 +988,9 @@ function prepareChips(_cardView, defaultView, editView) {
             chipAction.focus()
             stuTextField.value = newValue
         } else {
-            if (input.includes('\n') || input.includes(',')) {
+            if (input.includes('\n')) {
                 let names = input
-                    .split(/\r?\n|,/)
+                    .split(/\r?\n/)
                     .map((name) => name.trim().replace(/\s+/g, ' '))
                     .filter((name) => name !== '')
                 for (const name of names) {

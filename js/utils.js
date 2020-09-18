@@ -28,11 +28,14 @@ function toTimeString(timestamp) {
 }
 
 function getFirstName(fullName) {
-    const names = fullName.split(' ')
+    if (fullName.includes(', ')) {
+        return fullName.split(/,(.+)/)[1].trim()
+    }
+    const names = splitNames(fullName)
     if (names.length === 1) {
         var fName = fullName
     } else {
-        for (var i = 1; i < names.length - 1; i++) {
+        for (var i = names.length - 1; i > 1; i--) {
             const name = names[i]
             if (name.charAt(0) === name.charAt(0).toLowerCase()) {
                 break
@@ -44,11 +47,14 @@ function getFirstName(fullName) {
 }
 
 function getLastName(fullName) {
-    const names = fullName.split(' ')
+    if (fullName.includes(', ')) {
+        return fullName.split(/,(.+)/)[0].trim()
+    }
+    const names = splitNames(fullName)
     if (names.length === 1) {
         var lName = ''
     } else {
-        for (var i = 1; i < names.length - 1; i++) {
+        for (var i = names.length - 1; i > 1; i--) {
             const name = names[i]
             if (name.charAt(0) === name.charAt(0).toLowerCase()) {
                 break
@@ -57,6 +63,18 @@ function getLastName(fullName) {
         var lName = names.slice(i).join(' ')
     }
     return lName
+}
+
+function splitNames(fullName) {
+    const names = fullName.split(' ')
+    return names.filter(
+        (name) =>
+            !(
+                (name.charAt(0) === '[' && name.slice(-1) === ']') ||
+                (name.charAt(0) === '{' && name.slice(-1) === '}') ||
+                (name.charAt(0) === '(' && name.slice(-1) === ')')
+            )
+    )
 }
 
 function compareFirst(a, b) {

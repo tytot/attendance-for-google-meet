@@ -1,6 +1,5 @@
 const readyObserver = new MutationObserver(function (mutations, me) {
-    const time = document.querySelector('[jsname="W5i7Bf"]')
-    if (time && time.innerHTML.includes(':')) {
+    if (document.getElementsByClassName('wnPUne N0PJ8e')[0]) {
         setTimeout(initialize, 2000)
         me.disconnect()
     }
@@ -56,7 +55,7 @@ function instantiate() {
             if (result[0] === 'Done') {
                 console.log('Successfully initialized extension')
             } else {
-                setTimeout(instantiate, 4000)
+                setTimeout(instantiate, 2000)
             }
         }
     )

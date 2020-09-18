@@ -10,7 +10,7 @@ Google Meet hath updated once again and broke our code, but we have fixed the is
 
 Google Meet updated and broke our code, but we have fixed the issue. The extension will be updated in the Chrome Web Store in a few days; sorry for the inconvenience.
 
-## Link
+## Official Download Link
 
 https://chrome.google.com/webstore/detail/attendance-for-google-mee/gioogehddfnceeihfoeencjbhggblkkd
 

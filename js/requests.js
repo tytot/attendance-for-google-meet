@@ -822,7 +822,7 @@ function getMetaByKey(key, token, spreadsheetId) {
             )
             if (response.ok || response.status === 404) {
                 const data = await response.json()
-                console.log(`Get metadata for key ${key} response:`)
+                log(`Get metadata for key ${key} response:`)
                 console.log(data)
                 if (data.error) {
                     resolve(null)
@@ -890,7 +890,7 @@ function batchUpdate(token, requests, spreadsheetId, sheetId) {
     if (sheetId) {
         requests.push(autoResize(sheetId))
     }
-    console.log('Executing batch update...')
+    log('Executing batch update...')
     console.log(requests)
     return new Promise(async (resolve, reject) => {
         const body = {

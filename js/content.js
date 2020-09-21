@@ -1,6 +1,5 @@
 const readyObserver = new MutationObserver(function (mutations, me) {
     if (document.getElementsByClassName('c8mVDd')[0]) {
-        console.log('Injecting inject.js...')
         let s = document.createElement('script')
         s.src = chrome.runtime.getURL('js/inject.js')
         document.documentElement.appendChild(s)
@@ -57,7 +56,7 @@ function instantiate() {
         },
         function (result) {
             if (result[0] === 'Done') {
-                console.log('Successfully initialized extension.')
+                log('Successfully initialized extension.')
             } else {
                 setTimeout(instantiate, 2000)
             }

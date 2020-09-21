@@ -1,3 +1,11 @@
+function log(message) {
+    console.log(
+        `%c[A4GM]%c ${message} `,
+        'color:white;background:#058D80',
+        'font-weight:bold;color:#058D80;'
+    )
+}
+
 function hashCode(s) {
     var nHash = 0
     if (!s.length) return nHash

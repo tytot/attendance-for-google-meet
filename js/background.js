@@ -35,7 +35,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             let ready = false
             for (const tab of tabs) {
                 if (tab.id === sender.tab.id) {
-                    console.log('Initializing extension...')
+                    log('Initializing extension...')
                     sendResponse({ ready: true })
                     ready = true
                 }
@@ -45,7 +45,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                     activeInfo
                 ) {
                     if (activeInfo.tabId === sender.tab.id) {
-                        console.log('Initializing extension...')
+                        log('Initializing extension...')
                         chrome.tabs.onActivated.removeListener(tabListener)
                         sendResponse({ ready: true })
                     }
@@ -71,7 +71,7 @@ chrome.runtime.onConnect.addListener(function (port) {
                     }
                     const id = result['spreadsheet-id']
                     const className = result[code].class
-                    console.log('Meet code: ' + code)
+                    log('Meet code: ' + code)
                     if (id == undefined) {
                         createSpreadsheet(token, className, code, port)
                     } else {
@@ -104,7 +104,7 @@ chrome.runtime.onConnect.addListener(function (port) {
                             id,
                             sheetId
                         )
-                        console.log(
+                        log(
                             `Renamed sheet ${oldClassName} to ${newClassName}`
                         )
                         console.log(data)
@@ -122,7 +122,7 @@ chrome.runtime.onConnect.addListener(function (port) {
                         requests.push(deleteCodeMetadata(code))
                     }
                     const data = await batchUpdate(token, requests, id)
-                    console.log('Deleted metadata response:')
+                    log('Delete metadata response:')
                     console.log(data)
                 })
             }
@@ -154,14 +154,14 @@ async function createSpreadsheet(token, className, code, port) {
     }
     let spreadsheetId = null
     let requests = []
-    console.log('Creating new attendance spreadsheet...')
+    log('Creating new attendance spreadsheet...')
 
     try {
         const newSpreadsheet = await (
             await fetch('https://sheets.googleapis.com/v4/spreadsheets', init)
         ).json()
         postMessage(port, { progress: 0.3 })
-        console.log(
+        log(
             `Successfully created Attendance spreadsheet with id ${newSpreadsheet.spreadsheetId}.`
         )
         chrome.storage.sync.set({
@@ -177,7 +177,7 @@ async function createSpreadsheet(token, className, code, port) {
         requests = requests.concat(icReqs)
         const data = await batchUpdate(token, requests, spreadsheetId, 0)
         postMessage(port, { done: true, progress: 1 })
-        console.log('Initialize spreadsheet response:')
+        log('Initialize spreadsheet response:')
         console.log(data)
     } catch (error) {
         postMessage(port, {
@@ -190,7 +190,7 @@ async function createSpreadsheet(token, className, code, port) {
 
 async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
     let requests = []
-    console.log('Updating spreadsheet...')
+    log('Updating spreadsheet...')
 
     try {
         const classMeta = await getMetaByKey(className, token, spreadsheetId)
@@ -207,7 +207,7 @@ async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
             sheetId++
             requests = requests.concat(addSheet(className, code, sheetId))
             requests = requests.concat(createHeaders(sheetId))
-            console.log(
+            log(
                 `Creating new sheet for class ${className}, ID ${sheetId}`
             )
         } else {
@@ -236,13 +236,13 @@ async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
         requests = requests.concat(icReqs)
         let data = await batchUpdate(token, requests, spreadsheetId, sheetId)
         postMessage(port, { progress: 0.65 })
-        console.log('Update spreadsheet response:')
+        log('Update spreadsheet response:')
         console.log(data)
         const cgReqs = await collapseGroup(token, code, spreadsheetId, sheetId)
         postMessage(port, { progress: 0.75 })
         if (cgReqs) {
             data = await batchUpdate(token, cgReqs, spreadsheetId, sheetId)
-            console.log('Update metadata and groups response:')
+            log('Update metadata and groups response:')
             console.log(data)
         }
         postMessage(port, { done: true, progress: 1 })

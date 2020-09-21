@@ -1,5 +1,9 @@
 const readyObserver = new MutationObserver(function (mutations, me) {
-    if (document.getElementsByClassName('wnPUne N0PJ8e')[0]) {
+    if (document.getElementsByClassName('c8mVDd')[0]) {
+        console.log('Injecting inject.js...')
+        let s = document.createElement('script')
+        s.src = chrome.runtime.getURL('js/inject.js')
+        document.documentElement.appendChild(s)
         setTimeout(initialize, 2000)
         me.disconnect()
     }
@@ -53,7 +57,7 @@ function instantiate() {
         },
         function (result) {
             if (result[0] === 'Done') {
-                console.log('Successfully initialized extension')
+                console.log('Successfully initialized extension.')
             } else {
                 setTimeout(instantiate, 2000)
             }
@@ -110,7 +114,7 @@ aria-label="Attendance management"
         <div class="mdc-list-divider" role="separator"></div>
         <div class="class-content">
             <ul class="mdc-list" id="class-list" role="listbox"></ul>
-            <button class="mdc-button" id="add-class">
+            <button class="mdc-button" id="addeth-class">
                 <div class="mdc-button__ripple"></div>
                 <i class="material-icons mdc-button__icon" aria-hidden="true"
                     >add</i
@@ -481,7 +485,7 @@ const selectDialogHTML = `<div class="mdc-dialog" id="select">
                     <ul class="mdc-list" id="class-list" role="listbox"></ul>
                     <button 
                         class="mdc-button" 
-                        id="add-class" 
+                        id="addeth-class" 
                         style="min-width: 400px !important;"
                     >
                         <div class="mdc-button__ripple"></div>

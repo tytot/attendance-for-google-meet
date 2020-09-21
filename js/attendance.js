@@ -8,22 +8,18 @@ const MDCTextField = mdc.textField.MDCTextField
 const MDCChipSet = mdc.chips.MDCChipSet
 
 let port = chrome.runtime.connect()
-let pOpened = true
-let pClicked = false
 let rostersCache = null
-let numAttendees = 0
+
+window.addEventListener('message', function (event) {
+    if (event.origin !== 'https://meet.google.com') return
+    if (event.data.sender !== 'Ya boi') return
+    const names = event.data.attendance
+    storeNames(names)
+})
 
 const tabObserver = new MutationObserver(function (mutations, me) {
-    const names = document.getElementsByClassName('cS7aqe NkoVdd')
-    if (numAttendees === 0) {
-        takeAttendance()
-        me.disconnect()
-    } else {
-        if (names[1] != undefined) {
-            takeAttendance()
-            me.disconnect()
-        }
-    }
+    takeFirstAttendance()
+    me.disconnect()
 })
 
 document.getElementsByClassName('gV3Svc')[1].click()
@@ -31,28 +27,6 @@ tabObserver.observe(document.getElementsByClassName('mKBhCf')[0], {
     childList: true,
     subtree: true,
 })
-
-setInterval(async function () {
-    let count =
-        parseInt(document.querySelector("[jscontroller='FTBAv']").innerHTML) - 1
-    if (count !== numAttendees) {
-        numAttendees = count
-        const container = document.getElementsByClassName(
-            'HALYaf tmIkuc s2gQvd'
-        )[0]
-        if (!container) {
-            document.getElementsByClassName('gV3Svc')[1].click()
-            pOpened = true
-            tabObserver.observe(document.getElementsByClassName('mKBhCf')[0], {
-                childList: true,
-                subtree: true,
-            })
-        } else {
-            await clickPeople()
-            takeAttendance()
-        }
-    }
-}, 5000)
 
 const closedObserver = new MutationObserver(function (mutations, me) {
     if (
@@ -70,9 +44,7 @@ const closedObserver = new MutationObserver(function (mutations, me) {
 
 resizeCard()
 window.addEventListener('resize', resizeCard)
-const trayObserver = new MutationObserver(function (mutations, me) {
-    resizeCard()
-})
+const trayObserver = new MutationObserver(resizeCard)
 
 let bigButtons = [...document.querySelector('.NzPR9b').children]
 bigButtons = bigButtons.filter((child) => child.classList.contains('uArJ5e'))
@@ -306,53 +278,49 @@ function removeSnackbarButtons() {
     sbUndo.style.display = 'none'
 }
 
-function clickPeople() {
-    return new Promise((resolve) => {
-        const peopleTab = document.querySelector('.Z9zn3b')
-        if (peopleTab.getAttribute('aria-selected') === 'false') {
-            pClicked = true
-        }
-        peopleTab.click()
-        setTimeout(resolve, 200)
-    })
-}
-
-function takeAttendance() {
-    attendanceHandler().then(() => {
-        if (pOpened) {
-            setTimeout(function () {
-                document.querySelector('[jscontroller="soHxf"]').click()
-            }, 500)
-            pOpened = false
-        } else if (pClicked) {
-            setTimeout(function () {
-                document.querySelector('.diMUPd').click()
-            }, 500)
-            pClicked = false
-        }
-    })
-}
-
-function attendanceHandler() {
-    return new Promise(async (resolve) => {
-        let names = []
-        let lastNumNames = 0
-        const container = document.getElementsByClassName(
-            'HALYaf tmIkuc s2gQvd'
-        )[0]
-        container.scrollTop = 0
+async function takeFirstAttendance() {
+    let names = []
+    let lastNumNames = 0
+    const container = document.getElementsByClassName(
+        'HALYaf tmIkuc s2gQvd'
+    )[0]
+    container.scrollTop = 0
+    await getVisibleAttendees(container, names, 200)
+    while (names.length !== lastNumNames) {
+        lastNumNames = names.length
         await getVisibleAttendees(container, names, 200)
-        while (names.length !== lastNumNames) {
-            lastNumNames = names.length
-            await getVisibleAttendees(container, names, 200)
-        }
-        container.scrollTop = 0
-        storeNames(names)
-        resolve()
+    }
+    container.scrollTop = 0
+    setTimeout(function () {
+        document.querySelector('[jscontroller="soHxf"]').click()
+    }, 500)
+    storeNames(names)
+}
+
+function getVisibleAttendees(container, names, delay) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const labels = document.getElementsByClassName('cS7aqe NkoVdd')
+            for (const label of labels) {
+                const name = label.innerHTML
+                if (
+                    !names.includes(name) &&
+                    !name.endsWith(' (You)') &&
+                    !name.endsWith(' (Your Presentation)') &&
+                    !name.endsWith(' (Presentation)')
+                ) {
+                    names.push(name)
+                }
+            }
+            container.scrollTop = 56 * names.length
+
+            resolve()
+        }, delay)
     })
 }
 
 function storeNames(names) {
+    console.log(names)
     const code = getMeetCode()
     chrome.storage.sync.get(null, function (result) {
         const timestamp = ~~(Date.now() / 1000)
@@ -414,28 +382,6 @@ function storeNames(names) {
         }
 
         chrome.storage.sync.set({ [code]: res })
-    })
-}
-
-function getVisibleAttendees(container, names, delay) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const labels = document.getElementsByClassName('cS7aqe NkoVdd')
-            for (const label of labels) {
-                const name = label.innerHTML
-                if (
-                    !names.includes(name) &&
-                    !name.endsWith(' (You)') &&
-                    !name.endsWith(' (Your Presentation)') &&
-                    !name.endsWith(' (Presentation)')
-                ) {
-                    names.push(name)
-                }
-            }
-            container.scrollTop = 56 * names.length
-
-            resolve()
-        }, delay)
     })
 }
 
@@ -873,13 +819,15 @@ function prepareChips(_cardView, defaultView, editView) {
         }
     })
 
-    document.getElementById('add-class').addEventListener('click', function () {
-        document.getElementById('class-label').adding = true
-        document.getElementById(cardView).hidden = true
-        document.getElementById(editView).hidden = false
-        nameArray = []
-        editClass('')
-    })
+    document
+        .getElementById('addeth-class')
+        .addEventListener('click', function () {
+            document.getElementById('class-label').adding = true
+            document.getElementById(cardView).hidden = true
+            document.getElementById(editView).hidden = false
+            nameArray = []
+            editClass('')
+        })
 
     document
         .getElementById('save-class')

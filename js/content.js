@@ -54,12 +54,8 @@ function instantiate() {
         {
             data: 'instantiate',
         },
-        function (result) {
-            if (result[0] === 'Done') {
-                log('Successfully initialized extension.')
-            } else {
-                setTimeout(instantiate, 2000)
-            }
+        function () {
+            log('Successfully initialized extension.')
         }
     )
 }

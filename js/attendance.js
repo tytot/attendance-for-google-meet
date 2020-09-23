@@ -994,6 +994,4 @@
         newValue += ' '.repeat(Math.max(0, counter - 1))
         return newValue
     }
-
-    return 'Done'
 })()

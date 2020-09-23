@@ -3,7 +3,7 @@ const readyObserver = new MutationObserver(function (mutations, me) {
         let s = document.createElement('script')
         s.src = chrome.runtime.getURL('js/inject.js')
         document.documentElement.appendChild(s)
-        setTimeout(initialize, 2000)
+        initialize()
         me.disconnect()
     }
 })
@@ -113,6 +113,12 @@ aria-label="Attendance management"
         <div class="mdc-list-divider" role="separator"></div>
         <div class="class-content">
             <ul class="mdc-list" id="class-list" role="listbox"></ul>
+            <div id="no-classes" style="display:none;">
+                <i class="material-icons">
+                    warning
+                </i>
+                <p>You don't have any classes! Add a class by clicking the button below.</p>
+            </div>
             <button class="mdc-button" id="addeth-class">
                 <div class="mdc-button__ripple"></div>
                 <i class="material-icons mdc-button__icon" aria-hidden="true"
@@ -267,6 +273,12 @@ aria-label="Attendance management"
                 class="mdc-card-content"
                 style="max-height: 50vh; overflow: auto;"
             >
+                <div id="no-students" style="display:none;">
+                    <i class="material-icons">
+                        warning
+                    </i>
+                    <p>Select edit or click the + button next to a name to add students to this class.</p>
+                </div>
                 <ul
                     class="mdc-list mdc-list--dense mdc-list--two-line"
                     id="roster-status"
@@ -414,7 +426,7 @@ aria-label="Attendance management"
                         id="student-helper-id"
                         aria-hidden="true"
                     >
-                        Ex: Tony Vlachos, Natalie Anderson, Michele Fitzgerald
+                        Separate names with Enter.
                     </div>
                 </div>
             </div>
@@ -482,6 +494,12 @@ const selectDialogHTML = `<div class="mdc-dialog" id="select">
             <div id="dialog-default-view">
                 <div class="mdc-dialog__content class-content" id="dialog-content">
                     <ul class="mdc-list" id="class-list" role="listbox"></ul>
+                    <div id="no-classes" style="display:none;">
+                        <i class="material-icons">
+                            warning
+                        </i>
+                        <p>You don't have any classes! Add a class by clicking the button below.</p>
+                    </div>
                     <button 
                         class="mdc-button" 
                         id="addeth-class" 
@@ -579,8 +597,7 @@ const selectDialogHTML = `<div class="mdc-dialog" id="select">
                             id="student-helper-id"
                             aria-hidden="true"
                         >
-                            Ex: Tony Vlachos, Natalie Anderson, Michele
-                            Fitzgerald
+                            Separate names with Enter.
                         </div>
                     </div>
                 </div>

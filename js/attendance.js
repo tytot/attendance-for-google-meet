@@ -14,19 +14,9 @@
     window.addEventListener('message', function (event) {
         if (event.origin !== 'https://meet.google.com') return
         if (event.data.sender !== 'Ya boi') return
-        const names = event.data.attendance
-        storeNames(names)
-    })
-
-    const tabObserver = new MutationObserver(function (mutations, me) {
-        takeFirstAttendance()
-        me.disconnect()
-    })
-
-    document.getElementsByClassName('gV3Svc')[1].click()
-    tabObserver.observe(document.getElementsByClassName('mKBhCf')[0], {
-        childList: true,
-        subtree: true,
+        if (event.data.attendance) {
+            storeNames(event.data.attendance)
+        }
     })
 
     const closedObserver = new MutationObserver(function (mutations, me) {
@@ -287,48 +277,8 @@
         sbUndo.style.display = 'none'
     }
 
-    async function takeFirstAttendance() {
-        let names = []
-        let lastNumNames = 0
-        const container = document.getElementsByClassName(
-            'HALYaf tmIkuc s2gQvd'
-        )[0]
-        container.scrollTop = 0
-        await getVisibleAttendees(container, names, 200)
-        while (names.length !== lastNumNames) {
-            lastNumNames = names.length
-            await getVisibleAttendees(container, names, 200)
-        }
-        container.scrollTop = 0
-        setTimeout(function () {
-            document.querySelector('[jscontroller="soHxf"]').click()
-        }, 500)
-        storeNames(names)
-    }
-
-    function getVisibleAttendees(container, names, delay) {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const labels = document.getElementsByClassName('cS7aqe NkoVdd')
-                for (const label of labels) {
-                    const name = label.innerHTML
-                    if (
-                        !names.includes(name) &&
-                        !name.endsWith(' (You)') &&
-                        !name.endsWith(' (Your Presentation)') &&
-                        !name.endsWith(' (Presentation)')
-                    ) {
-                        names.push(name)
-                    }
-                }
-                container.scrollTop = 56 * names.length
-
-                resolve()
-            }, delay)
-        })
-    }
-
     function storeNames(names) {
+        console.log(names)
         const code = getMeetCode()
         chrome.storage.sync.get(null, function (result) {
             const timestamp = ~~(Date.now() / 1000)
@@ -396,66 +346,65 @@
     function updateRosterStatus(attendance, rosters, className) {
         const rosterStatus = document.getElementById('roster-status')
         rosterStatus.innerHTML = ''
-        let entries = []
 
         const roster = rosters[className]
-        const bigRoster = roster.map((name) => name.toLocaleUpperCase())
-        for (const name in attendance) {
-            const arr = attendance[name]
-            if (bigRoster.includes(name.toLocaleUpperCase())) {
-                if (arr.length % 2 === 1) {
-                    entries.push({
-                        name: name,
-                        color: 'green',
-                        tooltip: 'Present',
-                        icon: 'check_circle',
-                        text: `Joined at ${toTimeString(arr[0])}`,
-                        index: 2,
-                    })
+        if (roster.length === 0) {
+            document.querySelector('#no-students').style.display = 'flex'
+        } else {
+            document.querySelector('#no-students').style.display = 'none'
+            let entries = []
+            const bigRoster = roster.map((name) => name.toLocaleUpperCase())
+            for (const name in attendance) {
+                const arr = attendance[name]
+                if (bigRoster.includes(name.toLocaleUpperCase())) {
+                    if (arr.length % 2 === 1) {
+                        entries.push({
+                            name: name,
+                            color: 'green',
+                            tooltip: 'Present',
+                            icon: 'check_circle',
+                            text: `Joined at ${toTimeString(arr[0])}`,
+                            index: 2,
+                        })
+                    } else {
+                        entries.push({
+                            name: name,
+                            color: 'yellow',
+                            tooltip: 'Previously Present',
+                            icon: 'watch_later',
+                            text: `Last seen at ${toTimeString(
+                                arr[arr.length - 1]
+                            )}`,
+                            index: 1,
+                        })
+                    }
                 } else {
                     entries.push({
                         name: name,
-                        color: 'yellow',
-                        tooltip: 'Previously Present',
-                        icon: 'watch_later',
-                        text: `Last seen at ${toTimeString(
-                            arr[arr.length - 1]
-                        )}`,
-                        index: 1,
+                        color: 'gray',
+                        tooltip: 'Not on List',
+                        icon: 'error',
+                        text: `Joined at ${toTimeString(arr[0])}`,
+                        index: -1,
                     })
                 }
-            } else {
-                entries.push({
-                    name: name,
-                    color: 'gray',
-                    tooltip: 'Not on List',
-                    icon: 'error',
-                    text: `Joined at ${toTimeString(arr[0])}`,
-                    index: -1,
-                })
             }
-        }
-        const bigAttendance = Object.keys(attendance).map((key) =>
-            key.toLocaleUpperCase()
-        )
-        for (const name of roster) {
-            if (!bigAttendance.includes(name.toLocaleUpperCase())) {
-                entries.push({
-                    name: name,
-                    color: 'red',
-                    tooltip: 'Absent',
-                    icon: 'cancel',
-                    text: 'Not here',
-                    index: 0,
-                })
+            const bigAttendance = Object.keys(attendance).map((key) =>
+                key.toLocaleUpperCase()
+            )
+            for (const name of roster) {
+                if (!bigAttendance.includes(name.toLocaleUpperCase())) {
+                    entries.push({
+                        name: name,
+                        color: 'red',
+                        tooltip: 'Absent',
+                        icon: 'cancel',
+                        text: 'Not here',
+                        index: 0,
+                    })
+                }
             }
-        }
-        let single = false
-        if (entries.length === 1) {
-            single = true
-        }
 
-        if (!single) {
             if (sortMethod === 'firstName') {
                 compare = (a, b) => {
                     return compareFirst(a.name, b.name)
@@ -476,42 +425,32 @@
                     return a.index - b.index
                 }
             }
-            entries.sort(compare)
-        }
 
-        for (const entry of entries) {
-            if (!single) {
+            for (const entry of entries) {
                 if (entry.index === -1) {
                     var metaIcon = 'add_circle'
                     var metaTooltip = 'Add to Class'
-                } else if (roster.length > 1) {
+                } else {
                     metaIcon = 'remove_circle'
                     metaTooltip = 'Remove from Class'
                 }
-                if (metaIcon) {
-                    var meta = `<div class="mdc-list-item__meta">
-                        <button
-                            class="mdc-icon-button material-icons"
-                            aria-label="${metaTooltip}"
-                            jscontroller="VXdfxd"
-                            jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
-                            tabindex="0"
-                            data-tooltip="${metaTooltip}"
-                            data-tooltip-vertical-offset="-12"
-                            data-tooltip-horizontal-offset="0"
-                        >
-                            ${metaIcon}
-                        </button>
-                    </div>`
-                } else {
-                    meta = ''
-                }
-            } else {
-                meta = ''
-            }
-            rosterStatus.insertAdjacentHTML(
-                'beforeend',
-                `<li class="mdc-list-divider" role="separator"></li>
+                var meta = `<div class="mdc-list-item__meta">
+                <button
+                    class="mdc-icon-button material-icons"
+                    aria-label="${metaTooltip}"
+                    jscontroller="VXdfxd"
+                    jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                    tabindex="0"
+                    data-tooltip="${metaTooltip}"
+                    data-tooltip-vertical-offset="-12"
+                    data-tooltip-horizontal-offset="0"
+                >
+                    ${metaIcon}
+                </button>
+            </div>`
+                rosterStatus.insertAdjacentHTML(
+                    'beforeend',
+                    `<li class="mdc-list-divider" role="separator"></li>
                 <li class="mdc-list-item" tabindex="0">
                     <span
                         class="mdc-list-item__graphic material-icons ${entry.color}"
@@ -535,11 +474,10 @@
                     </span>
                     ${meta}
                 </li>`
-            )
-            const metaButton = rosterStatus.lastChild.querySelector(
-                '.mdc-icon-button'
-            )
-            if (!single) {
+                )
+                const metaButton = rosterStatus.lastChild.querySelector(
+                    '.mdc-icon-button'
+                )
                 if (entry.index === -1) {
                     metaButton.addEventListener('click', function () {
                         removeSnackbarButtons()
@@ -550,7 +488,7 @@
                         snackbar.close()
                         snackbar.open()
                     })
-                } else if (roster.length > 1) {
+                } else {
                     metaButton.addEventListener('click', function () {
                         removeSnackbarButtons()
                         rostersCache = rosters
@@ -665,6 +603,9 @@
                     classEl.roster = res[className]
                     classes.push(classEl)
                 }
+                if (classes.length === 0) {
+                    document.querySelector('#no-classes').style.display = 'flex'
+                }
                 resolve(classes)
             })
         })
@@ -706,6 +647,8 @@
                 classEl.name = className
                 classEl.roster = res[className]
 
+                document.querySelector('#no-classes').style.display = 'none'
+
                 resolve(classEl)
             })
         })
@@ -723,7 +666,11 @@
                 for (const classEl of classEls) {
                     if (classEl.name === className) {
                         classList.removeChild(classEl)
+                        break
                     }
+                }
+                if (Object.keys(res).length === 0) {
+                    document.querySelector('#no-classes').style.display = 'flex'
                 }
                 resolve()
             })
@@ -860,11 +807,6 @@
                     } else if (className.includes('§')) {
                         snackbar.labelText =
                             'Error: The class name cannot contain the character §.'
-                        snackbar.close()
-                        snackbar.open()
-                    } else if (nameArray.length === 0) {
-                        snackbar.labelText =
-                            'Error: You must have at least 1 student in a class.'
                         snackbar.close()
                         snackbar.open()
                     } else if (

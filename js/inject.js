@@ -1,44 +1,37 @@
 ;(function () {
-    let hooked = false
-    attemptHook()
+    let dataPath = []
+    let arrayKey = null
+    const regex = /function\(\){_\.[a-zA-Z]+\.prototype\.[a-zA-Z]+\.call\(this\);[a-zA-Z]+\(this\)}/
+
+    const finder = setInterval(attemptHook, 1)
 
     function attemptHook() {
-        if (!hooked) {
-            setTimeout(function () {
-                log('Attempting hook...')
-                const regex = /function\(\){_\.[a-zA-Z]+\.prototype\.[a-zA-Z]+\.call\(this\);[a-zA-Z]+\(this\)}/
-                for (const [_k, v] of Object.entries(
-                    window.default_MeetingsUi
-                )) {
-                    if (v && v.prototype) {
-                        for (const k of Object.keys(v.prototype)) {
-                            const p = Object.getOwnPropertyDescriptor(
-                                v.prototype,
-                                k
+        log(`Attempting hook...`)
+        outer: for (const [_k, v] of Object.entries(
+            window.default_MeetingsUi
+        )) {
+            if (v && v.prototype) {
+                for (const k of Object.keys(v.prototype)) {
+                    const p = Object.getOwnPropertyDescriptor(v.prototype, k)
+                    if (p && p.value && !v.prototype[k].__grid_ran) {
+                        let funcString = p.value.toString()
+                        if (regex.test(funcString)) {
+                            funcString = funcString.slice(11, -1)
+                            let newFuncString =
+                                `window.dispatchEvent(new CustomEvent("atd", {detail:this}));` +
+                                funcString
+                            v.prototype[k] = new Function(newFuncString)
+                            log(
+                                `Successfully hooked into participant data function.`
                             )
-                            if (p && p.value && !v.prototype[k].__grid_ran) {
-                                let funcString = p.value.toString()
-                                if (regex.test(funcString)) {
-                                    funcString = funcString.slice(11, -1)
-                                    newFuncString =
-                                        'window.dispatchEvent(new CustomEvent("atd", {detail:this}));' +
-                                        funcString
-                                    v.prototype[k] = new Function(newFuncString)
-                                    log(
-                                        'Successfully hooked into metadata function.'
-                                    )
-                                    hooked = true
-                                }
-                            }
+                            clearInterval(finder)
+                            break outer
                         }
                     }
                 }
-            }, 2000)
+            }
         }
     }
-
-    let dataPath = []
-    let arrayKey = null
 
     window.addEventListener('atd', function (event) {
         if (dataPath.length === 0) {

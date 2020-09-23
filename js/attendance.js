@@ -260,7 +260,9 @@
     }
 
     function getMeetCode() {
-        return document.title.substring(7)
+        return document
+            .getElementsByTagName('c-wiz')[0]
+            .getAttribute('data-unresolved-meeting-id')
     }
 
     function resizeCard() {

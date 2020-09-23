@@ -260,7 +260,7 @@
     }
 
     function getMeetCode() {
-        return document.title.substring(7)
+        return document.title.substring(6)
     }
 
     function resizeCard() {

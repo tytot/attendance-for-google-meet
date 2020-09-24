@@ -35,7 +35,6 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             let ready = false
             for (const tab of tabs) {
                 if (tab.id === sender.tab.id) {
-                    log('Initializing extension...')
                     sendResponse({ ready: true })
                     ready = true
                 }
@@ -45,7 +44,6 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                     activeInfo
                 ) {
                     if (activeInfo.tabId === sender.tab.id) {
-                        log('Initializing extension...')
                         chrome.tabs.onActivated.removeListener(tabListener)
                         sendResponse({ ready: true })
                     }

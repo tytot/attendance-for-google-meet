@@ -10,6 +10,7 @@
 
     let port = chrome.runtime.connect()
     let rostersCache = null
+    let sortMethod = 'lastName'
 
     window.addEventListener('message', function (event) {
         if (event.origin !== 'https://meet.google.com') return
@@ -150,7 +151,6 @@
         sortMenu.open = true
     })
     const sortOptions = new MDCList(sortMenuEl.querySelector('.mdc-list'))
-    let sortMethod = 'lastName'
     for (const listEl of sortOptions.listElements) {
         new MDCRipple(listEl)
         listEl.addEventListener('click', function () {
@@ -280,7 +280,6 @@
     }
 
     function storeNames(names) {
-        console.log(names)
         const code = getMeetCode()
         chrome.storage.sync.get(null, function (result) {
             const timestamp = ~~(Date.now() / 1000)
@@ -354,89 +353,91 @@
             document.querySelector('#no-students').style.display = 'flex'
         } else {
             document.querySelector('#no-students').style.display = 'none'
-            let entries = []
-            const bigRoster = roster.map((name) => name.toLocaleUpperCase())
-            for (const name in attendance) {
-                const arr = attendance[name]
-                if (bigRoster.includes(name.toLocaleUpperCase())) {
-                    if (arr.length % 2 === 1) {
-                        entries.push({
-                            name: name,
-                            color: 'green',
-                            tooltip: 'Present',
-                            icon: 'check_circle',
-                            text: `Joined at ${toTimeString(arr[0])}`,
-                            index: 2,
-                        })
-                    } else {
-                        entries.push({
-                            name: name,
-                            color: 'yellow',
-                            tooltip: 'Previously Present',
-                            icon: 'watch_later',
-                            text: `Last seen at ${toTimeString(
-                                arr[arr.length - 1]
-                            )}`,
-                            index: 1,
-                        })
-                    }
+        }
+        let entries = []
+        const bigRoster = roster.map((name) => name.toLocaleUpperCase())
+        for (const name in attendance) {
+            const arr = attendance[name]
+            if (bigRoster.includes(name.toLocaleUpperCase())) {
+                if (arr.length % 2 === 1) {
+                    entries.push({
+                        name: name,
+                        color: 'green',
+                        tooltip: 'Present',
+                        icon: 'check_circle',
+                        text: `Joined at ${toTimeString(arr[0])}`,
+                        index: 2,
+                    })
                 } else {
                     entries.push({
                         name: name,
-                        color: 'gray',
-                        tooltip: 'Not on List',
-                        icon: 'error',
-                        text: `Joined at ${toTimeString(arr[0])}`,
-                        index: -1,
+                        color: 'yellow',
+                        tooltip: 'Previously Present',
+                        icon: 'watch_later',
+                        text: `Last seen at ${toTimeString(
+                            arr[arr.length - 1]
+                        )}`,
+                        index: 1,
                     })
-                }
-            }
-            const bigAttendance = Object.keys(attendance).map((key) =>
-                key.toLocaleUpperCase()
-            )
-            for (const name of roster) {
-                if (!bigAttendance.includes(name.toLocaleUpperCase())) {
-                    entries.push({
-                        name: name,
-                        color: 'red',
-                        tooltip: 'Absent',
-                        icon: 'cancel',
-                        text: 'Not here',
-                        index: 0,
-                    })
-                }
-            }
-
-            if (sortMethod === 'firstName') {
-                compare = (a, b) => {
-                    return compareFirst(a.name, b.name)
-                }
-            } else if (sortMethod === 'lastName') {
-                compare = (a, b) => {
-                    return compareLast(a.name, b.name)
-                }
-            } else if (sortMethod === 'presentFirst') {
-                compare = (a, b) => {
-                    return b.index - a.index
                 }
             } else {
-                compare = (a, b) => {
-                    if (a.index === -1 || b.index === -1) {
-                        return b.index - a.index
-                    }
-                    return a.index - b.index
-                }
+                entries.push({
+                    name: name,
+                    color: 'gray',
+                    tooltip: 'Not on List',
+                    icon: 'error',
+                    text: `Joined at ${toTimeString(arr[0])}`,
+                    index: -1,
+                })
             }
+        }
+        const bigAttendance = Object.keys(attendance).map((key) =>
+            key.toLocaleUpperCase()
+        )
+        for (const name of roster) {
+            if (!bigAttendance.includes(name.toLocaleUpperCase())) {
+                entries.push({
+                    name: name,
+                    color: 'red',
+                    tooltip: 'Absent',
+                    icon: 'cancel',
+                    text: 'Not here',
+                    index: 0,
+                })
+            }
+        }
 
-            for (const entry of entries) {
-                if (entry.index === -1) {
-                    var metaIcon = 'add_circle'
-                    var metaTooltip = 'Add to Class'
-                } else {
-                    metaIcon = 'remove_circle'
-                    metaTooltip = 'Remove from Class'
+        if (sortMethod === 'firstName') {
+            var compare = (a, b) => {
+                return compareFirst(a.name, b.name)
+            }
+        } else if (sortMethod === 'lastName') {
+            compare = (a, b) => {
+                return compareLast(a.name, b.name)
+            }
+        } else if (sortMethod === 'presentFirst') {
+            compare = (a, b) => {
+                return b.index - a.index
+            }
+        } else {
+            compare = (a, b) => {
+                if (a.index === -1 || b.index === -1) {
+                    return b.index - a.index
                 }
-                var meta = `<div class="mdc-list-item__meta">
+                return a.index - b.index
+            }
+        }
+        entries.sort(compare)
+
+        for (const entry of entries) {
+            if (entry.index === -1) {
+                var metaIcon = 'add_circle'
+                var metaTooltip = 'Add to Class'
+            } else {
+                metaIcon = 'remove_circle'
+                metaTooltip = 'Remove from Class'
+            }
+            var meta = `<div class="mdc-list-item__meta">
                 <button
                     class="mdc-icon-button material-icons"
                     aria-label="${metaTooltip}"
@@ -450,9 +451,9 @@
                     ${metaIcon}
                 </button>
             </div>`
-                rosterStatus.insertAdjacentHTML(
-                    'beforeend',
-                    `<li class="mdc-list-divider" role="separator"></li>
+            rosterStatus.insertAdjacentHTML(
+                'beforeend',
+                `<li class="mdc-list-divider" role="separator"></li>
                 <li class="mdc-list-item" tabindex="0">
                     <span
                         class="mdc-list-item__graphic material-icons ${entry.color}"
@@ -476,31 +477,30 @@
                     </span>
                     ${meta}
                 </li>`
-                )
-                const metaButton = rosterStatus.lastChild.querySelector(
-                    '.mdc-icon-button'
-                )
-                if (entry.index === -1) {
-                    metaButton.addEventListener('click', function () {
-                        removeSnackbarButtons()
-                        rostersCache = rosters
-                        addStudent(entry.name)
-                        snackbar.labelText = `Added ${entry.name} to class.`
-                        sbUndo.style.display = 'inline-flex'
-                        snackbar.close()
-                        snackbar.open()
-                    })
-                } else {
-                    metaButton.addEventListener('click', function () {
-                        removeSnackbarButtons()
-                        rostersCache = rosters
-                        removeStudent(entry.name)
-                        snackbar.labelText = `Removed ${entry.name} from class.`
-                        sbUndo.style.display = 'inline-flex'
-                        snackbar.close()
-                        snackbar.open()
-                    })
-                }
+            )
+            const metaButton = rosterStatus.lastChild.querySelector(
+                '.mdc-icon-button'
+            )
+            if (entry.index === -1) {
+                metaButton.addEventListener('click', function () {
+                    removeSnackbarButtons()
+                    rostersCache = rosters
+                    addStudent(entry.name)
+                    snackbar.labelText = `Added ${entry.name} to class.`
+                    sbUndo.style.display = 'inline-flex'
+                    snackbar.close()
+                    snackbar.open()
+                })
+            } else {
+                metaButton.addEventListener('click', function () {
+                    removeSnackbarButtons()
+                    rostersCache = rosters
+                    removeStudent(entry.name)
+                    snackbar.labelText = `Removed ${entry.name} from class.`
+                    sbUndo.style.display = 'inline-flex'
+                    snackbar.close()
+                    snackbar.open()
+                })
             }
         }
     }

@@ -16,11 +16,11 @@
                     if (p && p.value && !v.prototype[k].__grid_ran) {
                         let funcString = p.value.toString()
                         if (regex.test(funcString)) {
-                            funcString = funcString.slice(11, -1)
-                            let newFuncString =
-                                `window.dispatchEvent(new CustomEvent("atd", {detail:this}));` +
-                                funcString
-                            v.prototype[k] = new Function(newFuncString)
+                            const og = v.prototype[k]
+                            v.prototype[k] = function() {
+                                window.dispatchEvent(new CustomEvent("atd",{detail:this}))
+                                og.call(this)
+                            }
                             log(
                                 `Successfully hooked into participant data function.`
                             )

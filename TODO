@@ -1,3 +1,28 @@
-- Troubleshooting
-- Translations
-- Have a separate sheet to be able to select a class, then select a student, and filter all the data and show only that student's attendance throughout each day (pivot tables?)
+UI:
+    ✔ Only show select popup on first join, option to disable @started(20-09-28 13:13) @done(20-09-28 14:15) @lasted(1h2m43s)
+    ✔ Snackbars for deleting class, saving class, adding/removing people @done(20-09-04 12:00)
+    ✔ Add and remove buttons next to student names @done(20-08-28 12:00)
+    ✔ Link to spreadsheet when done exporting @done(20-08-25 12:00)
+    ✔ Sort functionality @done(20-08-19 12:00)
+    ✔ Ability to paste names into text box @done(20-08-19 12:00)
+
+Backend:
+    ✔ Hook into exposed function to get attendance instead of opening people tab @critical @done(20-09-22 12:00)
+    ✔ Safer instantiation @high @done(20-09-22 12:00)
+    ✔ Refactor to async/await @done(20-09-11 12:00)
+    ✔ Smarter last names @done(20-08-29 12:00)
+    Spreadsheet Management:
+        ☐ Filter data by student and class (pivot tables?)
+        ✔ Remove number of rows from developer metadata, use the spreadsheet object to get groups instead @done(20-08-25 12:00)
+        ✔ Adjust to changing class sizes @done(20-08-19 12:00)
+        ✔ Rename sheet when renamed class @done(20-08-21 12:00)
+        ✔ Export on close option @done(20-09-04 12:00)
+
+Translations:
+    ☐ Setup translations.js
+    ☐ Replace all instances of text with path to translation
+    ☐ Recruit volunteers to provide translations
+
+README:
+    ☐ Troubleshooting
+    ✔ Tutorial @done(20-09-04 12:00)

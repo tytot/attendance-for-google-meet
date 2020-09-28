@@ -11,6 +11,8 @@
     let port = chrome.runtime.connect()
     let rostersCache = null
     let sortMethod = 'lastName'
+    let classTextField, stuTextFieldEl, stuTextField, chipSetEl, chipSet
+    let nameArray = []
 
     window.addEventListener('message', function (event) {
         if (event.origin !== 'https://meet.google.com') return
@@ -114,16 +116,47 @@
         })
 
     const selectDialog = new MDCDialog(document.getElementById('select'))
-    selectDialog.scrimClickAction = ''
-    selectDialog.escapeKeyAction = ''
-    selectDialog.open()
-    selectDialog.autoStackButtons = false
-    selectDialog.listen('MDCDialog:closed', (event) => {
-        const element = document.getElementById('select')
-        element.parentNode.removeChild(element)
-        prepareChips('card-class-view', 'card-default-view', 'card-edit-view')
+    chrome.storage.sync.get(null, function (result) {
+        const code = getMeetCode()
+        if (result['show-popup'] && !result.hasOwnProperty(code)) {
+            selectDialog.open()
+            selectDialog.scrimClickAction = ''
+            selectDialog.escapeKeyAction = ''
+            selectDialog.autoStackButtons = false
+            selectDialog.listen('MDCDialog:closed', (event) => {
+                initCard()
+            })
 
-        forceStatusUpdate()
+            prepareChips(null, 'dialog-default-view', 'dialog-edit-view')
+
+            document.getElementById('later').addEventListener('click', () => {
+                document.getElementById('card-class-view').hidden = false
+                document.getElementById('card-default-view').hidden = true
+            })
+            selectButton.addEventListener('click', () => {
+                const className =
+                    classList.listElements[classList.selectedIndex].name
+                const code = getMeetCode()
+                chrome.storage.sync.get(code, function (result) {
+                    let res = result[code]
+                    res.class = className
+                    chrome.storage.sync.set({ [code]: res })
+                    document.getElementById('class-label').innerText = className
+                })
+            })
+            document
+                .getElementById('cancel-class')
+                .addEventListener('click', function () {
+                    document.getElementById(
+                        'dialog-default-view'
+                    ).hidden = false
+                    document.getElementById('dialog-edit-view').hidden = true
+                })
+        } else {
+            document.getElementById('card-class-view').hidden = false
+            document.getElementById('card-default-view').hidden = true
+            initCard()
+        }
     })
 
     const confirmDeleteDialog = new MDCDialog(
@@ -190,25 +223,6 @@
         }
     })
 
-    let classTextField, stuTextFieldEl, stuTextField, chipSetEl, chipSet
-    let nameArray = []
-    prepareChips(null, 'dialog-default-view', 'dialog-edit-view')
-
-    document.getElementById('later').addEventListener('click', () => {
-        document.getElementById('card-class-view').hidden = false
-        document.getElementById('card-default-view').hidden = true
-    })
-    selectButton.addEventListener('click', () => {
-        const className = classList.listElements[classList.selectedIndex].name
-        const code = getMeetCode()
-        chrome.storage.sync.get(code, function (result) {
-            let res = result[code]
-            res.class = className
-            chrome.storage.sync.set({ [code]: res })
-            document.getElementById('class-label').innerText = className
-        })
-    })
-
     document
         .getElementById('default-back')
         .addEventListener('click', function () {
@@ -227,13 +241,6 @@
         }
         document.getElementById('card-edit-view').hidden = true
     })
-
-    document
-        .getElementById('cancel-class')
-        .addEventListener('click', function () {
-            document.getElementById('dialog-default-view').hidden = false
-            document.getElementById('dialog-edit-view').hidden = true
-        })
 
     document.addEventListener('keydown', function (event) {
         if (event.keyCode === 8 || event.key === 'Backspace') {
@@ -522,6 +529,13 @@
                 url: url,
             })
         })
+    }
+
+    function initCard() {
+        const element = document.getElementById('select')
+        element.parentNode.removeChild(element)
+        prepareChips('card-class-view', 'card-default-view', 'card-edit-view')
+        forceStatusUpdate()
     }
 
     function showCard() {

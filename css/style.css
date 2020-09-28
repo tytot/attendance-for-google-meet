@@ -127,7 +127,7 @@
     border-radius: 8px;
 }
 
-#delete-dialog .mdc-dialog__surface  {
+#delete-dialog .mdc-dialog__surface {
     border-radius: 8px;
 }
 
@@ -157,21 +157,25 @@
     font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
-#no-classes, #no-students {
+#no-classes,
+#no-students {
     display: flex;
     align-items: center;
     max-width: 400px;
 }
 
-#no-classes i, #no-students i {
+#no-classes i,
+#no-students i {
     font-size: 48px;
     margin-left: 24px;
     margin-right: 8px;
-    color: #9e9e9e
+    color: #9e9e9e;
 }
 
-#no-classes p, #no-students p {
+#no-classes p,
+#no-students p {
     font-size: 16px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
     text-align: center;
     margin-right: 24px;
 }
@@ -181,7 +185,7 @@
     height: 48px;
     justify-content: left;
     padding-left: 16px;
-    color: #058D80;
+    color: #058d80;
 }
 
 #addeth-class .mdc-button__icon {
@@ -189,7 +193,7 @@
     height: 24px;
     font-size: 24px;
     margin-right: 16px;
-    color: #058D80;
+    color: #058d80;
 }
 
 #edit-roster {

@@ -19,26 +19,39 @@ const MDCSnackbar = mdc.snackbar.MDCSnackbar
 const snackbar = new MDCSnackbar(document.querySelector('.mdc-snackbar'))
 
 const MDCSwitch = mdc.switchControl.MDCSwitch
-const switchControl = new MDCSwitch(document.querySelector('.mdc-switch'))
+const exportSwitch = new MDCSwitch(
+    document.querySelector('#auto-export .mdc-switch')
+)
+const popupSwitch = new MDCSwitch(
+    document.querySelector('#show-popup .mdc-switch')
+)
 const openButton = document.querySelector('#open')
 
 let autoExport = false
-chrome.storage.sync.get(['auto-export', 'spreadsheet-id'], function (result) {
-    if (result['auto-export']) {
-        switchControl.checked = true
-        autoExport = true
-    }
+let showPopup = false
+chrome.storage.sync.get(
+    ['auto-export', 'show-popup', 'spreadsheet-id'],
+    function (result) {
+        if (result['auto-export']) {
+            exportSwitch.checked = true
+            autoExport = true
+        }
+        if (result['show-popup']) {
+            popupSwitch.checked = true
+            showPopup = true
+        }
 
-    const id = result['spreadsheet-id']
-    if (id == undefined) {
-        openButton.disabled = true
-    } else {
-        openButton.addEventListener('click', function () {
-            const url = `https://docs.google.com/spreadsheets/d/${id}`
-            chrome.tabs.create({ url: url })
-        })
+        const id = result['spreadsheet-id']
+        if (id == undefined) {
+            openButton.disabled = true
+        } else {
+            openButton.addEventListener('click', function () {
+                const url = `https://docs.google.com/spreadsheets/d/${id}`
+                chrome.tabs.create({ url: url })
+            })
+        }
     }
-})
+)
 
 document.querySelector('#docs').addEventListener('click', function () {
     chrome.tabs.create({
@@ -52,9 +65,15 @@ document.querySelector('#contact').addEventListener('click', function () {
     })
 })
 document.querySelector('#auto-export').addEventListener('click', function () {
-    if (switchControl.checked !== autoExport) {
-        autoExport = switchControl.checked
-        chrome.storage.sync.set({ 'auto-export': switchControl.checked })
+    if (exportSwitch.checked !== autoExport) {
+        autoExport = exportSwitch.checked
+        chrome.storage.sync.set({ 'auto-export': exportSwitch.checked })
+    }
+})
+document.querySelector('#show-popup').addEventListener('click', function () {
+    if (popupSwitch.checked !== showPopup) {
+        showPopup = popupSwitch.checked
+        chrome.storage.sync.set({ 'show-popup': popupSwitch.checked })
     }
 })
 

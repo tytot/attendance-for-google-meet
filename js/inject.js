@@ -17,12 +17,14 @@
                         let funcString = p.value.toString()
                         if (regex.test(funcString)) {
                             const og = v.prototype[k]
-                            v.prototype[k] = function() {
-                                window.dispatchEvent(new CustomEvent("atd",{detail:this}))
+                            v.prototype[k] = function () {
+                                window.dispatchEvent(
+                                    new CustomEvent('atd', { detail: this })
+                                )
                                 og.call(this)
                             }
                             log(
-                                `Successfully hooked into participant data function.`
+                                `Successfully hooked into participant data function at ${_k}.prototype.${k}.`
                             )
                             clearInterval(finder)
                             break outer

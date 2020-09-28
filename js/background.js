@@ -1,20 +1,24 @@
 chrome.runtime.onInstalled.addListener(function (details) {
-    if (details.reason === 'install') {
-        chrome.storage.sync.set({ 'auto-export': false })
-    } else if (details.reason === 'update') {
-        const pv = details.previousVersion
-        if (
-            pv === '1.0.3' ||
-            pv === '1.0.2' ||
-            pv === '1.0.1' ||
-            pv === '1.0.0'
-        ) {
-            chrome.storage.local.get(null, function (data) {
+    chrome.storage.local.get(null, function (data) {
+        if (details.reason === 'update') {
+            const pv = details.previousVersion
+            if (
+                pv === '1.0.3' ||
+                pv === '1.0.2' ||
+                pv === '1.0.1' ||
+                pv === '1.0.0'
+            ) {
                 chrome.storage.sync.set(data)
                 chrome.storage.local.clear()
-            })
+            }
         }
-    }
+        if (!data.hasOwnProperty('auto-export')) {
+            chrome.storage.sync.set({ 'auto-export': false })
+        }
+        if (!data.hasOwnProperty('show-popup')) {
+            chrome.storage.sync.set({ 'show-popup': true })
+        }
+    })
 })
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
@@ -102,9 +106,7 @@ chrome.runtime.onConnect.addListener(function (port) {
                             id,
                             sheetId
                         )
-                        log(
-                            `Renamed sheet ${oldClassName} to ${newClassName}`
-                        )
+                        log(`Renamed sheet ${oldClassName} to ${newClassName}`)
                         console.log(data)
                     } catch (error) {
                         console.log(error)
@@ -205,9 +207,7 @@ async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
             sheetId++
             requests = requests.concat(addSheet(className, code, sheetId))
             requests = requests.concat(createHeaders(sheetId))
-            log(
-                `Creating new sheet for class ${className}, ID ${sheetId}`
-            )
+            log(`Creating new sheet for class ${className}, ID ${sheetId}`)
         } else {
             sheetId = classMeta.location.sheetId
         }

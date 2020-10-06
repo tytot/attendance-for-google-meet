@@ -20,7 +20,7 @@ function initialize() {
         },
         function (response) {
             if (response.ready) {
-                log('Initializing extension...')
+                Utils.log('Initializing extension...')
                 document.body.insertAdjacentHTML(
                     'afterbegin',
                     confirmDeleteDialogHTML
@@ -56,7 +56,7 @@ function instantiate() {
             data: 'instantiate',
         },
         function () {
-            log('Successfully initialized extension.')
+            Utils.log('Successfully initialized extension.')
         }
     )
 }

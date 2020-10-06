@@ -43,7 +43,7 @@ function createSheetMetadata(className, sheetId) {
     const request = {
         createDeveloperMetadata: {
             developerMetadata: {
-                metadataId: hashCode(className),
+                metadataId: Utils.hashCode(className),
                 metadataKey: className,
                 location: {
                     sheetId: sheetId,
@@ -60,7 +60,7 @@ function deleteSheetMetadata(oldClassName) {
         deleteDeveloperMetadata: {
             dataFilter: {
                 developerMetadataLookup: {
-                    metadataId: hashCode(oldClassName),
+                    metadataId: Utils.hashCode(oldClassName),
                 },
             },
         },
@@ -322,7 +322,7 @@ function initializeCells(code, sheetId) {
             {
                 createDeveloperMetadata: {
                     developerMetadata: {
-                        metadataId: hashCode(`${code}§${sheetId}`),
+                        metadataId: Utils.hashCode(`${code}§${sheetId}`),
                         metadataKey: code,
                         location: {
                             dimensionRange: {
@@ -561,7 +561,7 @@ function generateAttendanceRows(code) {
             const roster = result.rosters[result[code].class]
             const rawData = result[code].attendance
 
-            const dts = dateTimeString(startUnix, unix)
+            const dts = Utils.dateTimeString(startUnix, unix)
             const header = `${dts} (${mins} min): ${code}`
             let rowData = [
                 {
@@ -600,10 +600,11 @@ function generateAttendanceRows(code) {
             ]
 
             let names = Array.from(roster)
-            names.sort(compareLast)
+            names.sort(Utils.compareLast)
             for (const name of names) {
-                const firstName = getFirstName(name)
-                const lastName = getLastName(name)
+                const nameList = name.split('|')
+                const firstName = nameList[0]
+                const lastName = nameList[1]
                 let present = 'N',
                     timeIn = '',
                     timeOut = '',
@@ -618,9 +619,9 @@ function generateAttendanceRows(code) {
                         const l = timestamps.length
                         if (l > 0) {
                             present = 'Y'
-                            timeIn = toTimeString(timestamps[0])
+                            timeIn = Utils.toTimeString(timestamps[0])
                             if ((l - 1) % 2 === 1) {
-                                timeOut = toTimeString(timestamps[l - 1])
+                                timeOut = Utils.toTimeString(timestamps[l - 1])
                             }
                             joins = Math.ceil(l / 2)
                             for (let i = 0; i < l; i += 2) {
@@ -815,19 +816,21 @@ function getMetaByKey(key, token, spreadsheetId) {
         }
         try {
             const response = await fetch(
-                `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/developerMetadata/${hashCode(
+                `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/developerMetadata/${Utils.hashCode(
                     key
                 )}`,
                 init
             )
             if (response.ok || response.status === 404) {
                 const data = await response.json()
-                log(`Get metadata for key ${key} response:`)
+                Utils.log(`Get metadata for key ${key} response:`)
                 console.log(data)
                 if (data.error) {
                     resolve(null)
                 }
                 resolve(data)
+            } else if (response.status == 401) {
+                throw response
             } else {
                 console.log(response)
                 throw new Error(
@@ -886,11 +889,11 @@ function getRowCountByStartRow(token, spreadsheetId, sheetId, startRow) {
     })
 }
 
-function batchUpdate(token, requests, spreadsheetId, sheetId) {
-    if (sheetId) {
+function batchUpdate(token, requests, spreadsheetId, sheetId = -1) {
+    if (sheetId !== -1) {
         requests.push(autoResize(sheetId))
     }
-    log('Executing batch update...')
+    Utils.log('Executing batch update...')
     console.log(requests)
     return new Promise(async (resolve, reject) => {
         const body = {

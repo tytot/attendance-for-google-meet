@@ -91,11 +91,58 @@ expandButton.addEventListener('click', function () {
     }
 })
 
+const refreshButton = document.querySelector('#refresh')
+refreshButton.addEventListener('click', function () {
+    chrome.storage.sync.get('last-token-refresh', function (result) {
+        const unix = ~~(Date.now() / 1000)
+        let valid = true
+        if (result.hasOwnProperty('last-token-refresh')) {
+            if (unix - result['last-token-refresh'] < 86400) {
+                valid = false
+            }
+        }
+        if (valid) {
+            chrome.storage.sync.set({ 'last-token-refresh': unix })
+            refreshButton.disabled = true
+            try {
+                chrome.identity.getAuthToken({ interactive: false }, function (
+                    token
+                ) {
+                    chrome.identity.removeCachedAuthToken(
+                        { token: token },
+                        function () {
+                            console.log(`Removed auth token ${token}.`)
+                            snackbar.close()
+                            snackbar.labelText =
+                                'Successfully refreshed auth token.'
+                            snackbar.open()
+                            refreshButton.disabled = false
+                        }
+                    )
+                })
+            } catch (error) {
+                console.log(error)
+                snackbar.close()
+                snackbar.labelText =
+                    'An error occurred while refreshing your auth token.'
+                snackbar.open()
+                refreshButton.disabled = false
+            }
+        } else {
+            snackbar.close()
+            snackbar.labelText =
+                'Please wait until tomorrow to refresh your token again.'
+            snackbar.open()
+        }
+    })
+})
+
 document.querySelector('#reset').addEventListener('click', function () {
     resetDialog.open()
 })
 document.querySelector('#confirm-reset').addEventListener('click', function () {
     chrome.storage.sync.remove('spreadsheet-id', function () {
+        snackbar.close()
         snackbar.labelText = 'Successfully reset default spreadsheet.'
         snackbar.open()
         openButton.disabled = true
@@ -112,6 +159,7 @@ document.querySelector('#confirm-clear').addEventListener('click', function () {
                 chrome.storage.sync.remove(key)
             }
         }
+        snackbar.close()
         snackbar.labelText = 'Successfully cleared storage.'
         snackbar.open()
     })

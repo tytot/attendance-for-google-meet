@@ -144,6 +144,7 @@ hr.divider {
 }
 
 #expand .mdc-button__label,
+#refresh .mdc-button__label,
 #reset .mdc-button__label,
 #clear .mdc-button__label {
     width: 280px;

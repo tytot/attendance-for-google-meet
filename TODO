@@ -1,4 +1,5 @@
 UI:
+    ✔ Option on popup to verify extension @started(20-10-03 21:32) @done(20-10-03 22:02) @lasted(30m12s)
     ✔ Only show select popup on first join, option to disable @started(20-09-28 13:13) @done(20-09-28 14:15) @lasted(1h2m43s)
     ✔ Snackbars for deleting class, saving class, adding/removing people @done(20-09-04 12:00)
     ✔ Add and remove buttons next to student names @done(20-08-28 12:00)
@@ -7,8 +8,12 @@ UI:
     ✔ Ability to paste names into text box @done(20-08-19 12:00)
 
 Backend:
-    ✔ Hook into exposed function to get attendance instead of opening people tab @critical @done(20-09-22 12:00)
-    ✔ Safer instantiation @high @done(20-09-22 12:00)
+    ☐ Maybe use Maps instead of Objects?
+    ☐ Resolve bug wherein some present students are marked as absent @low
+    ✔ Determine first/last names from video data object @low @started(20-10-05 11:32) @done(20-10-06 15:43) @lasted(1d4h11m3s)
+    ✔ Deal with cases in which token is invalid @started(20-10-01 19:13) @done(20-10-03 21:33) @lasted(2d2h20m40s)
+    ✔ Hook into exposed function to get attendance instead of opening people tab @high @done(20-09-22 12:00)
+    ✔ Safer instantiation @low @done(20-09-22 12:00)
     ✔ Refactor to async/await @done(20-09-11 12:00)
     ✔ Smarter last names @done(20-08-29 12:00)
     Spreadsheet Management:

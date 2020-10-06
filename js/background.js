@@ -60,27 +60,17 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
 chrome.runtime.onConnect.addListener(function (port) {
     port.onMessage.addListener(function (msg) {
-        const code = msg.code
         chrome.identity.getAuthToken({ interactive: true }, function (token) {
-            if (msg.data === 'export') {
-                chrome.storage.sync.get(['spreadsheet-id', code], function (
-                    result
-                ) {
-                    if (msg.auto) {
-                        port = null
-                    } else {
-                        postMessage(port, { progress: 0 })
-                    }
-                    const id = result['spreadsheet-id']
-                    const className = result[code].class
-                    log('Meet code: ' + code)
-                    if (id == undefined) {
-                        createSpreadsheet(token, className, code, port)
-                    } else {
-                        updateSpreadsheet(token, className, code, id, port)
-                    }
+            if (token == undefined) {
+                postMessage(port, {
+                    done: true,
+                    error: 'The user did not approve access.',
+                    progress: 0,
                 })
+            } else if (msg.data === 'export') {
+                tryExport(msg, token, port)
             } else if (msg.data === 'rename') {
+                const code = msg.code
                 chrome.storage.sync.get('spreadsheet-id', async function (
                     result
                 ) {
@@ -106,7 +96,7 @@ chrome.runtime.onConnect.addListener(function (port) {
                             id,
                             sheetId
                         )
-                        log(`Renamed sheet ${oldClassName} to ${newClassName}`)
+                        Utils.log(`Renamed sheet ${oldClassName} to ${newClassName}`)
                         console.log(data)
                     } catch (error) {
                         console.log(error)
@@ -116,14 +106,16 @@ chrome.runtime.onConnect.addListener(function (port) {
                 chrome.storage.sync.get('spreadsheet-id', async function (
                     result
                 ) {
-                    const id = result['spreadsheet-id']
-                    let requests = []
-                    for (const code of msg.codes) {
-                        requests.push(deleteCodeMetadata(code))
+                    if (result.hasOwnProperty('spreadsheet-id')) {
+                        const id = result['spreadsheet-id']
+                        let requests = []
+                        for (const code of msg.codes) {
+                            requests.push(deleteCodeMetadata(code))
+                        }
+                        const data = await batchUpdate(token, requests, id)
+                        Utils.log('Delete metadata response:')
+                        console.log(data)
                     }
-                    const data = await batchUpdate(token, requests, id)
-                    log('Delete metadata response:')
-                    console.log(data)
                 })
             }
         })
@@ -136,7 +128,26 @@ function postMessage(port, message) {
     }
 }
 
-async function createSpreadsheet(token, className, code, port) {
+function tryExport(msg, token, port, retry = false) {
+    const code = msg.code
+    chrome.storage.sync.get(['spreadsheet-id', code], async function (result) {
+        if (msg.auto) {
+            port = null
+        } else {
+            postMessage(port, { progress: 0 })
+        }
+        const id = result['spreadsheet-id']
+        const className = result[code].class
+        Utils.log('Meet code: ' + code)
+        if (id == undefined) {
+            createSpreadsheet(token, className, code, port, retry)
+        } else {
+            updateSpreadsheet(token, className, code, id, port, retry)
+        }
+    })
+}
+
+async function createSpreadsheet(token, className, code, port, retry) {
     const body = {
         properties: {
             title: 'Attendance for Google Meet™',
@@ -154,14 +165,17 @@ async function createSpreadsheet(token, className, code, port) {
     }
     let spreadsheetId = null
     let requests = []
-    log('Creating new attendance spreadsheet...')
+    Utils.log('Creating new attendance spreadsheet...')
 
     try {
         const newSpreadsheet = await (
             await fetch('https://sheets.googleapis.com/v4/spreadsheets', init)
         ).json()
+        if (newSpreadsheet.spreadsheetId == undefined) {
+            throw newSpreadsheet.error
+        }
         postMessage(port, { progress: 0.3 })
-        log(
+        Utils.log(
             `Successfully created Attendance spreadsheet with id ${newSpreadsheet.spreadsheetId}.`
         )
         chrome.storage.sync.set({
@@ -177,20 +191,43 @@ async function createSpreadsheet(token, className, code, port) {
         requests = requests.concat(icReqs)
         const data = await batchUpdate(token, requests, spreadsheetId, 0)
         postMessage(port, { done: true, progress: 1 })
-        log('Initialize spreadsheet response:')
+        Utils.log('Initialize spreadsheet response:')
         console.log(data)
     } catch (error) {
-        postMessage(port, {
-            done: true,
-            error: error.message,
-            progress: 0,
-        })
+        if (!retry && error.code === 401) {
+            chrome.identity.removeCachedAuthToken(
+                { token: token },
+                function () {
+                    Utils.log('Removed cached auth token.')
+                    Utils.log('Retrying export...')
+                    chrome.identity.getAuthToken(
+                        { interactive: true },
+                        function (newToken) {
+                            tryExport({ code: code }, newToken, port, true)
+                        }
+                    )
+                }
+            )
+        } else {
+            postMessage(port, {
+                done: true,
+                error: error.message,
+                progress: 0,
+            })
+        }
     }
 }
 
-async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
+async function updateSpreadsheet(
+    token,
+    className,
+    code,
+    spreadsheetId,
+    port,
+    retry = false
+) {
     let requests = []
-    log('Updating spreadsheet...')
+    Utils.log('Updating spreadsheet...')
 
     try {
         const classMeta = await getMetaByKey(className, token, spreadsheetId)
@@ -207,7 +244,7 @@ async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
             sheetId++
             requests = requests.concat(addSheet(className, code, sheetId))
             requests = requests.concat(createHeaders(sheetId))
-            log(`Creating new sheet for class ${className}, ID ${sheetId}`)
+            Utils.log(`Creating new sheet for class ${className}, ID ${sheetId}`)
         } else {
             sheetId = classMeta.location.sheetId
         }
@@ -234,21 +271,37 @@ async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
         requests = requests.concat(icReqs)
         let data = await batchUpdate(token, requests, spreadsheetId, sheetId)
         postMessage(port, { progress: 0.65 })
-        log('Update spreadsheet response:')
+        Utils.log('Update spreadsheet response:')
         console.log(data)
         const cgReqs = await collapseGroup(token, code, spreadsheetId, sheetId)
         postMessage(port, { progress: 0.75 })
         if (cgReqs) {
             data = await batchUpdate(token, cgReqs, spreadsheetId, sheetId)
-            log('Update metadata and groups response:')
+            Utils.log('Update metadata and groups response:')
             console.log(data)
         }
         postMessage(port, { done: true, progress: 1 })
     } catch (error) {
-        postMessage(port, {
-            done: true,
-            error: error.message,
-            progress: 0,
-        })
+        if (!retry && error.status === 401) {
+            chrome.identity.removeCachedAuthToken(
+                { token: token },
+                function () {
+                    Utils.log('Removed cached auth token.')
+                    Utils.log('Retrying export...')
+                    chrome.identity.getAuthToken(
+                        { interactive: true },
+                        function (newToken) {
+                            tryExport({ code: code }, newToken, port, true)
+                        }
+                    )
+                }
+            )
+        } else {
+            postMessage(port, {
+                done: true,
+                error: error.message,
+                progress: 0,
+            })
+        }
     }
 }

@@ -88,7 +88,7 @@
     exportButton.addEventListener('click', function () {
         port.postMessage({ data: 'export', auto: false, code: getMeetCode() })
         exportButton.disabled = true
-        log('Exporting...')
+        Utils.log('Exporting...')
     })
     window.addEventListener('beforeunload', function () {
         chrome.storage.sync.get('auto-export', function (result) {
@@ -287,6 +287,7 @@
     }
 
     function storeNames(names) {
+        console.log(names)
         const code = getMeetCode()
         chrome.storage.sync.get(null, function (result) {
             const timestamp = ~~(Date.now() / 1000)
@@ -344,14 +345,19 @@
 
             const className = res.class
             if (className) {
-                updateRosterStatus(currentData, result.rosters, className)
+                updateRosterStatus(currentData, result.rosters, className, true)
             }
 
             chrome.storage.sync.set({ [code]: res })
         })
     }
 
-    function updateRosterStatus(attendance, rosters, className) {
+    function updateRosterStatus(
+        attendance,
+        rosters,
+        className,
+        detect = false
+    ) {
         const rosterStatus = document.getElementById('roster-status')
         rosterStatus.innerHTML = ''
 
@@ -362,41 +368,61 @@
             document.querySelector('#no-students').style.display = 'none'
         }
         let entries = []
-        const bigRoster = roster.map((name) => name.toLocaleUpperCase())
+        let changed = false
         for (const name in attendance) {
             const arr = attendance[name]
-            if (bigRoster.includes(name.toLocaleUpperCase())) {
-                if (arr.length % 2 === 1) {
-                    entries.push({
-                        name: name,
-                        color: 'green',
-                        tooltip: 'Present',
-                        icon: 'check_circle',
-                        text: `Joined at ${toTimeString(arr[0])}`,
-                        index: 2,
-                    })
-                } else {
-                    entries.push({
-                        name: name,
-                        color: 'yellow',
-                        tooltip: 'Previously Present',
-                        icon: 'watch_later',
-                        text: `Last seen at ${toTimeString(
-                            arr[arr.length - 1]
-                        )}`,
-                        index: 1,
-                    })
+            let found = false
+            let i = 0
+            while (!found && i < roster.length) {
+                const testName = roster[i]
+                if (
+                    testName.replace('|', ' ').toLocaleUpperCase() ===
+                    name.replace('|', ' ').toLocaleUpperCase()
+                ) {
+                    found = true
+                    if (arr.length % 2 === 1) {
+                        entries.push({
+                            name: name,
+                            color: 'green',
+                            tooltip: 'Present',
+                            icon: 'check_circle',
+                            text: `Joined at ${Utils.toTimeString(arr[0])}`,
+                            index: 2,
+                        })
+                    } else {
+                        entries.push({
+                            name: name,
+                            color: 'yellow',
+                            tooltip: 'Previously Present',
+                            icon: 'watch_later',
+                            text: `Last seen at ${Utils.toTimeString(
+                                arr[arr.length - 1]
+                            )}`,
+                            index: 1,
+                        })
+                    }
+                    if (testName !== name) {
+                        roster[i] = name
+                        if (!changed) {
+                            changed = true
+                        }
+                    }
                 }
-            } else {
+                i++
+            }
+            if (!found) {
                 entries.push({
                     name: name,
                     color: 'gray',
                     tooltip: 'Not on List',
                     icon: 'error',
-                    text: `Joined at ${toTimeString(arr[0])}`,
+                    text: `Joined at ${Utils.toTimeString(arr[0])}`,
                     index: -1,
                 })
             }
+        }
+        if (detect && changed) {
+            chrome.storage.sync.set({ rosters: rosters })
         }
         const bigAttendance = Object.keys(attendance).map((key) =>
             key.toLocaleUpperCase()
@@ -416,11 +442,11 @@
 
         if (sortMethod === 'firstName') {
             var compare = (a, b) => {
-                return compareFirst(a.name, b.name)
+                return Utils.compareFirst(a.name, b.name)
             }
         } else if (sortMethod === 'lastName') {
             compare = (a, b) => {
-                return compareLast(a.name, b.name)
+                return Utils.compareLast(a.name, b.name)
             }
         } else if (sortMethod === 'presentFirst') {
             compare = (a, b) => {
@@ -458,6 +484,7 @@
                     ${metaIcon}
                 </button>
             </div>`
+            const realName = entry.name.replace('|', ' ')
             rosterStatus.insertAdjacentHTML(
                 'beforeend',
                 `<li class="mdc-list-divider" role="separator"></li>
@@ -476,7 +503,7 @@
                     </span>
                     <span class="mdc-list-item__text">
                         <span class="mdc-list-item__primary-text">
-                            ${entry.name}
+                            ${realName}
                         </span>
                         <span class="mdc-list-item__secondary-text">
                             ${entry.text}
@@ -493,7 +520,7 @@
                     removeSnackbarButtons()
                     rostersCache = rosters
                     addStudent(entry.name)
-                    snackbar.labelText = `Added ${entry.name} to class.`
+                    snackbar.labelText = `Added ${realName} to class.`
                     sbUndo.style.display = 'inline-flex'
                     snackbar.close()
                     snackbar.open()
@@ -503,7 +530,7 @@
                     removeSnackbarButtons()
                     rostersCache = rosters
                     removeStudent(entry.name)
-                    snackbar.labelText = `Removed ${entry.name} from class.`
+                    snackbar.labelText = `Removed ${realName} from class.`
                     sbUndo.style.display = 'inline-flex'
                     snackbar.close()
                     snackbar.open()
@@ -670,6 +697,20 @@
         })
     }
 
+    function updateClass(className, roster, set = false) {
+        chrome.storage.sync.get('rosters', function (result) {
+            let res = result['rosters']
+            res[className] = roster
+            chrome.storage.sync.set({ rosters: res })
+            if (set) {
+                const code = getMeetCode()
+                result[code].class = className
+                chrome.storage.sync.set({ [code]: result[code] })
+            }
+            resolve()
+        })
+    }
+
     function deleteClass(className) {
         return new Promise((resolve) => {
             chrome.storage.sync.get('rosters', function (result) {
@@ -731,7 +772,7 @@
         chipSetEl.innerHTML = ''
         chipSet = new MDCChipSet(chipSetEl)
         for (const name of nameArray) {
-            addChip(name)
+            addChip(name.replace('|', ' '))
         }
         stuTextField.value = getNewFieldValue()
     }
@@ -834,24 +875,32 @@
                         snackbar.close()
                         snackbar.open()
                     } else {
-                        await deleteClass(initClassName)
                         delete classTextField.initValue
-                        const classEl = await addClass(
-                            className,
-                            nameArray,
-                            !selectDialog.isOpen
-                        )
-                        addDefaultEventListeners(
-                            classEl,
-                            cardView,
-                            defaultView,
-                            editView,
-                            _cardView
-                        )
+                        if (initClassName !== className) {
+                            await deleteClass(initClassName)
+                            const classEl = await addClass(
+                                className,
+                                nameArray,
+                                !selectDialog.isOpen
+                            )
+                            new MDCRipple(classEl)
+                            addDefaultEventListeners(
+                                classEl,
+                                cardView,
+                                defaultView,
+                                editView,
+                                _cardView
+                            )
+                        } else {
+                            await updateClass(
+                                className,
+                                nameArray,
+                                !selectDialog.isOpen
+                            )
+                        }
                         if (selectButton) {
                             selectButton.disabled = true
                         }
-
                         const cardTitle = document.getElementById('class-label')
                         if (cardTitle.adding) {
                             document.getElementById(cardView).hidden = false
@@ -872,7 +921,6 @@
                             document.getElementById(editView).hidden = true
                             forceStatusUpdate()
                         }
-                        new MDCRipple(classEl)
 
                         snackbar.labelText = `Successfully saved class ${className}.`
                         snackbar.close()
@@ -948,8 +996,8 @@
                     !target.classList.contains('delete-class')
                 ) {
                     const code = getMeetCode()
-                    chrome.storage.sync.get(getMeetCode(), function (result) {
-                        let res = result[code]
+                    chrome.storage.sync.get(null, function (result) {
+                        const res = result[code]
                         res.class = classEl.name
                         chrome.storage.sync.set({ [code]: res })
 
@@ -959,7 +1007,12 @@
                         document.getElementById('class-label').innerText =
                             classEl.name
 
-                        forceStatusUpdate()
+                        updateRosterStatus(
+                            res.attendance,
+                            result.rosters,
+                            res.class,
+                            true
+                        )
                     })
                 }
             })

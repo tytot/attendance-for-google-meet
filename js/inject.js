@@ -96,10 +96,23 @@
         )[dataPath[4]][dataPath[5]]
 
         let names = []
+        console.log(data)
+        const regex = /(\(|\[)([^\(\[\)\]]+)(\)|\])/
         for (const v of Object.values(data)) {
             const array = v[arrayKey]
-            if (array[4] && array[6].length === 0 && array[24] !== 2) {
-                names.push(array[1])
+            if (array[4] && array[6].length === 0 && array[20] == undefined) {
+                const fullName = array[1]
+                if (fullName.includes(',')) {
+                    const names = fullName.split(/,(.+)/)
+                    var firstName = names[1]
+                    var lastName = names[0]
+                } else {
+                    firstName = array[28]
+                    lastName = fullName.replace(firstName, '')
+                }
+                firstName = firstName.replace(regex, '').trim()
+                lastName = lastName.replace(regex, '').trim()
+                names.push(firstName + '|' + lastName)
             }
         }
 

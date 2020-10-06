@@ -1,94 +1,98 @@
-function log(message) {
-    console.log(
-        `%c[A4GM]%c ${message} `,
-        'color:white;background:#058D80',
-        'font-weight:bold;color:#058D80;'
-    )
-}
+class Utils {
+    static #nameMap = new Map()
 
-function hashCode(s) {
-    var nHash = 0
-    if (!s.length) return nHash
-    for (var i = 0, imax = s.length, n; i < imax; ++i) {
-        n = s.charCodeAt(i)
-        nHash = (nHash << 5) - nHash + n
-        nHash = nHash & nHash // Convert to 32-bit integer
+    static log(message) {
+        console.log(
+            `%c[A4GM]%c ${message} `,
+            'color:white;background:#058D80',
+            'font-weight:bold;color:#058D80;'
+        )
     }
-    return Math.abs(nHash)
-}
 
-function dateTimeString(startTimestamp, timestamp) {
-    const date = new Date(startTimestamp * 1000).toLocaleDateString()
-    return `${date}, ${toTimeString(startTimestamp)} — ${toTimeString(
-        timestamp
-    )}`
-}
-
-function toTimeString(timestamp) {
-    try {
-        return new Date(timestamp * 1000).toLocaleTimeString([], {
-            hour: 'numeric',
-            minute: 'numeric',
-        })
-    } catch (e) {
-        return new Date(timestamp * 1000).toLocaleTimeString()
+    static hashCode(s) {
+        var nHash = 0
+        if (!s.length) return nHash
+        for (var i = 0, imax = s.length, n; i < imax; ++i) {
+            n = s.charCodeAt(i)
+            nHash = (nHash << 5) - nHash + n
+            nHash = nHash & nHash // Convert to 32-bit integer
+        }
+        return Math.abs(nHash)
     }
-}
 
-function getFirstName(fullName) {
-    if (fullName.includes(', ')) {
-        return fullName.split(/,(.+)/)[1].trim()
+    static dateTimeString(startTimestamp, timestamp) {
+        const date = new Date(startTimestamp * 1000).toLocaleDateString()
+        return `${date}, ${toTimeString(startTimestamp)} — ${toTimeString(
+            timestamp
+        )}`
     }
-    const names = splitNames(fullName)
-    if (names.length === 1) {
-        var fName = fullName
-    } else {
-        for (var i = names.length - 1; i > 1; i--) {
-            const name = names[i]
-            if (name.charAt(0) === name.charAt(0).toLowerCase()) {
-                break
+
+    static toTimeString(timestamp) {
+        try {
+            return new Date(timestamp * 1000).toLocaleTimeString([], {
+                hour: 'numeric',
+                minute: 'numeric',
+            })
+        } catch (e) {
+            return new Date(timestamp * 1000).toLocaleTimeString()
+        }
+    }
+
+    static #getFirstName(fullName) {
+        if (this.#nameMap.has(fullName)) {
+            return this.#nameMap.get(fullName)[0]
+        }
+        return this.#splitNames(fullName)[0]
+    }
+
+    static #getLastName(fullName) {
+        if (this.#nameMap.has(fullName)) {
+            return this.#nameMap.get(fullName)[1]
+        }
+        return this.#splitNames(fullName)[1]
+    }
+
+    static #splitNames(fullName) {
+        if (fullName.includes('|')) {
+            splitNames = fullName.split('|')
+        } else if (fullName.includes(', ')) {
+            var splitNames = fullName.split(/,(.+)/)
+            splitNames = [splitNames[1].trim(), splitNames[0].trim()]
+        } else {
+            const names = fullName
+                .split(' ')
+                .filter(
+                    (name) =>
+                        !(
+                            (name.charAt(0) === '[' &&
+                                name.slice(-1) === ']') ||
+                            (name.charAt(0) === '(' && name.slice(-1) === ')')
+                        )
+                )
+            if (names.length === 1) {
+                splitNames = [fullName, '']
+            } else {
+                for (var i = names.length - 1; i > 1; i--) {
+                    const name = names[i]
+                    if (name.charAt(0) === name.charAt(0).toLowerCase()) {
+                        break
+                    }
+                }
+                splitNames = [
+                    names.slice(0, i).join(' '),
+                    names.slice(i).join(' '),
+                ]
             }
         }
-        var fName = names.slice(0, i).join(' ')
+        this.#nameMap.set(fullName, splitNames)
+        return splitNames
     }
-    return fName
-}
 
-function getLastName(fullName) {
-    if (fullName.includes(', ')) {
-        return fullName.split(/,(.+)/)[0].trim()
+    static compareFirst(a, b) {
+        return this.#getFirstName(a).localeCompare(this.#getFirstName(b))
     }
-    const names = splitNames(fullName)
-    if (names.length === 1) {
-        var lName = ''
-    } else {
-        for (var i = names.length - 1; i > 1; i--) {
-            const name = names[i]
-            if (name.charAt(0) === name.charAt(0).toLowerCase()) {
-                break
-            }
-        }
-        var lName = names.slice(i).join(' ')
+
+    static compareLast(a, b) {
+        return this.#getLastName(a).localeCompare(this.#getLastName(b))
     }
-    return lName
-}
-
-function splitNames(fullName) {
-    const names = fullName.split(' ')
-    return names.filter(
-        (name) =>
-            !(
-                (name.charAt(0) === '[' && name.slice(-1) === ']') ||
-                (name.charAt(0) === '{' && name.slice(-1) === '}') ||
-                (name.charAt(0) === '(' && name.slice(-1) === ')')
-            )
-    )
-}
-
-function compareFirst(a, b) {
-    return getFirstName(a).localeCompare(getFirstName(b))
-}
-
-function compareLast(a, b) {
-    return getLastName(a).localeCompare(getLastName(b))
 }

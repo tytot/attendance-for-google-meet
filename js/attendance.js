@@ -166,7 +166,7 @@
     confirmDeleteDialog.listen('MDCDialog:opening', (event) => {
         document.getElementById(
             'delete-dialog-content'
-        ).innerText = `Are you sure you want to delete class ${deleteButton.classToDelete}?`
+        ).innerText = `${translations[lang].areYouSure} ${deleteButton.classToDelete}?`
     })
     deleteButton.addEventListener('click', function () {
         const className = deleteButton.classToDelete

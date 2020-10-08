@@ -88,7 +88,7 @@
     exportButton.addEventListener('click', function () {
         port.postMessage({ data: 'export', auto: false, code: getMeetCode() })
         exportButton.disabled = true
-        Utils.log('Exporting...')
+        Utils.log(`${translations[lang].exporting}...`)
     })
     window.addEventListener('beforeunload', function () {
         chrome.storage.sync.get('auto-export', function (result) {

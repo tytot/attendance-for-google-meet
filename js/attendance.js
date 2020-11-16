@@ -12,7 +12,6 @@
     let rostersCache = null
     let sortMethod = 'lastName'
     let classTextField, stuTextFieldEl, stuTextField, chipSetEl, chipSet
-    let nameArray = []
 
     window.addEventListener('message', function (event) {
         if (event.origin !== 'https://meet.google.com') return
@@ -232,9 +231,8 @@
 
     document.getElementById('edit-back').addEventListener('click', function () {
         const cardTitle = document.getElementById('class-label')
-        if (cardTitle.adding) {
+        if (classTextField.initValue === '') {
             document.getElementById('card-class-view').hidden = false
-            delete cardTitle.adding
         } else {
             document.getElementById('card-default-view').hidden = false
             cardTitle.innerText = classTextField.value
@@ -669,17 +667,12 @@
         })
     }
 
-    function addClass(className, roster, set = false) {
+    function addClass(className, roster) {
         return new Promise((resolve) => {
-            chrome.storage.sync.get(null, function (result) {
+            chrome.storage.sync.get('rosters', function (result) {
                 let res = result['rosters']
                 res[className] = roster
                 chrome.storage.sync.set({ rosters: res })
-                if (set) {
-                    const code = getMeetCode()
-                    result[code].class = className
-                    chrome.storage.sync.set({ [code]: result[code] })
-                }
 
                 const classList = document.getElementById('class-list')
                 classList.insertAdjacentHTML(
@@ -698,16 +691,60 @@
     }
 
     function updateClass(className, roster, set = false) {
-        chrome.storage.sync.get('rosters', function (result) {
-            let res = result['rosters']
-            res[className] = roster
-            chrome.storage.sync.set({ rosters: res })
-            if (set) {
-                const code = getMeetCode()
-                result[code].class = className
-                chrome.storage.sync.set({ [code]: result[code] })
-            }
-            resolve()
+        return new Promise((resolve) => {
+            chrome.storage.sync.get(null, function (result) {
+                let res = result['rosters']
+                res[className] = roster
+                chrome.storage.sync.set({ rosters: res })
+                if (set) {
+                    const code = getMeetCode()
+                    result[code].class = className
+                    chrome.storage.sync.set({ [code]: result[code] })
+                }
+                const classList = document.getElementById('class-list')
+                const classEls = classList.getElementsByTagName('li')
+                for (const classEl of classEls) {
+                    if (classEl.name === className) {
+                        classEl.roster = roster
+                        break
+                    }
+                }
+                resolve()
+            })
+        })
+    }
+
+    function updateAndRenameClass(
+        oldClassName,
+        newClassName,
+        roster,
+        set = false
+    ) {
+        return new Promise((resolve) => {
+            chrome.storage.sync.get(null, function (result) {
+                let res = result['rosters']
+                res[newClassName] = roster
+                delete res[oldClassName]
+                chrome.storage.sync.set({ rosters: res })
+                if (set) {
+                    const code = getMeetCode()
+                    result[code].class = newClassName
+                    chrome.storage.sync.set({ [code]: result[code] })
+                }
+                const classList = document.getElementById('class-list')
+                const classEls = classList.getElementsByTagName('li')
+                for (const classEl of classEls) {
+                    if (classEl.name === oldClassName) {
+                        classEl.name = newClassName
+                        classEl.roster = roster
+                        classEl.querySelector(
+                            '.class-entry'
+                        ).innerText = newClassName
+                        break
+                    }
+                }
+                resolve()
+            })
         })
     }
 
@@ -766,12 +803,12 @@
         })
     }
 
-    function editClass(className) {
+    function editClass(className, roster) {
         classTextField.value = className
         classTextField.initValue = className
         chipSetEl.innerHTML = ''
         chipSet = new MDCChipSet(chipSetEl)
-        for (const name of nameArray) {
+        for (const name of roster) {
             addChip(name.replace('|', ' '))
         }
         stuTextField.value = getNewFieldValue()
@@ -806,17 +843,22 @@
             })
     }
 
-    function removeChip(name = nameArray[nameArray.length - 1]) {
-        const i = nameArray.indexOf(name)
+    function removeChip(name) {
+        const nameArray = chipSet.chips.map(
+            (chip) => chip.root.outerText.replace('cancel', '').trim()
+        )
+        if (name) {
+            var i = nameArray.indexOf(name)
+        } else {
+            i = nameArray.length - 1;
+        }
         const chip = chipSet.chips[i]
         chip.beginExit()
-        nameArray.splice(i, 1)
         stuTextField.value = getNewFieldValue(true)
     }
 
     function prepareChips(_cardView, defaultView, editView) {
         cardView = _cardView || defaultView
-
         const textFields = document.getElementsByClassName('mdc-text-field')
         classTextField = new MDCTextField(textFields[0])
         stuTextFieldEl = textFields[1]
@@ -843,8 +885,7 @@
                 document.getElementById('class-label').adding = true
                 document.getElementById(cardView).hidden = true
                 document.getElementById(editView).hidden = false
-                nameArray = []
-                editClass('')
+                editClass('', [])
             })
 
         document
@@ -875,14 +916,12 @@
                         snackbar.close()
                         snackbar.open()
                     } else {
+                        const nameArray = chipSet.chips.map(
+                            (chip) => chip.root.outerText.replace('cancel', '').trim()
+                        )
                         delete classTextField.initValue
-                        if (initClassName !== className) {
-                            await deleteClass(initClassName)
-                            const classEl = await addClass(
-                                className,
-                                nameArray,
-                                !selectDialog.isOpen
-                            )
+                        if (initClassName === '') {
+                            const classEl = await addClass(className, nameArray)
                             new MDCRipple(classEl)
                             addDefaultEventListeners(
                                 classEl,
@@ -891,35 +930,39 @@
                                 editView,
                                 _cardView
                             )
-                        } else {
-                            await updateClass(
-                                className,
-                                nameArray,
-                                !selectDialog.isOpen
-                            )
-                        }
-                        if (selectButton) {
-                            selectButton.disabled = true
-                        }
-                        const cardTitle = document.getElementById('class-label')
-                        if (cardTitle.adding) {
                             document.getElementById(cardView).hidden = false
                             document.getElementById(editView).hidden = true
-                            delete cardTitle.adding
                         } else {
-                            if (className !== initClassName) {
+                            if (initClassName !== className) {
+                                await updateAndRenameClass(
+                                    initClassName,
+                                    className,
+                                    nameArray,
+                                    !selectDialog.isOpen
+                                )
                                 port.postMessage({
                                     data: 'rename',
                                     code: getMeetCode(),
                                     oldClassName: initClassName,
                                     newClassName: className,
                                 })
+                            } else {
+                                await updateClass(
+                                    className,
+                                    nameArray,
+                                    !selectDialog.isOpen
+                                )
                             }
-
+                            const cardTitle = document.getElementById(
+                                'class-label'
+                            )
                             cardTitle.innerText = className
                             document.getElementById(defaultView).hidden = false
                             document.getElementById(editView).hidden = true
                             forceStatusUpdate()
+                        }
+                        if (selectButton) {
+                            selectButton.disabled = true
                         }
 
                         snackbar.labelText = `Successfully saved class ${className}.`
@@ -939,8 +982,7 @@
                         document.getElementById(defaultView).hidden = true
                         document.getElementById(editView).hidden = false
                     } catch {}
-                    nameArray = Array.from(result.rosters[className])
-                    editClass(className)
+                    editClass(className, Array.from(result.rosters[className]))
                 })
             })
 
@@ -962,7 +1004,6 @@
                         .map((name) => name.trim().replace(/\s+/g, ' '))
                         .filter((name) => name !== '')
                     for (const name of names) {
-                        nameArray.push(name)
                         addChip(name)
                     }
                     stuTextField.value = getNewFieldValue()
@@ -971,7 +1012,7 @@
                 }
             }
         })
-
+        
         const input = document.getElementsByClassName(
             'mdc-text-field__input'
         )[1]
@@ -1029,8 +1070,7 @@
                 document.getElementById(cardView).hidden = true
                 document.getElementById(defaultView).hidden = true
                 document.getElementById(editView).hidden = false
-                nameArray = Array.from(classEl.roster)
-                editClass(classEl.name)
+                editClass(classEl.name, Array.from(classEl.roster))
             })
     }
 

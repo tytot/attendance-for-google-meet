@@ -1,4 +1,6 @@
 UI:
+    ☐ Fix scrolling issues on select dialog
+    ✘ Copy Google's chip set input @started(20-10-08 14:28) @cancelled(20-11-16 18:05) @wasted(5w4d4h37m44s)
     ✔ Option on popup to verify extension @started(20-10-03 21:32) @done(20-10-03 22:02) @lasted(30m12s)
     ✔ Only show select popup on first join, option to disable @started(20-09-28 13:13) @done(20-09-28 14:15) @lasted(1h2m43s)
     ✔ Snackbars for deleting class, saving class, adding/removing people @done(20-09-04 12:00)
@@ -8,8 +10,9 @@ UI:
     ✔ Ability to paste names into text box @done(20-08-19 12:00)
 
 Backend:
-    ☐ Maybe use Maps instead of Objects?
+    ✘ Maybe use Maps instead of Objects? @cancelled(20-11-16 18:05)
     ☐ Resolve bug wherein some present students are marked as absent @low
+    ✔ Get rid of nameArray variable @started(20-10-08 10:41) @done(20-10-08 14:23) @lasted(3h42m6s)
     ✔ Determine first/last names from video data object @low @started(20-10-05 11:32) @done(20-10-06 15:43) @lasted(1d4h11m3s)
     ✔ Deal with cases in which token is invalid @started(20-10-01 19:13) @done(20-10-03 21:33) @lasted(2d2h20m40s)
     ✔ Hook into exposed function to get attendance instead of opening people tab @high @done(20-09-22 12:00)
@@ -24,8 +27,8 @@ Backend:
         ✔ Export on close option @done(20-09-04 12:00)
 
 Translations:
-    ☐ Setup translations.js
-    ☐ Replace all instances of text with path to translation
+    ☐ Setup translations.js @started(20-10-29 13:16)
+    ☐ Replace all instances of text with path to translation @started(20-10-29 13:17)
     ☐ Recruit volunteers to provide translations
 
 README:

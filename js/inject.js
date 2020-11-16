@@ -1,7 +1,7 @@
 ;(function () {
     let dataPath = []
     let arrayKey = null
-    const regex = /function\(\){_\.[a-zA-Z]+\.prototype\.[a-zA-Z]+\.call\(this\);[a-zA-Z]+\(this\)}/
+    const regex = /function\(\){_\.[a-zA-Z0-9$_]+\.prototype\.[a-zA-Z0-9$_]+\.call\(this\);[a-zA-Z0-9$_]+\(this\)}/
 
     const finder = setInterval(attemptHook, 1)
 

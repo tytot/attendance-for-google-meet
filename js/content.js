@@ -62,28 +62,26 @@ function instantiate() {
 }
 
 const cardHTML = `<div
-class="mdc-card"
-id="card"
-style="
-    position: fixed;
-    top: 48px;
-    right: 0;
-    z-index: 101;
-    width: 304px;
-    border-radius: 0 0 0 8px;
-"
-aria-label="Attendance management"
->
+    class="mdc-card"
+    id="card"
+    style="
+        position: fixed;
+        top: 48px;
+        right: 0;
+        z-index: 101;
+        width: 304px;
+        border-radius: 0 0 0 8px;
+    "
+    aria-label="Attendance management"
+    >
     <div hidden id="card-class-view">
         <div class="mdc-card-header">
             <div>
-                <h2 class="CkXZgc card-title">
-                    Select Class
-                </h2>
+                <h2 class="CkXZgc card-title">Select Class</h2>
             </div>
             <button
                 class="mdc-icon-button medium-button material-icons right"
-                style="right: 32px;"
+                style="right: 32px"
                 aria-label="Help"
                 jscontroller="VXdfxd"
                 jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
@@ -110,11 +108,12 @@ aria-label="Attendance management"
         <div class="mdc-list-divider" role="separator"></div>
         <div class="class-content">
             <ul class="mdc-list" id="class-list" role="listbox"></ul>
-            <div id="no-classes" style="display:none;">
-                <i class="material-icons">
-                    warning
-                </i>
-                <p>You don't have any classes! Add a class by clicking the button below.</p>
+            <div id="no-classes" style="display: none">
+                <i class="material-icons"> warning </i>
+                <p>
+                    You don't have any classes! Add a class by clicking the
+                    button below.
+                </p>
             </div>
             <button class="mdc-button" id="addeth-class">
                 <div class="mdc-button__ripple"></div>
@@ -158,7 +157,7 @@ aria-label="Attendance management"
     </div>
     <div id="card-default-view">
         <div class="mdc-card-header">
-            <div class="mdc-menu-surface--anchor right" style="right: 40px;">
+            <div class="mdc-menu-surface--anchor right" style="right: 40px">
                 <div
                     class="mdc-menu mdc-menu-surface"
                     id="sort-menu"
@@ -201,10 +200,10 @@ aria-label="Attendance management"
                             role="menuitem"
                             tabindex="0"
                         >
-                        <span class="mdc-list-item__text"
-                            >Sort by Presence (Absent First)</span
-                        >
-                    </li>
+                            <span class="mdc-list-item__text"
+                                >Sort by Presence (Absent First)</span
+                            >
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -222,13 +221,11 @@ aria-label="Attendance management"
                 arrow_back
             </button>
             <div>
-                <h2 class="CkXZgc card-title" id="class-label">
-                    View Class
-                </h2>
+                <h2 class="CkXZgc card-title" id="class-label">View Class</h2>
             </div>
             <button
                 class="mdc-icon-button medium-button material-icons right more"
-                style="right: 32px;"
+                style="right: 32px"
                 aria-label="Sort Options"
                 jscontroller="VXdfxd"
                 jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
@@ -254,7 +251,7 @@ aria-label="Attendance management"
         </div>
         <div class="mdc-list-divider" role="separator"></div>
         <div>
-            <div style="text-align: center;">
+            <div style="text-align: center">
                 <button class="mdc-button" id="edit-roster">
                     <div class="mdc-button__ripple"></div>
                     <i
@@ -268,13 +265,14 @@ aria-label="Attendance management"
             <div class="mdc-list-divider" role="separator"></div>
             <div
                 class="mdc-card-content"
-                style="max-height: 50vh; overflow: auto;"
+                style="max-height: 50vh; overflow: auto"
             >
-                <div id="no-students" style="display:none;">
-                    <i class="material-icons">
-                        warning
-                    </i>
-                    <p>Select edit or click the + button next to a name to add students to this class.</p>
+                <div id="no-students" style="display: none">
+                    <i class="material-icons"> warning </i>
+                    <p>
+                        Select edit or click the + button next to a name to add
+                        students to this class.
+                    </p>
                 </div>
                 <ul
                     class="mdc-list mdc-list--dense mdc-list--two-line"
@@ -332,13 +330,11 @@ aria-label="Attendance management"
                 arrow_back
             </button>
             <div>
-                <h2 class="CkXZgc card-title">
-                    Add/Edit Class
-                </h2>
+                <h2 class="CkXZgc card-title">Add/Edit Class</h2>
             </div>
             <button
                 class="mdc-icon-button medium-button material-icons right"
-                style="right: 32px;"
+                style="right: 32px"
                 aria-label="Help"
                 jscontroller="VXdfxd"
                 jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
@@ -364,7 +360,7 @@ aria-label="Attendance management"
         </div>
         <div class="mdc-list-divider" role="separator"></div>
         <div>
-            <div style="text-align: center;">
+            <div style="text-align: center">
                 <button class="mdc-button confirm-roster" id="save-class">
                     <div class="mdc-button__ripple"></div>
                     <i
@@ -378,9 +374,9 @@ aria-label="Attendance management"
             <div class="mdc-list-divider" role="separator"></div>
             <div
                 class="mdc-card-content"
-                style="max-height: 50vh; overflow: auto;"
+                style="max-height: 50vh; overflow: auto"
             >
-                <div class="label CkXZgc" style="margin-top: 8px;">
+                <div class="label CkXZgc" style="margin-top: 8px">
                     Class Name
                 </div>
                 <label
@@ -393,40 +389,40 @@ aria-label="Attendance management"
                     </span>
                 </label>
                 <div class="label CkXZgc">Student Names</div>
-                <label
-                    class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea mdc-text-field--no-label"
-                >
-                    <div
-                        class="mdc-chip-set mdc-chip-set--input"
-                        role="grid"
-                    ></div>
-                    <textarea
-                        class="mdc-text-field__input"
-                        rows="6"
-                        cols="100"
-                        aria-label="Enter Student Names"
-                        aria-controls="student-helper-id"
-                        aria-describedby="student-helper-id"
-                    ></textarea>
-                    <span class="mdc-notched-outline">
-                        <span class="mdc-notched-outline__leading"></span>
-                        <span class="mdc-notched-outline__notch"> </span>
-                        <span class="mdc-notched-outline__trailing"></span>
-                    </span>
-                </label>
-                <div
-                    class="mdc-text-field-helper-line"
-                    style="margin-bottom: 8px;"
-                >
-                    <div
-                        class="mdc-text-field-helper-text"
-                        id="student-helper-id"
-                        aria-hidden="true"
+                    <label
+                        class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea mdc-text-field--no-label"
                     >
-                        Separate names with Enter.
+                        <div
+                            class="mdc-chip-set mdc-chip-set--input"
+                            role="grid"
+                        ></div>
+                        <textarea
+                            class="mdc-text-field__input"
+                            rows="6"
+                            cols="100"
+                            aria-label="Enter Student Names"
+                            aria-controls="student-helper-id"
+                            aria-describedby="student-helper-id"
+                        ></textarea>
+                        <span class="mdc-notched-outline">
+                            <span class="mdc-notched-outline__leading"></span>
+                            <span class="mdc-notched-outline__notch"> </span>
+                            <span class="mdc-notched-outline__trailing"></span>
+                        </span>
+                    </label>
+                    <div
+                        class="mdc-text-field-helper-line"
+                        style="margin-bottom: 8px;"
+                    >
+                        <div
+                            class="mdc-text-field-helper-text"
+                            id="student-helper-id"
+                            aria-hidden="true"
+                        >
+                            Separate names with Enter.
+                        </div>
                     </div>
                 </div>
-            </div>
         </div>
         <div
             role="progressbar"

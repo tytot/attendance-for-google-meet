@@ -22,9 +22,9 @@ class Utils {
 
     static dateTimeString(startTimestamp, timestamp) {
         const date = new Date(startTimestamp * 1000).toLocaleDateString()
-        return `${date}, ${toTimeString(startTimestamp)} — ${toTimeString(
-            timestamp
-        )}`
+        return `${date}, ${Utils.toTimeString(
+            startTimestamp
+        )} — ${Utils.toTimeString(timestamp)}`
     }
 
     static toTimeString(timestamp) {

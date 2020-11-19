@@ -87,7 +87,7 @@
     exportButton.addEventListener('click', function () {
         port.postMessage({ data: 'export', auto: false, code: getMeetCode() })
         exportButton.disabled = true
-        Utils.log(`${translations[lang].exporting}...`)
+        Utils.log(`Exporting...`)
     })
     window.addEventListener('beforeunload', function () {
         chrome.storage.sync.get('auto-export', function (result) {
@@ -165,7 +165,7 @@
     confirmDeleteDialog.listen('MDCDialog:opening', (event) => {
         document.getElementById(
             'delete-dialog-content'
-        ).innerText = `${translations[lang].areYouSure} ${deleteButton.classToDelete}?`
+        ).innerText = `Are you sure you want to delete the class ${deleteButton.classToDelete}?`
     })
     deleteButton.addEventListener('click', function () {
         const className = deleteButton.classToDelete

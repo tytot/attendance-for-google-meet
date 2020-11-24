@@ -1,5 +1,5 @@
 class Utils {
-    static #nameMap = new Map()
+    static nameMap = new Map()
 
     static log(message) {
         console.log(
@@ -38,21 +38,21 @@ class Utils {
         }
     }
 
-    static #getFirstName(fullName) {
-        if (this.#nameMap.has(fullName)) {
-            return this.#nameMap.get(fullName)[0]
+    static getFirstName(fullName) {
+        if (this.nameMap.has(fullName)) {
+            return this.nameMap.get(fullName)[0]
         }
-        return this.#splitNames(fullName)[0]
+        return this.splitNames(fullName)[0]
     }
 
-    static #getLastName(fullName) {
-        if (this.#nameMap.has(fullName)) {
-            return this.#nameMap.get(fullName)[1]
+    static getLastName(fullName) {
+        if (this.nameMap.has(fullName)) {
+            return this.nameMap.get(fullName)[1]
         }
-        return this.#splitNames(fullName)[1]
+        return this.splitNames(fullName)[1]
     }
 
-    static #splitNames(fullName) {
+    static splitNames(fullName) {
         if (fullName.includes('|')) {
             splitNames = fullName.split('|')
         } else if (fullName.includes(', ')) {
@@ -84,15 +84,15 @@ class Utils {
                 ]
             }
         }
-        this.#nameMap.set(fullName, splitNames)
+        this.nameMap.set(fullName, splitNames)
         return splitNames
     }
 
     static compareFirst(a, b) {
-        return this.#getFirstName(a).localeCompare(this.#getFirstName(b))
+        return this.getFirstName(a).localeCompare(this.getFirstName(b))
     }
 
     static compareLast(a, b) {
-        return this.#getLastName(a).localeCompare(this.#getLastName(b))
+        return this.getLastName(a).localeCompare(this.getLastName(b))
     }
 }

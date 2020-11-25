@@ -39,17 +39,17 @@ class Utils {
     }
 
     static getFirstName(fullName) {
-        if (nameMap.has(fullName)) {
-            return nameMap.get(fullName)[0]
+        if (Utils.nameMap.has(fullName)) {
+            return Utils.nameMap.get(fullName)[0]
         }
-        return splitNames(fullName)[0]
+        return Utils.splitNames(fullName)[0]
     }
 
     static getLastName(fullName) {
-        if (nameMap.has(fullName)) {
-            return nameMap.get(fullName)[1]
+        if (Utils.nameMap.has(fullName)) {
+            return Utils.nameMap.get(fullName)[1]
         }
-        return splitNames(fullName)[1]
+        return Utils.splitNames(fullName)[1]
     }
 
     static splitNames(fullName) {
@@ -84,15 +84,15 @@ class Utils {
                 ]
             }
         }
-        nameMap.set(fullName, splitNames)
+        Utils.nameMap.set(fullName, splitNames)
         return splitNames
     }
 
     static compareFirst(a, b) {
-        return getFirstName(a).localeCompare(getFirstName(b))
+        return Utils.getFirstName(a).localeCompare(Utils.getFirstName(b))
     }
 
     static compareLast(a, b) {
-        return getLastName(a).localeCompare(getLastName(b))
+        return  Utils.getLastName(a).localeCompare(Utils.getLastName(b))
     }
 }

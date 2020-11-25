@@ -39,24 +39,24 @@ class Utils {
     }
 
     static getFirstName(fullName) {
-        if (this.nameMap.has(fullName)) {
-            return this.nameMap.get(fullName)[0]
+        if (nameMap.has(fullName)) {
+            return nameMap.get(fullName)[0]
         }
-        return this.splitNames(fullName)[0]
+        return splitNames(fullName)[0]
     }
 
     static getLastName(fullName) {
-        if (this.nameMap.has(fullName)) {
-            return this.nameMap.get(fullName)[1]
+        if (nameMap.has(fullName)) {
+            return nameMap.get(fullName)[1]
         }
-        return this.splitNames(fullName)[1]
+        return splitNames(fullName)[1]
     }
 
     static splitNames(fullName) {
         if (fullName.includes('|')) {
-            splitNames = fullName.split('|')
+            var splitNames = fullName.split('|')
         } else if (fullName.includes(', ')) {
-            var splitNames = fullName.split(/,(.+)/)
+            splitNames = fullName.split(/,(.+)/)
             splitNames = [splitNames[1].trim(), splitNames[0].trim()]
         } else {
             const names = fullName
@@ -84,15 +84,15 @@ class Utils {
                 ]
             }
         }
-        this.nameMap.set(fullName, splitNames)
+        nameMap.set(fullName, splitNames)
         return splitNames
     }
 
     static compareFirst(a, b) {
-        return this.getFirstName(a).localeCompare(this.getFirstName(b))
+        return getFirstName(a).localeCompare(getFirstName(b))
     }
 
     static compareLast(a, b) {
-        return this.getLastName(a).localeCompare(this.getLastName(b))
+        return getLastName(a).localeCompare(getLastName(b))
     }
 }

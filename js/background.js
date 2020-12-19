@@ -18,6 +18,9 @@ chrome.runtime.onInstalled.addListener(function (details) {
         if (!data.hasOwnProperty('show-popup')) {
             chrome.storage.sync.set({ 'show-popup': true })
         }
+        if (!data.hasOwnProperty('reset-interval')) {
+            chrome.storage.sync.set({ 'reset-interval': 12 })
+        }
     })
 })
 

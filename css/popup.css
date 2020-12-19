@@ -190,10 +190,6 @@ hr.divider {
     color: #ffffff !important;
 }
 
-#show-popup {
-    margin-bottom: 4px;
-}
-
 .mdc-switch {
     top: 4px;
     left: -4px;
@@ -202,4 +198,26 @@ hr.divider {
 .switch-label {
     width: 200px;
     padding: 0;
+}
+
+.mdc-text-field {
+    top: 2px;
+    left: -4px;
+    width: 50px !important;
+    height: 32px !important;
+    padding: 0 8px !important;
+    text-align: center !important;
+}
+
+.mdc-text-field__input {
+    color: var(--mdc-theme-primary) !important;
+}
+
+#reset-interval {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+#text-field-label {
+    cursor: default;
 }

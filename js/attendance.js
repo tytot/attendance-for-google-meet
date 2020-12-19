@@ -293,7 +293,7 @@
             for (const key in result) {
                 const data = result[key]
                 if (data.hasOwnProperty('timestamp')) {
-                    if (timestamp - data.timestamp >= 43200) {
+                    if (timestamp - data.timestamp >= result['reset-interval'] * 3600) {
                         chrome.storage.sync.remove([key])
                         delete result[key]
                         codesToDelete.push(key)

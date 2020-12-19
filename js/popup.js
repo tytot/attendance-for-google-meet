@@ -25,12 +25,19 @@ const exportSwitch = new MDCSwitch(
 const popupSwitch = new MDCSwitch(
     document.querySelector('#show-popup .mdc-switch')
 )
+
+const MDCTextField = mdc.textField.MDCTextField
+const intervalField = new MDCTextField(
+    document.querySelector('.mdc-text-field') 
+)
+
 const openButton = document.querySelector('#open')
 
 let autoExport = false
 let showPopup = false
+let resetInterval = 12
 chrome.storage.sync.get(
-    ['auto-export', 'show-popup', 'spreadsheet-id'],
+    ['auto-export', 'show-popup', 'reset-interval', 'spreadsheet-id'],
     function (result) {
         if (result['auto-export']) {
             exportSwitch.checked = true
@@ -39,6 +46,10 @@ chrome.storage.sync.get(
         if (result['show-popup']) {
             popupSwitch.checked = true
             showPopup = true
+        }
+        if (result['reset-interval']) {
+            intervalField.value = result['reset-interval']
+            resetInterval = result['reset-interval']
         }
 
         const id = result['spreadsheet-id']
@@ -74,6 +85,17 @@ document.querySelector('#show-popup').addEventListener('click', function () {
     if (popupSwitch.checked !== showPopup) {
         showPopup = popupSwitch.checked
         chrome.storage.sync.set({ 'show-popup': popupSwitch.checked })
+    }
+})
+document.querySelector('#reset-interval').addEventListener('input', function () {
+    if (intervalField.value !== '' && intervalField.value !== resetInterval) {
+        const tempInterval = parseFloat(intervalField.value)
+        if (isNaN(tempInterval))
+            intervalField.value = resetInterval
+        else {
+            resetInterval = tempInterval
+            chrome.storage.sync.set({ 'reset-interval': resetInterval })
+        }
     }
 })
 

@@ -602,9 +602,8 @@ function generateAttendanceRows(code) {
             let names = Array.from(roster)
             names.sort(Utils.compareLast)
             for (const name of names) {
-                const nameList = name.split('|')
-                const firstName = nameList[0]
-                const lastName = nameList[1]
+                const firstName = Utils.getFirstName(name)
+                const lastName = Utils.getLastName(name)
                 let present = 'N',
                     timeIn = '',
                     timeOut = '',

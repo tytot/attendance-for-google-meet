@@ -47,7 +47,7 @@ chrome.storage.sync.get(
             popupSwitch.checked = true
             showPopup = true
         }
-        if (result['reset-interval']) {
+        if (result.hasOwnProperty('reset-interval')) {
             intervalField.value = result['reset-interval']
             resetInterval = result['reset-interval']
         }
@@ -181,6 +181,7 @@ document.querySelector('#confirm-clear').addEventListener('click', function () {
                 chrome.storage.sync.remove(key)
             }
         }
+        chrome.storage.sync.set({ 'reset-interval': 12 })
         snackbar.close()
         snackbar.labelText = 'Successfully cleared storage.'
         snackbar.open()

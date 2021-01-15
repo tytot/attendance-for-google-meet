@@ -140,7 +140,7 @@
                     let res = result[code]
                     res.class = className
                     chrome.storage.sync.set({ [code]: res })
-                    document.getElementById('class-label').innerText = className
+                    document.getElementById('class-label').textContent = className
                 })
             })
             document
@@ -165,7 +165,7 @@
     confirmDeleteDialog.listen('MDCDialog:opening', (event) => {
         document.getElementById(
             'delete-dialog-content'
-        ).innerText = `Are you sure you want to delete the class ${deleteButton.classToDelete}?`
+        ).textContent = `Are you sure you want to delete the class ${deleteButton.classToDelete}?`
     })
     deleteButton.addEventListener('click', function () {
         const className = deleteButton.classToDelete
@@ -235,7 +235,7 @@
             document.getElementById('card-class-view').hidden = false
         } else {
             document.getElementById('card-default-view').hidden = false
-            cardTitle.innerText = classTextField.value
+            cardTitle.textContent = classTextField.value
         }
         document.getElementById('card-edit-view').hidden = true
     })
@@ -294,9 +294,20 @@
                 const data = result[key]
                 if (data.hasOwnProperty('timestamp')) {
                     if (timestamp - data.timestamp >= result['reset-interval'] * 3600) {
-                        chrome.storage.sync.remove([key])
-                        delete result[key]
                         codesToDelete.push(key)
+                        if (key !== code) {
+                            chrome.storage.sync.remove([key])
+                            delete result[key]
+                        } else {
+                            const className = result[key].class
+                            result[key] = {
+                                attendance: {},
+                                'start-timestamp': timestamp,
+                            }
+                            if (className) {
+                                result[key].class = className
+                            }
+                        }
                     }
                 }
             }
@@ -307,13 +318,13 @@
                 })
             }
 
-            let res = result[code]
-            if (res == undefined) {
-                res = {
+            if (!result.hasOwnProperty(code)) {
+                result[code] = {
                     attendance: {},
                     'start-timestamp': timestamp,
                 }
             }
+            const res = result[code]
             let currentData = res.attendance
             res.timestamp = timestamp
 
@@ -726,10 +737,17 @@
                 res[newClassName] = roster
                 delete res[oldClassName]
                 chrome.storage.sync.set({ rosters: res })
+                const code = getMeetCode()
                 if (set) {
-                    const code = getMeetCode()
                     result[code].class = newClassName
                     chrome.storage.sync.set({ [code]: result[code] })
+                }
+                for (const key in result) {
+                    const data = result[key]
+                    if (key !== code && data.hasOwnProperty('timestamp')) {
+                        data.class = newClassName
+                        chrome.storage.sync.set({ [key]: data })
+                    }
                 }
                 const classList = document.getElementById('class-list')
                 const classEls = classList.getElementsByTagName('li')
@@ -739,7 +757,7 @@
                         classEl.roster = roster
                         classEl.querySelector(
                             '.class-entry'
-                        ).innerText = newClassName
+                        ).textContent = newClassName
                         break
                     }
                 }
@@ -956,7 +974,7 @@
                             const cardTitle = document.getElementById(
                                 'class-label'
                             )
-                            cardTitle.innerText = className
+                            cardTitle.textContent = className
                             document.getElementById(defaultView).hidden = false
                             document.getElementById(editView).hidden = true
                             forceStatusUpdate()
@@ -1045,7 +1063,7 @@
                         document.getElementById(cardView).hidden = true
                         document.getElementById(defaultView).hidden = false
 
-                        document.getElementById('class-label').innerText =
+                        document.getElementById('class-label').textContent =
                             classEl.name
 
                         updateRosterStatus(

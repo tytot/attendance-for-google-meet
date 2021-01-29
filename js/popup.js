@@ -165,7 +165,7 @@ document.querySelector('#reset').addEventListener('click', function () {
 document.querySelector('#confirm-reset').addEventListener('click', function () {
     chrome.storage.sync.remove('spreadsheet-id', function () {
         snackbar.close()
-        snackbar.labelText = 'Successfully reset default spreadsheet.'
+        snackbar.labelText = 'Successfully unlinked spreadsheet.'
         snackbar.open()
         openButton.disabled = true
     })

@@ -1,3 +1,46 @@
+const meetTabs = new Map()
+const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/
+const codeRegex = /\w{3}-\w{4}-\w{3}/
+
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
+    if (changeInfo.hasOwnProperty('url') && meetRegex.test(changeInfo.url)) {
+        const code = codeRegex.exec(changeInfo.url)[0]
+        meetTabs.set(tabId, code)
+    }
+})
+
+chrome.tabs.onRemoved.addListener(function (tabId) {
+    if (meetTabs.has(tabId)) {
+        const code = meetTabs.get(tabId)
+        meetTabs.delete(tabId)
+        console.log(tabId)
+        chrome.storage.sync.get('auto-export', function (result) {
+            if (result['auto-export']) {
+                chrome.identity.getAuthToken(
+                    { interactive: true },
+                    function (token) {
+                        if (token) {
+                            tryExport(token, code)
+                        }
+                    }
+                )
+            }
+        })
+    }
+})
+
+chrome.tabs.query(
+    { url: '*://meet.google.com/**-**-**' },
+    function (tabs) {
+        for (const tab of tabs) {
+            if (meetRegex.test(tab.url)) {
+                const code = codeRegex.exec(tab.url)[0]
+                meetTabs.set(tab.id, code)
+            }
+        }
+    }
+)
+
 chrome.runtime.onInstalled.addListener(function (details) {
     chrome.storage.local.get(null, function (data) {
         if (details.reason === 'update') {
@@ -58,6 +101,8 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             }
         })
         return true
+    } else if (message.data === 'delete-tab') {
+        meetTabs.delete(sender.tab.id)
     }
 })
 
@@ -71,55 +116,63 @@ chrome.runtime.onConnect.addListener(function (port) {
                     progress: 0,
                 })
             } else if (msg.data === 'export') {
-                tryExport(msg, token, port)
+                tryExport(token, msg.code, port)
             } else if (msg.data === 'rename') {
                 const code = msg.code
-                chrome.storage.sync.get('spreadsheet-id', async function (
-                    result
-                ) {
-                    const id = result['spreadsheet-id']
-                    const oldClassName = msg.oldClassName
-                    const newClassName = msg.newClassName
-
-                    let requests = [deleteSheetMetadata(oldClassName)]
-                    try {
-                        const meta = await getMetaByKey(oldClassName, token, id)
-                        const sheetId = meta.location.sheetId
-                        requests = requests.concat(
-                            updateSheetProperties(
-                                newClassName,
-                                code,
-                                sheetId,
-                                'title'
-                            )
-                        )
-                        const data = await batchUpdate(
-                            token,
-                            requests,
-                            id,
-                            sheetId
-                        )
-                        Utils.log(`Renamed sheet ${oldClassName} to ${newClassName}`)
-                        console.log(data)
-                    } catch (error) {
-                        console.log(error)
-                    }
-                })
-            } else if (msg.data === 'delete-meta') {
-                chrome.storage.sync.get('spreadsheet-id', async function (
-                    result
-                ) {
-                    if (result.hasOwnProperty('spreadsheet-id')) {
+                chrome.storage.sync.get(
+                    'spreadsheet-id',
+                    async function (result) {
                         const id = result['spreadsheet-id']
-                        let requests = []
-                        for (const code of msg.codes) {
-                            requests.push(deleteCodeMetadata(code))
+                        const oldClassName = msg.oldClassName
+                        const newClassName = msg.newClassName
+
+                        let requests = [deleteSheetMetadata(oldClassName)]
+                        try {
+                            const meta = await getMetaByKey(
+                                oldClassName,
+                                token,
+                                id
+                            )
+                            const sheetId = meta.location.sheetId
+                            requests = requests.concat(
+                                updateSheetProperties(
+                                    newClassName,
+                                    code,
+                                    sheetId,
+                                    'title'
+                                )
+                            )
+                            const data = await batchUpdate(
+                                token,
+                                requests,
+                                id,
+                                sheetId
+                            )
+                            Utils.log(
+                                `Renamed sheet ${oldClassName} to ${newClassName}`
+                            )
+                            console.log(data)
+                        } catch (error) {
+                            console.log(error)
                         }
-                        const data = await batchUpdate(token, requests, id)
-                        Utils.log('Delete metadata response:')
-                        console.log(data)
                     }
-                })
+                )
+            } else if (msg.data === 'delete-meta') {
+                chrome.storage.sync.get(
+                    'spreadsheet-id',
+                    async function (result) {
+                        if (result.hasOwnProperty('spreadsheet-id')) {
+                            const id = result['spreadsheet-id']
+                            let requests = []
+                            for (const code of msg.codes) {
+                                requests.push(deleteCodeMetadata(code))
+                            }
+                            const data = await batchUpdate(token, requests, id)
+                            Utils.log('Delete metadata response:')
+                            console.log(data)
+                        }
+                    }
+                )
             }
         })
     })
@@ -131,21 +184,21 @@ function postMessage(port, message) {
     }
 }
 
-function tryExport(msg, token, port, retry = false) {
-    const code = msg.code
+function tryExport(token, code, port, retry = false) {
+    Utils.log('Attempting export...')
     chrome.storage.sync.get(['spreadsheet-id', code], async function (result) {
-        if (msg.auto) {
-            port = null
-        } else {
-            postMessage(port, { progress: 0 })
-        }
+        postMessage(port, { progress: 0 })
         const id = result['spreadsheet-id']
-        const className = result[code].class
-        Utils.log('Meet code: ' + code)
-        if (id == undefined) {
-            createSpreadsheet(token, className, code, port, retry)
+        if (result[code].hasOwnProperty('class')) {
+            const className = result[code].class
+            Utils.log('Meet code: ' + code)
+            if (id == undefined) {
+                createSpreadsheet(token, className, code, port, retry)
+            } else {
+                updateSpreadsheet(token, className, code, id, port, retry)
+            }
         } else {
-            updateSpreadsheet(token, className, code, id, port, retry)
+            Utils.log('Cancelled export; there was no class selected.')
         }
     })
 }
@@ -206,7 +259,7 @@ async function createSpreadsheet(token, className, code, port, retry) {
                     chrome.identity.getAuthToken(
                         { interactive: true },
                         function (newToken) {
-                            tryExport({ code: code }, newToken, port, true)
+                            tryExport(newToken, code, port, true)
                         }
                     )
                 }
@@ -247,7 +300,9 @@ async function updateSpreadsheet(
             sheetId++
             requests = requests.concat(addSheet(className, code, sheetId))
             requests = requests.concat(createHeaders(sheetId))
-            Utils.log(`Creating new sheet for class ${className}, ID ${sheetId}`)
+            Utils.log(
+                `Creating new sheet for class ${className}, ID ${sheetId}`
+            )
         } else {
             sheetId = classMeta.location.sheetId
         }
@@ -294,7 +349,7 @@ async function updateSpreadsheet(
                     chrome.identity.getAuthToken(
                         { interactive: true },
                         function (newToken) {
-                            tryExport({ code: code }, newToken, port, true)
+                            tryExport(newToken, code, port, true)
                         }
                     )
                 }

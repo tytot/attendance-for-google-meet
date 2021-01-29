@@ -21,6 +21,27 @@
         }
     })
 
+    chrome.runtime.sendMessage({
+        data: 'add-tab',
+        code: getMeetCode(),
+    })
+
+    new MutationObserver(function (mutations, me) {
+        if (document.querySelector('.CX8SS')) {
+            chrome.runtime.sendMessage({ data: 'delete-tab' })
+            chrome.storage.sync.get('auto-export', function (result) {
+                if (result['auto-export']) {
+                    port.postMessage({ data: 'export', code: getMeetCode() })
+                    Utils.log(`Exporting...`)
+                }
+                me.disconnect()
+            })
+        }
+    }).observe(document.querySelector('.SSPGKf'), {
+        childList: true,
+        subtree: true,
+    })
+
     const closedObserver = new MutationObserver(function (mutations, me) {
         if (
             !document.getElementsByClassName(
@@ -85,20 +106,9 @@
 
     const exportButton = document.getElementById('export')
     exportButton.addEventListener('click', function () {
-        port.postMessage({ data: 'export', auto: false, code: getMeetCode() })
+        port.postMessage({ data: 'export', code: getMeetCode() })
         exportButton.disabled = true
         Utils.log(`Exporting...`)
-    })
-    window.addEventListener('beforeunload', function () {
-        chrome.storage.sync.get('auto-export', function (result) {
-            if (result['auto-export']) {
-                port.postMessage({
-                    data: 'export',
-                    auto: true,
-                    code: getMeetCode(),
-                })
-            }
-        })
     })
 
     const classList = new MDCList(document.querySelector('#class-list'))
@@ -140,7 +150,9 @@
                     let res = result[code]
                     res.class = className
                     chrome.storage.sync.set({ [code]: res })
-                    document.getElementById('class-label').textContent = className
+                    document.getElementById(
+                        'class-label'
+                    ).textContent = className
                 })
             })
             document
@@ -293,7 +305,10 @@
             for (const key in result) {
                 const data = result[key]
                 if (data.hasOwnProperty('timestamp')) {
-                    if (timestamp - data.timestamp >= result['reset-interval'] * 3600) {
+                    if (
+                        timestamp - data.timestamp >=
+                        result['reset-interval'] * 3600
+                    ) {
                         codesToDelete.push(key)
                         if (key !== code) {
                             chrome.storage.sync.remove([key])
@@ -862,13 +877,13 @@
     }
 
     function removeChip(name) {
-        const nameArray = chipSet.chips.map(
-            (chip) => chip.root.outerText.replace('cancel', '').trim()
+        const nameArray = chipSet.chips.map((chip) =>
+            chip.root.outerText.replace('cancel', '').trim()
         )
         if (name) {
             var i = nameArray.indexOf(name)
         } else {
-            i = nameArray.length - 1;
+            i = nameArray.length - 1
         }
         const chip = chipSet.chips[i]
         chip.beginExit()
@@ -934,8 +949,8 @@
                         snackbar.close()
                         snackbar.open()
                     } else {
-                        const nameArray = chipSet.chips.map(
-                            (chip) => chip.root.outerText.replace('cancel', '').trim()
+                        const nameArray = chipSet.chips.map((chip) =>
+                            chip.root.outerText.replace('cancel', '').trim()
                         )
                         delete classTextField.initValue
                         if (initClassName === '') {
@@ -1030,7 +1045,7 @@
                 }
             }
         })
-        
+
         const input = document.getElementsByClassName(
             'mdc-text-field__input'
         )[1]

@@ -23,7 +23,7 @@
             <img id="logo" src="../img/icons/icon48.png" alt="Logo" />
             <div id="title">Attendance for Google Meet™</div>
             <div id="meta">
-                <p id="version">Version 1.2.11</p>
+                <p id="version">Version 1.2.12</p>
                 <p>By Tyler Lin and Adit Bala</p>
             </div>
         </div>
@@ -97,9 +97,9 @@
                                 export afterwards.
                             </p>
                             <p>
-                                This option will generate a brand new
+                                This option will unlink your current
                                 spreadsheet, and all future exports will update
-                                the new spreadsheet. Choose this option if you
+                                a new spreadsheet. Choose this option if you
                                 want to use a new spreadsheet for a new
                                 quarter/semester/school year or if your current
                                 spreadsheet causes errors when you try to
@@ -107,8 +107,8 @@
                             </p>
                             <p>
                                 Be warned that you cannot export to your current
-                                spreadsheet after you decide to use a new one.
-                                Do you want to proceed?
+                                spreadsheet after you decide to unlink it. Do
+                                you want to proceed?
                             </p>
                         </div>
                         <div class="mdc-dialog__actions">
@@ -280,11 +280,13 @@
                         <span class="mdc-notched-outline__leading"></span>
                         <span class="mdc-notched-outline__trailing"></span>
                     </span>
-                    <input type="text" class="mdc-text-field__input" aria-labelledby="label-id">
+                    <input
+                        type="text"
+                        class="mdc-text-field__input"
+                        aria-labelledby="label-id"
+                    />
                 </label>
-                <label
-                    id="text-field-label"
-                    class="mdc-button switch-label"
+                <label id="text-field-label" class="mdc-button switch-label"
                     >Reset Interval (hrs.)</label
                 >
             </div>
@@ -298,7 +300,10 @@
             <div id="more-options" hidden>
                 <hr class="dashed" />
                 <div>
-                    <button id="refresh" class="mdc-button mdc-button--outlined">
+                    <button
+                        id="refresh"
+                        class="mdc-button mdc-button--outlined"
+                    >
                         <div class="mdc-button__ripple"></div>
                         <i
                             class="material-icons mdc-button__icon"
@@ -319,7 +324,7 @@
                             >layers_clear</i
                         >
                         <span class="mdc-button__label"
-                            >Reset Spreadsheet</span
+                            >Unlink Spreadsheet</span
                         >
                     </button>
                 </div>
@@ -331,9 +336,7 @@
                             aria-hidden="true"
                             >delete</i
                         >
-                        <span class="mdc-button__label"
-                            >Clear Storage</span
-                        >
+                        <span class="mdc-button__label">Clear Storage</span>
                     </button>
                 </div>
             </div>

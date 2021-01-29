@@ -10,6 +10,9 @@ UI:
     ✔ Ability to paste names into text box @done(20-08-19 12:00)
 
 Backend:
+    ☐ Fix problems that arise when using the same code repeatedly
+    ☐ Fix export on leave
+    ☐ Deal with big classes @low
     ✘ Maybe use Maps instead of Objects? @cancelled(20-11-16 18:05)
     ☐ Resolve bug wherein some present students are marked as absent @low
     ✔ Get rid of nameArray variable @started(20-10-08 10:41) @done(20-10-08 14:23) @lasted(3h42m6s)

@@ -11,7 +11,7 @@ UI:
 
 Backend:
     ☐ Fix problems that arise when using the same code repeatedly
-    ☐ Fix export on leave
+    ✔ Fix export on leave @done(21-01-28 21:10)
     ☐ Deal with big classes @low
     ✘ Maybe use Maps instead of Objects? @cancelled(20-11-16 18:05)
     ☐ Resolve bug wherein some present students are marked as absent @low

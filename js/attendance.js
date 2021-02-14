@@ -297,7 +297,6 @@
     }
 
     function storeNames(names) {
-        console.log(names)
         const code = getMeetCode()
         chrome.storage.sync.get(null, function (result) {
             const timestamp = ~~(Date.now() / 1000)

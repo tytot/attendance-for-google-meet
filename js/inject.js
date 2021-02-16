@@ -1,57 +1,99 @@
 ;(function () {
     let dataPath = []
+    let arrayKey = null
 
-    // _.mY = function(a) {
-    //     return a.d0.slice()
-    // }
-    const regex = /function\(a\){return a.[a-zA-Z0-9$_]+\.slice\(\)}/
+    const regex1 = /function\(\){_\.[a-zA-Z0-9$_]{2,3}\.prototype\.[a-zA-Z0-9$_]{2,3}\.call\(this\);[a-zA-Z0-9$_]{2,3}\(this\)}/
+    const regex2 = /[a-zA-Z0-9$_]{2,3}\(\){super\.[a-zA-Z0-9$_]{2,3}\(\);[a-zA-Z0-9$_]{2,3}\(this\)}/
     const nameRegex = /(\(|\[)([^\(\[\)\]]+)(\)|\])/
 
     const finder = setInterval(attemptHook, 1)
 
     function attemptHook() {
         log(`Attempting hook...`)
-        for (const _k in window.default_MeetingsUi) {
+        outer: for (const _k in window.default_MeetingsUi) {
             const v = window.default_MeetingsUi[_k]
-            if (v && typeof v === 'function') {
-                if (regex.test(v.toString())) {
-                    log('If you\'re seeing this, I have already lost my sanity fixing this bug')
-                    const og = v
-                    const arrPath = v.toString().split('.')[1]
-                    window.default_MeetingsUi[_k] = function (a) {
-                        window.dispatchEvent(
-                            new CustomEvent('atd', { detail: a[arrPath] })
-                        )
-                        return og.call(this, a)
+            if (v && v.prototype) {
+                for (const k of Object.getOwnPropertyNames(v.prototype)) {
+                    const p = Object.getOwnPropertyDescriptor(v.prototype, k)
+                    if (
+                        k !== 'constructor' &&
+                        p &&
+                        p.value &&
+                        !v.prototype[k].__grid_ran
+                    ) {
+                        let funcString = p.value.toString()
+                        if (
+                            regex1.test(funcString) ||
+                            regex2.test(funcString)
+                        ) {
+                            const og = v.prototype[k]
+                            v.prototype[k] = function () {
+                                window.dispatchEvent(
+                                    new CustomEvent('atd', { detail: this })
+                                )
+                                og.call(this)
+                            }
+                            log(
+                                `Successfully hooked into participant data function at ${_k}.prototype.${k}.`
+                            )
+                            clearInterval(finder)
+                            break outer
+                        }
                     }
-                    log(
-                        `Successfully hooked into participant data function at window.default_MeetingsUi.${_k}.`
-                    )
-                    clearInterval(finder)
-                    break
                 }
             }
         }
     }
 
-    let cache = []
     window.addEventListener('atd', function (event) {
-        cache = event.detail
-    })
-
-    setInterval(function () {
         if (dataPath.length === 0) {
-            outer: for (const [___k, ___v] of Object.entries(cache[0])) {
-                if (___v && typeof ___v === 'object') {
+            outer: for (const [___k, ___v] of Object.entries(event.detail)) {
+                if (___v) {
                     for (const [__k, __v] of Object.entries(___v)) {
-                        if (__v && typeof __v === 'object') {
+                        if (__v) {
                             for (const [_k, _v] of Object.entries(__v)) {
-                                if (_v && Array.isArray(_v) && _v.length === 32) {
-                                    dataPath = [___k, __k, _k]
-                                    log(
-                                        `Found path to participant data: el.${___k}.${__k}.${_k}`
-                                    )
-                                    break outer
+                                if (_v && _v instanceof Map && _v.size > 0) {
+                                    const [k, v] = _v.entries().next().value
+                                    if (
+                                        typeof k === 'string' &&
+                                        k.substring(0, 7) === 'spaces/'
+                                    ) {
+                                        for (const [k_, v_] of Object.entries(
+                                            v
+                                        )) {
+                                            if (
+                                                v_ &&
+                                                v_.hasOwnProperty('data')
+                                            ) {
+                                                dataPath = [
+                                                    ___k,
+                                                    __k,
+                                                    _k,
+                                                    k,
+                                                    k_,
+                                                    'data',
+                                                ]
+                                                for (const v__ of Object.values(
+                                                    v_.data
+                                                )) {
+                                                    for (const [
+                                                        k___,
+                                                        v___,
+                                                    ] of Object.entries(v__)) {
+                                                        if (
+                                                            Array.isArray(v___)
+                                                        ) {
+                                                            arrayKey = k___
+                                                            log(
+                                                                `Found path to participant data at {source}.${___k}.${__k}.${_k}.${k}.${k_}.data.{id}.${k___}.`
+                                                            )
+                                                            break outer
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -59,10 +101,13 @@
                 }
             }
         }
+        const data = event.detail[dataPath[0]][dataPath[1]][dataPath[2]].get(
+            dataPath[3]
+        )[dataPath[4]][dataPath[5]]
 
         let names = []
-        for (const element of cache) {
-            const array = element[dataPath[0]][dataPath[1]][dataPath[2]]
+        for (const v of Object.values(data)) {
+            const array = v[arrayKey]
             if (array[4] && array[6].length === 0 && array[20] == undefined) {
                 const fullName = array[1]
                 if (fullName.includes(',')) {
@@ -86,7 +131,7 @@
             },
             'https://meet.google.com'
         )
-    }, 1000)
+    })
 
     function log(message) {
         console.log(

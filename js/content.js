@@ -54,7 +54,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
         : `<div class="updates">
         <div class="notification">
             <i class="material-icons">important_devices</i>
-            <div>
+            <div style="flex: 1">
                 <p style="margin-bottom: 0"><b>
                     New in Version 1.3.0
                 </b></p>
@@ -66,10 +66,16 @@ chrome.storage.local.get('updates-dismissed', function (response) {
             </div>
         </div>
         <hr style="border-style: none none dotted; margin: 0;">
-        <button class="dismiss-updates mdc-button">
-            <span class="mdc-button__ripple"></span>
-            <span class="mdc-button__label">Dismiss</span>
-        </button>
+        <div class="updates-actions">
+            <button class="view-changelog mdc-button" style="float: left">
+                <span class="mdc-button__ripple"></span>
+                <span class="mdc-button__label">View Changelog</span>
+            </button>
+            <button class="dismiss-updates mdc-button" style="float: right">
+                <span class="mdc-button__ripple"></span>
+                <span class="mdc-button__label">Dismiss</span>
+            </button>
+        </div>
     </div>`
 
     const cardHTML = `<div

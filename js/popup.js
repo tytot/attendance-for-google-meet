@@ -28,9 +28,12 @@ const popupSwitch = new MDCSwitch(
 
 const MDCTextField = mdc.textField.MDCTextField
 const intervalField = new MDCTextField(
-    document.querySelector('.mdc-text-field') 
+    document.querySelector('.mdc-text-field')
 )
 
+document.getElementById('version').textContent = `Version ${
+    chrome.runtime.getManifest().version
+}`
 const openButton = document.querySelector('#open')
 
 let autoExport = false
@@ -87,17 +90,21 @@ document.querySelector('#show-popup').addEventListener('click', function () {
         chrome.storage.local.set({ 'show-popup': popupSwitch.checked })
     }
 })
-document.querySelector('#reset-interval').addEventListener('input', function () {
-    if (intervalField.value !== '' && intervalField.value !== resetInterval) {
-        const tempInterval = parseFloat(intervalField.value)
-        if (isNaN(tempInterval))
-            intervalField.value = resetInterval
-        else {
-            resetInterval = tempInterval
-            chrome.storage.local.set({ 'reset-interval': resetInterval })
+document
+    .querySelector('#reset-interval')
+    .addEventListener('input', function () {
+        if (
+            intervalField.value !== '' &&
+            intervalField.value !== resetInterval
+        ) {
+            const tempInterval = parseFloat(intervalField.value)
+            if (isNaN(tempInterval)) intervalField.value = resetInterval
+            else {
+                resetInterval = tempInterval
+                chrome.storage.local.set({ 'reset-interval': resetInterval })
+            }
         }
-    }
-})
+    })
 
 const moreOptions = document.querySelector('#more-options')
 const expandButton = document.querySelector('#expand')
@@ -127,21 +134,22 @@ refreshButton.addEventListener('click', function () {
             chrome.storage.local.set({ 'last-token-refresh': unix })
             refreshButton.disabled = true
             try {
-                chrome.identity.getAuthToken({ interactive: false }, function (
-                    token
-                ) {
-                    chrome.identity.removeCachedAuthToken(
-                        { token: token },
-                        function () {
-                            console.log(`Removed auth token ${token}.`)
-                            snackbar.close()
-                            snackbar.labelText =
-                                'Successfully refreshed auth token.'
-                            snackbar.open()
-                            refreshButton.disabled = false
-                        }
-                    )
-                })
+                chrome.identity.getAuthToken(
+                    { interactive: false },
+                    function (token) {
+                        chrome.identity.removeCachedAuthToken(
+                            { token: token },
+                            function () {
+                                console.log(`Removed auth token ${token}.`)
+                                snackbar.close()
+                                snackbar.labelText =
+                                    'Successfully refreshed auth token.'
+                                snackbar.open()
+                                refreshButton.disabled = false
+                            }
+                        )
+                    }
+                )
             } catch (error) {
                 console.log(error)
                 snackbar.close()

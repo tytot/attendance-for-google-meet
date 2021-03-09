@@ -182,16 +182,19 @@
 .updates {
     background-color: #058d80;
     color: white;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .updates i {
     color: white;
 }
 
-.updates button {
+.updates-actions {
+    overflow: hidden;
+}
+
+.updates-actions button {
     color: white !important;
-    float: right;
 }
 
 #addeth-class {

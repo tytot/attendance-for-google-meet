@@ -13,7 +13,6 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
     if (meetTabs.has(tabId)) {
         const code = meetTabs.get(tabId)
         meetTabs.delete(tabId)
-        console.log(tabId)
         chrome.storage.local.get('auto-export', function (result) {
             if (result['auto-export']) {
                 chrome.identity.getAuthToken(

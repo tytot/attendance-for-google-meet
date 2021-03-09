@@ -21,6 +21,16 @@
         }
     })
 
+    document.querySelectorAll('.view-changelog').forEach((element) => {
+        element.addEventListener('click', () => {
+            chrome.runtime.sendMessage({
+                data: 'open-url',
+                url: `https://github.com/tytot/attendance-for-google-meet/releases/tag/v${
+                    chrome.runtime.getManifest().version
+                }`,
+            })
+        })
+    })
     document.querySelectorAll('.dismiss-updates').forEach((element) => {
         element.addEventListener('click', () => {
             chrome.storage.local.set({ 'updates-dismissed': true }, () => {

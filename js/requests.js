@@ -554,7 +554,7 @@ function collapseGroup(token, code, spreadsheetId, sheetId) {
 
 function generateAttendanceRows(code) {
     return new Promise((resolve) => {
-        chrome.storage.sync.get(null, function (result) {
+        chrome.storage.local.get(null, function (result) {
             const startUnix = result[code]['start-timestamp']
             const unix = ~~(Date.now() / 1000)
             const mins = Math.round((unix - startUnix) / 6) / 10

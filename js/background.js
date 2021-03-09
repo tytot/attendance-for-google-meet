@@ -14,7 +14,7 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
         const code = meetTabs.get(tabId)
         meetTabs.delete(tabId)
         console.log(tabId)
-        chrome.storage.sync.get('auto-export', function (result) {
+        chrome.storage.local.get('auto-export', function (result) {
             if (result['auto-export']) {
                 chrome.identity.getAuthToken(
                     { interactive: true },
@@ -42,29 +42,35 @@ chrome.tabs.query(
 )
 
 chrome.runtime.onInstalled.addListener(function (details) {
-    chrome.storage.local.get(null, function (data) {
-        if (details.reason === 'update') {
-            const pv = details.previousVersion
-            if (
-                pv === '1.0.3' ||
-                pv === '1.0.2' ||
-                pv === '1.0.1' ||
-                pv === '1.0.0'
-            ) {
+    if (details.reason === 'update') {
+        const pv = details.previousVersion
+        if (pv === '1.0.3') {
+            chrome.storage.local.get(null, function (data) {
                 chrome.storage.sync.set(data)
                 chrome.storage.local.clear()
+            })
+        } else if (pv.localeCompare('1.2.14') >= 0) {
+            if (pv === '1.2.14') {
+                chrome.storage.sync.get(null, function (data) {
+                    chrome.storage.local.set(data)
+                    chrome.storage.sync.clear()
+                })
             }
+            chrome.storage.local.set({ 'updates-dismissed': false })
         }
-        if (!data.hasOwnProperty('auto-export')) {
-            chrome.storage.sync.set({ 'auto-export': false })
-        }
-        if (!data.hasOwnProperty('show-popup')) {
-            chrome.storage.sync.set({ 'show-popup': true })
-        }
-        if (!data.hasOwnProperty('reset-interval')) {
-            chrome.storage.sync.set({ 'reset-interval': 12 })
-        }
-    })
+    } else if (details.reason === 'install') {
+        chrome.storage.local.get(null, function (data) {
+            if (!data.hasOwnProperty('auto-export')) {
+                chrome.storage.local.set({ 'auto-export': false })
+            }
+            if (!data.hasOwnProperty('show-popup')) {
+                chrome.storage.local.set({ 'show-popup': true })
+            }
+            if (!data.hasOwnProperty('reset-interval')) {
+                chrome.storage.local.set({ 'reset-interval': 12 })
+            }
+        })
+    }
 })
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
@@ -119,7 +125,7 @@ chrome.runtime.onConnect.addListener(function (port) {
                 tryExport(token, msg.code, port)
             } else if (msg.data === 'rename') {
                 const code = msg.code
-                chrome.storage.sync.get(
+                chrome.storage.local.get(
                     'spreadsheet-id',
                     async function (result) {
                         const id = result['spreadsheet-id']
@@ -158,7 +164,7 @@ chrome.runtime.onConnect.addListener(function (port) {
                     }
                 )
             } else if (msg.data === 'delete-meta') {
-                chrome.storage.sync.get(
+                chrome.storage.local.get(
                     'spreadsheet-id',
                     async function (result) {
                         if (result.hasOwnProperty('spreadsheet-id')) {
@@ -186,7 +192,7 @@ function postMessage(port, message) {
 
 function tryExport(token, code, port, retry = false) {
     Utils.log('Attempting export...')
-    chrome.storage.sync.get(['spreadsheet-id', code], async function (result) {
+    chrome.storage.local.get(['spreadsheet-id', code], async function (result) {
         postMessage(port, { progress: 0 })
         const id = result['spreadsheet-id']
         if (result[code].hasOwnProperty('class')) {
@@ -234,7 +240,7 @@ async function createSpreadsheet(token, className, code, port, retry) {
         Utils.log(
             `Successfully created Attendance spreadsheet with id ${newSpreadsheet.spreadsheetId}.`
         )
-        chrome.storage.sync.set({
+        chrome.storage.local.set({
             'spreadsheet-id': newSpreadsheet.spreadsheetId,
         })
         spreadsheetId = newSpreadsheet.spreadsheetId

@@ -36,7 +36,7 @@ const openButton = document.querySelector('#open')
 let autoExport = false
 let showPopup = false
 let resetInterval = 12
-chrome.storage.sync.get(
+chrome.storage.local.get(
     ['auto-export', 'show-popup', 'reset-interval', 'spreadsheet-id'],
     function (result) {
         if (result['auto-export']) {
@@ -78,13 +78,13 @@ document.querySelector('#contact').addEventListener('click', function () {
 document.querySelector('#auto-export').addEventListener('click', function () {
     if (exportSwitch.checked !== autoExport) {
         autoExport = exportSwitch.checked
-        chrome.storage.sync.set({ 'auto-export': exportSwitch.checked })
+        chrome.storage.local.set({ 'auto-export': exportSwitch.checked })
     }
 })
 document.querySelector('#show-popup').addEventListener('click', function () {
     if (popupSwitch.checked !== showPopup) {
         showPopup = popupSwitch.checked
-        chrome.storage.sync.set({ 'show-popup': popupSwitch.checked })
+        chrome.storage.local.set({ 'show-popup': popupSwitch.checked })
     }
 })
 document.querySelector('#reset-interval').addEventListener('input', function () {
@@ -94,7 +94,7 @@ document.querySelector('#reset-interval').addEventListener('input', function () 
             intervalField.value = resetInterval
         else {
             resetInterval = tempInterval
-            chrome.storage.sync.set({ 'reset-interval': resetInterval })
+            chrome.storage.local.set({ 'reset-interval': resetInterval })
         }
     }
 })
@@ -115,7 +115,7 @@ expandButton.addEventListener('click', function () {
 
 const refreshButton = document.querySelector('#refresh')
 refreshButton.addEventListener('click', function () {
-    chrome.storage.sync.get('last-token-refresh', function (result) {
+    chrome.storage.local.get('last-token-refresh', function (result) {
         const unix = ~~(Date.now() / 1000)
         let valid = true
         if (result.hasOwnProperty('last-token-refresh')) {
@@ -124,7 +124,7 @@ refreshButton.addEventListener('click', function () {
             }
         }
         if (valid) {
-            chrome.storage.sync.set({ 'last-token-refresh': unix })
+            chrome.storage.local.set({ 'last-token-refresh': unix })
             refreshButton.disabled = true
             try {
                 chrome.identity.getAuthToken({ interactive: false }, function (
@@ -163,7 +163,7 @@ document.querySelector('#reset').addEventListener('click', function () {
     resetDialog.open()
 })
 document.querySelector('#confirm-reset').addEventListener('click', function () {
-    chrome.storage.sync.remove('spreadsheet-id', function () {
+    chrome.storage.local.remove('spreadsheet-id', function () {
         snackbar.close()
         snackbar.labelText = 'Successfully unlinked spreadsheet.'
         snackbar.open()
@@ -175,13 +175,13 @@ document.querySelector('#clear').addEventListener('click', function () {
     clearDialog.open()
 })
 document.querySelector('#confirm-clear').addEventListener('click', function () {
-    chrome.storage.sync.get(null, function (result) {
+    chrome.storage.local.get(null, function (result) {
         for (const key in result) {
             if (key !== 'spreadsheet-id') {
-                chrome.storage.sync.remove(key)
+                chrome.storage.local.remove(key)
             }
         }
-        chrome.storage.sync.set({ 'reset-interval': 12 })
+        chrome.storage.local.set({ 'reset-interval': 12 })
         snackbar.close()
         snackbar.labelText = 'Successfully cleared storage.'
         snackbar.open()

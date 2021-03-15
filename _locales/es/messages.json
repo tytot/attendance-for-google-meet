@@ -1,0 +1,34 @@
+{
+    "title": {
+        "message": "Asistencia para Google Meet™",
+        "description": "Extension name"
+    },
+    "version": {
+        "message": "Versión $VERSION_NUMBER$",
+        "description": "Extension version",
+        "placeholders": {
+            "version_number": {
+                "content": "$1",
+                "example": "1.3.0"
+            }
+        }
+    },
+    "attribution": {
+        "message": "Por Tyler Lin y Adit Bala",
+        "description": "Extension attribution"
+    },
+    "exporting": {
+        "message": "Exportando...",
+        "description": "Message shown when exporting"
+    },
+    "areYouSure": {
+        "message": "¿Estás seguro que quieres eliminar la clase $CLASS_NAME$?",
+        "description": "Message shown when deleting a class",
+        "placeholders": {
+            "class_name": {
+                "content": "$1",
+                "example": "English"
+            }
+        }
+    }
+}

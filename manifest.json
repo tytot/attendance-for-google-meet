@@ -40,5 +40,6 @@
         "48": "img/icons/icon48.png",
         "128": "img/icons/icon128.png"
     },
+    "default_locale": "en",
     "manifest_version": 2
 }

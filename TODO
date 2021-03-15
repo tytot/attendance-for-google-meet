@@ -33,8 +33,9 @@ Backend:
         ✔ Rename sheet when renamed class @done(20-08-21 12:00)
         ✔ Export on close option @done(20-09-04 12:00)
 
-Translations:
-    ☐ Setup translations.js @started(20-10-29 13:16)
+Internationalization:
+    ✘ Setup translations.js @started(20-10-29 13:16) @cancelled(21-03-15 08:42) @wasted(19w3d19h26m21s)
+    ☐ Create locale message files @started(21-03-15 08:43)
     ☐ Replace all instances of text with path to translation @started(20-10-29 13:17)
     ☐ Recruit volunteers to provide translations
     Volunteers:

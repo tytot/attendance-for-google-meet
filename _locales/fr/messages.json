@@ -1,0 +1,34 @@
+{
+    "title": {
+        "message": "Appel pour Google Meet™",
+        "description": "Extension name"
+    },
+    "version": {
+        "message": "Version $VERSION_NUMBER$",
+        "description": "Extension version",
+        "placeholders": {
+            "version_number": {
+                "content": "$1",
+                "example": "1.3.0"
+            }
+        }
+    },
+    "attribution": {
+        "message": "De Tyler Lin et Adit Bala",
+        "description": "Extension attribution"
+    },
+    "exporting": {
+        "message": "Exportant...",
+        "description": "Message shown when exporting"
+    },
+    "areYouSure": {
+        "message": "Êtes-vous sûr de vouloir supprimer le cours $CLASS_NAME$?",
+        "description": "Message shown when deleting a class",
+        "placeholders": {
+            "class_name": {
+                "content": "$1",
+                "example": "English"
+            }
+        }
+    }
+}

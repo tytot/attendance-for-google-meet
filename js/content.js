@@ -56,12 +56,20 @@ chrome.storage.local.get('updates-dismissed', function (response) {
             <i class="material-icons">important_devices</i>
             <div style="flex: 1">
                 <p style="margin-bottom: 0"><b>
-                    New in Version 1.3.0
+                    New in Version ${chrome.runtime.getManifest().version}
                 </b></p>
                 <ul>
-                    <li>Increased storage; track up to 50x more classes and students</li>
-                    <li>Better support for non-English names</li>
-                    <li>Visual & semantic changes</li>
+                    <li>Status bar that shows how many students are present at a glance
+                        <ul>
+                            <li>Click on it to see detailed numbers</li>
+                        </ul>
+                    </li>
+                    <li>Separate section for students not on the class list
+                        <ul>
+                            <li>Jump to it from the status bar details</li>
+                            <li>Option to add all unlisted students to class at once</li>
+                        </ul>
+                    <li>U.I. polish</li>
                 </ul>
             </div>
         </div>
@@ -98,7 +106,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                 </div>
                 <button
                     class="mdc-icon-button medium-button material-icons right"
-                    style="right: 32px"
+                    style="right: 48px"
                     aria-label="Help"
                     jscontroller="VXdfxd"
                     jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
@@ -175,7 +183,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
         </div>
         <div id="card-default-view">
             <div class="mdc-card-header">
-                <div class="mdc-menu-surface--anchor right" style="right: 40px">
+                <div class="mdc-menu-surface--anchor right" style="right: 48px">
                     <div
                         class="mdc-menu mdc-menu-surface"
                         id="sort-menu"
@@ -189,7 +197,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                                 tabindex="0"
                             >
                                 <span class="mdc-list-item__text"
-                                    >Sort by Last Name (A - Z)</span
+                                    >Sort by Last Name (A–Z)</span
                                 >
                             </li>
                             <li
@@ -199,7 +207,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                                 tabindex="0"
                             >
                                 <span class="mdc-list-item__text"
-                                    >Sort by First Name (A - Z)</span
+                                    >Sort by First Name (A–Z)</span
                                 >
                             </li>
                             <li
@@ -243,7 +251,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                 </div>
                 <button
                     class="mdc-icon-button medium-button material-icons right more"
-                    style="right: 32px"
+                    style="right: 48px"
                     aria-label="Sort Options"
                     jscontroller="VXdfxd"
                     jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
@@ -432,7 +440,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                 </div>
                 <button
                     class="mdc-icon-button medium-button material-icons right"
-                    style="right: 32px"
+                    style="right: 48px"
                     aria-label="Help"
                     jscontroller="VXdfxd"
                     jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
@@ -569,7 +577,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                     <h2 class="mdc-dialog__title CkXZgc" id="dialog-title">
                         Select Class
                     </h2>
-                    <button class="mdc-icon-button material-icons big-button right"
+                    <button class="mdc-icon-button material-icons medium-button right"
                         aria-label="Help"
                         jscontroller="VXdfxd"
                         jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"

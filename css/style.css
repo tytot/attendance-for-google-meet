@@ -61,52 +61,37 @@
 
 #dialog-title {
     text-align: center;
-    top: -4px;
+    top: -6px;
     max-width: none;
     font-size: 20px;
+    height: 52px;
 }
 
 .card-title {
+    height: 52px;
+    line-height: 52px !important;
+    font-size: 20px !important;
     text-align: center;
-    max-width: calc(100% - 148px) !important;
-    margin-top: 12px;
-    margin-bottom: 12px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0 88px;
 }
 
 .left {
     position: absolute;
-    top: 0px;
-    left: 0px;
-    padding: 0px;
+    top: 8px;
+    left: 8px;
     z-index: 1;
 }
 
 .right {
     position: absolute;
-    top: 0px;
-    right: 0px;
-    padding: 0px;
-}
-
-.big-button {
-    margin: 4px 8px 0 4px;
+    top: 8px;
+    right: 8px;
 }
 
 .medium-button {
-    margin: 8px 10px;
-    width: 32px;
-    height: 32px;
-    font-size: 20px;
-}
-
-.small-button {
-    margin: 0 0 8px 0;
+    width: 36px;
+    height: 36px;
     padding: 0;
-    width: 24px;
-    height: 24px;
-    font-size: 18px;
 }
 
 .green {
@@ -176,6 +161,7 @@
     display: inline-block;
     padding: 4px 8px;
     cursor: pointer;
+    border-radius: 8px;
 }
 .status-details-container {
     text-align: center;
@@ -207,7 +193,8 @@
     font-family: 'Google Sans', Roboto, Arial, sans-serif;
     text-transform: uppercase;
     font-weight: bold;
-    padding: 8px 16px;
+    padding: 8px;
+    padding-left: 16px;
     letter-spacing: 0;
     background-color: var(--gm-neutral-highlight-color);
 }
@@ -279,15 +266,15 @@
     width: 100%;
     height: 48px;
     justify-content: left;
-    padding-left: 16px;
+    padding-left: 8px;
     color: var(--mdc-theme-primary);
 }
 
 #addeth-class .mdc-button__icon {
-    width: 24px;
+    width: 36px;
     height: 24px;
     font-size: 24px;
-    margin-right: 16px;
+    margin-right: 8px;
     color: var(--mdc-theme-primary);
 }
 
@@ -303,8 +290,14 @@
     cursor: default;
 }
 
+.mdc-list-item {
+    padding: 0 8px !important;
+}
 .mdc-list-item__graphic {
-    margin-right: 16px;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    margin-right: 8px !important;
 }
 
 .export-button {

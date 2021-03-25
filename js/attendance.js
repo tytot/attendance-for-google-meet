@@ -421,19 +421,14 @@
 
             const className = res.class
             if (className) {
-                updateRosterStatus(currentData, result.rosters, className, true)
+                updateRosterStatus(currentData, result.rosters, className)
             }
 
             chrome.storage.local.set({ [code]: res })
         })
     }
 
-    function updateRosterStatus(
-        attendance,
-        rosters,
-        className,
-        detect = false
-    ) {
+    function updateRosterStatus(attendance, rosters, className) {
         rosterStatus.innerHTML = ''
 
         const roster = rosters[className]
@@ -457,8 +452,8 @@
             while (!found && i < roster.length) {
                 const testName = roster[i]
                 if (
-                    testName.replace('|', ' ').toLocaleUpperCase() ===
-                    name.replace('|', ' ').toLocaleUpperCase()
+                    testName.replace('|', ' ').trim().toLocaleUpperCase() ===
+                    name.replace('|', ' ').trim().toLocaleUpperCase()
                 ) {
                     found = true
                     if (arr.length % 2 === 1) {
@@ -505,7 +500,7 @@
                 statusCounts.gray++
             }
         }
-        if (detect && changed) {
+        if (changed) {
             chrome.storage.local.set({ rosters: rosters })
         }
         const bigAttendance = Object.keys(attendance).map((key) =>
@@ -560,6 +555,7 @@
             jumpButton.classList.remove('mdc-ripple-surface')
             jumpButton.setAttribute('aria-disabled', true)
             jumpButton.style.cursor = 'default'
+            jumpButton.removeAttribute('jscontroller')
         }
         entries.forEach((entry, index) => {
             if (entry.index === -1) {
@@ -582,17 +578,17 @@
                         jumpButton.classList.add('mdc-ripple-surface')
                         jumpButton.setAttribute('aria-disabled', false)
                         jumpButton.style.cursor = 'pointer'
+                        jumpButton.setAttribute('jscontroller', 'VXdfxd')
                     }
                     document
                         .getElementById('add-all-unlisted')
                         .addEventListener('click', function () {
+                            removeSnackbarButtons()
                             rostersCache = rosters
-                            const nons = entries.filter(
-                                (entry) => entry.index === -1
-                            )
-                            nons.forEach((entry) => {
-                                addStudent(entry.name)
-                            })
+                            const nons = entries
+                                .filter((entry) => entry.index === -1)
+                                .map((non) => non.name)
+                            addBulkStudents(nons)
                             snackbar.labelText = `Added ${nons.length} student${
                                 nons.length === 1 ? '' : 's'
                             } to class.`
@@ -607,7 +603,7 @@
             }
             var meta = `<div class="mdc-list-item__meta">
                 <button
-                    class="mdc-icon-button material-icons"
+                    class="mdc-icon-button material-icons medium-button"
                     aria-label="${metaTooltip}"
                     jscontroller="VXdfxd"
                     jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
@@ -619,7 +615,7 @@
                     ${metaIcon}
                 </button>
             </div>`
-            const realName = entry.name.replace('|', ' ')
+            const realName = entry.name.replace('|', ' ').trim()
             rosterStatus.insertAdjacentHTML(
                 'beforeend',
                 `<li class="mdc-list-divider" role="separator"></li>
@@ -783,7 +779,7 @@
             </span>
             <div class="mdc-list-item__meta">
                 <button
-                    class="mdc-icon-button material-icons edit-class"
+                    class="mdc-icon-button material-icons medium-button edit-class"
                     aria-label="Edit"
                     jscontroller="VXdfxd"
                     jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
@@ -795,7 +791,7 @@
                     edit
                 </button>
                 <button
-                    class="mdc-icon-button material-icons delete-class"
+                    class="mdc-icon-button material-icons medium-button delete-class"
                     aria-label="Delete"
                     jscontroller="VXdfxd"
                     jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
@@ -1055,6 +1051,19 @@
         })
     }
 
+    function addBulkStudents(names) {
+        chrome.storage.local.get(null, function (result) {
+            const code = getMeetCode()
+            const className = result[code].class
+            let res = result.rosters
+            names.forEach((name) => {
+                res[className].push(name)
+            })
+            chrome.storage.local.set({ rosters: res })
+            updateRosterStatus(result[code].attendance, res, className)
+        })
+    }
+
     function removeStudent(name) {
         chrome.storage.local.get(null, function (result) {
             const code = getMeetCode()
@@ -1082,7 +1091,7 @@
         chipSetEl.innerHTML = ''
         chipSet = new MDCChipSet(chipSetEl)
         for (const name of roster) {
-            addChip(name.replace('|', ' '))
+            addChip(name.replace('|', ' ').trim())
         }
         stuTextField.value = getNewFieldValue()
     }
@@ -1324,8 +1333,7 @@
                         updateRosterStatus(
                             res.attendance,
                             result.rosters,
-                            res.class,
-                            true
+                            res.class
                         )
                         rosterStatus.parentElement.scrollTop = 0
                     })

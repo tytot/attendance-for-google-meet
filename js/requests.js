@@ -552,6 +552,24 @@ function collapseGroup(token, code, spreadsheetId, sheetId) {
     })
 }
 
+const red = {
+    red: 217 / 255,
+    green: 48 / 255,
+    blue: 37 / 255,
+    alpha: 1,
+}
+const green = {
+    red: 52 / 255,
+    green: 167 / 255,
+    blue: 83 / 255,
+    alpha: 1,
+}
+const white = {
+    red: 1,
+    green: 1,
+    blue: 1,
+    alpha: 1
+}
 function generateAttendanceRows(code) {
     return new Promise((resolve) => {
         chrome.storage.local.get(null, function (result) {
@@ -655,14 +673,20 @@ function generateAttendanceRows(code) {
                                 stringValue: present,
                             },
                             userEnteredFormat: {
-                                backgroundColor: {
-                                    red: present === 'N' ? 1 : 0.5,
-                                    green: present === 'N' ? 0.5 : 1,
-                                    blue: 0.5,
-                                    alpha: 1,
+                                backgroundColor: present === 'N' ? red : green,
+                                borders: {
+                                    top: {
+                                        style: 'SOLID',
+                                        color: white
+                                    },
+                                    bottom: {
+                                        style: 'SOLID',
+                                        color: white
+                                    }
                                 },
                                 horizontalAlignment: 'CENTER',
                                 textFormat: {
+                                    foregroundColor: white,
                                     bold: true,
                                 },
                             },

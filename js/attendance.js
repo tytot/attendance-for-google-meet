@@ -110,7 +110,11 @@
     const attendanceButton = document.getElementById('attendance')
     attendanceButton.addEventListener('click', toggleCard)
     attendanceButton.addEventListener('keydown', function (event) {
-        if (event.key === 'Enter' || event.keyCode === 13) {
+        if (
+            event.key === ' ' ||
+            event.key === 'Enter' ||
+            event.key === 'Spacebar'
+        ) {
             toggleCard()
         }
     })
@@ -118,6 +122,40 @@
     for (const closeButton of document.getElementsByClassName('close-card')) {
         closeButton.addEventListener('click', hideCard)
     }
+
+    const statusBar = document.getElementById('status-bar')
+    const statusDetails = document.getElementById('status-details')
+    const statusCountEls = statusDetails.getElementsByClassName(
+        'status-details-count'
+    )
+    statusBar.addEventListener('click', toggleStatusDetails)
+    statusBar.addEventListener('keydown', function (event) {
+        if (
+            event.key === ' ' ||
+            event.key === 'Enter' ||
+            event.key === 'Spacebar'
+        ) {
+            toggleStatusDetails()
+        }
+    })
+    document
+        .getElementById('hide-status-details')
+        .addEventListener('click', toggleStatusDetails)
+
+    const jumpButton = document.getElementById('status-unlisted')
+    let unlistedPos = 0
+    jumpButton.addEventListener('click', jumpToUnlisted)
+    jumpButton.addEventListener('keydown', function (event) {
+        if (
+            event.key === ' ' ||
+            event.key === 'Enter' ||
+            event.key === 'Spacebar'
+        ) {
+            jumpToUnlisted()
+        }
+    })
+
+    const rosterStatus = document.getElementById('roster-status')
 
     const exportButton = document.getElementById('export')
     exportButton.addEventListener('click', function () {
@@ -396,7 +434,6 @@
         className,
         detect = false
     ) {
-        const rosterStatus = document.getElementById('roster-status')
         rosterStatus.innerHTML = ''
 
         const roster = rosters[className]
@@ -406,6 +443,12 @@
             document.querySelector('#no-students').style.display = 'none'
         }
         let entries = []
+        const statusCounts = {
+            red: 0,
+            yellow: 0,
+            green: 0,
+            gray: 0,
+        }
         let changed = false
         for (const name in attendance) {
             const arr = attendance[name]
@@ -427,6 +470,7 @@
                             text: `Joined at ${Utils.toTimeString(arr[0])}`,
                             index: 2,
                         })
+                        statusCounts.green++
                     } else {
                         entries.push({
                             name: name,
@@ -438,6 +482,7 @@
                             )}`,
                             index: 1,
                         })
+                        statusCounts.yellow++
                     }
                     if (testName !== name) {
                         roster[i] = name
@@ -457,6 +502,7 @@
                     text: `Joined at ${Utils.toTimeString(arr[0])}`,
                     index: -1,
                 })
+                statusCounts.gray++
             }
         }
         if (detect && changed) {
@@ -475,15 +521,22 @@
                     text: 'Not here',
                     index: 0,
                 })
+                statusCounts.red++
             }
         }
 
         if (sortMethod === 'firstName') {
             var compare = (a, b) => {
+                if ((a.index === -1) !== (b.index === -1)) {
+                    return b.index - a.index
+                }
                 return Utils.compareFirst(a.name, b.name)
             }
         } else if (sortMethod === 'lastName') {
             compare = (a, b) => {
+                if ((a.index === -1) !== (b.index === -1)) {
+                    return b.index - a.index
+                }
                 return Utils.compareLast(a.name, b.name)
             }
         } else if (sortMethod === 'presentFirst') {
@@ -492,7 +545,7 @@
             }
         } else {
             compare = (a, b) => {
-                if (a.index === -1 || b.index === -1) {
+                if ((a.index === -1) !== (b.index === -1)) {
                     return b.index - a.index
                 }
                 return a.index - b.index
@@ -500,10 +553,54 @@
         }
         entries.sort(compare)
 
-        for (const entry of entries) {
+        if (
+            statusCounts.gray === 0 &&
+            jumpButton.classList.contains('mdc-ripple-surface')
+        ) {
+            jumpButton.classList.remove('mdc-ripple-surface')
+            jumpButton.setAttribute('aria-disabled', true)
+            jumpButton.style.cursor = 'default'
+        }
+        entries.forEach((entry, index) => {
             if (entry.index === -1) {
                 var metaIcon = 'add_circle'
                 var metaTooltip = 'Add to Class'
+                if (index > 0 && entries[index - 1].index !== -1) {
+                    rosterStatus.insertAdjacentHTML(
+                        'beforeend',
+                        `<li class="mdc-list-divider" role="separator"></li>
+                        <li id="unlisted-divider">
+                            Not on List
+                            <button id="add-all-unlisted" class="mdc-button">
+                                <span class="mdc-button__ripple"></span>
+                                <span class="mdc-button__label">Add All</span>
+                            </button>
+                        </li>`
+                    )
+                    unlistedPos = 61 * index
+                    if (!jumpButton.classList.contains('mdc-ripple-surface')) {
+                        jumpButton.classList.add('mdc-ripple-surface')
+                        jumpButton.setAttribute('aria-disabled', false)
+                        jumpButton.style.cursor = 'pointer'
+                    }
+                    document
+                        .getElementById('add-all-unlisted')
+                        .addEventListener('click', function () {
+                            rostersCache = rosters
+                            const nons = entries.filter(
+                                (entry) => entry.index === -1
+                            )
+                            nons.forEach((entry) => {
+                                addStudent(entry.name)
+                            })
+                            snackbar.labelText = `Added ${nons.length} student${
+                                nons.length === 1 ? '' : 's'
+                            } to class.`
+                            sbUndo.style.display = 'inline-flex'
+                            snackbar.close()
+                            snackbar.open()
+                        })
+                }
             } else {
                 metaIcon = 'remove_circle'
                 metaTooltip = 'Remove from Class'
@@ -574,7 +671,28 @@
                     snackbar.open()
                 })
             }
+        })
+        rosterStatus.removeChild(rosterStatus.firstElementChild)
+
+        if (roster.length !== 0) {
+            ;['green', 'yellow', 'red'].forEach(function (color, index) {
+                const bar = document.getElementById(`status-${color}`)
+                bar.style.width = `${
+                    (100 * statusCounts[color]) / roster.length
+                }%`
+                const prefix = bar.getAttribute('aria-label').split(':')[0]
+                bar.setAttribute(
+                    'aria-label',
+                    `${prefix}: ${statusCounts[color]}/${roster.length}`
+                )
+                statusCountEls[index].innerHTML = `<b>${statusCounts[color]
+                    .toString()
+                    .padStart(roster.length.toString().length, '0')}</b>/${
+                    roster.length
+                }`
+            })
         }
+        statusCountEls[3].innerHTML = `<b>${statusCounts.gray}</b>`
     }
 
     function troubleshoot() {
@@ -624,6 +742,27 @@
         const attendanceButton = document.getElementById('attendance')
         attendanceButton.classList.add('IeuGXd')
         document.getElementById('card').style.visibility = 'hidden'
+    }
+
+    function toggleStatusDetails() {
+        const expanded = statusBar.getAttribute('aria-expanded') === 'true'
+        statusBar.setAttribute('aria-pressed', !expanded)
+        statusBar.setAttribute('aria-expanded', !expanded)
+        if (!expanded) {
+            statusDetails.style.display = 'block'
+            statusBar.setAttribute('data-tooltip', 'Hide Status Details')
+            statusBar.setAttribute('aria-label', 'Hide Status Details')
+        } else {
+            statusDetails.style.display = 'none'
+            statusBar.setAttribute('data-tooltip', 'Show Status Details')
+            statusBar.setAttribute('aria-label', 'Show Status Details')
+        }
+    }
+
+    function jumpToUnlisted() {
+        if (jumpButton.classList.contains('mdc-ripple-surface')) {
+            rosterStatus.parentElement.scrollTop = unlistedPos
+        }
     }
 
     function getClassHTML(className) {
@@ -1188,6 +1327,7 @@
                             res.class,
                             true
                         )
+                        rosterStatus.parentElement.scrollTop = 0
                     })
                 }
             })

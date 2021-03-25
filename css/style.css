@@ -27,6 +27,13 @@
             format('woff');
 }
 
+:root {
+    --green: #34a753;
+    --red: #d93025;
+    --yellow: #fabb04;
+    --gray: #bababa;
+}
+
 .material-icons {
     font-family: 'Material Icons';
     font-weight: normal;
@@ -102,20 +109,20 @@
     font-size: 18px;
 }
 
-.material-icons.green {
-    color: #7fff7f;
+.green {
+    color: var(--green);
 }
 
-.material-icons.red {
-    color: #ff7f7f;
+.red {
+    color: var(--red);
 }
 
-.material-icons.yellow {
-    color: #ffec7f;
+.yellow {
+    color: var(--yellow);
 }
 
-.material-icons.gray {
-    color: #bababa;
+.gray {
+    color: var(--gray);
 }
 
 #select .mdc-dialog__content {
@@ -131,12 +138,83 @@
     border-radius: 8px;
 }
 
+#status-bar {
+    display: flex;
+    height: 8px;
+    cursor: pointer;
+}
+#status-red {
+    background-color: var(--red);
+}
+#status-yellow {
+    background-color: var(--yellow);
+}
+#status-green {
+    background-color: var(--green);
+}
+#status-details {
+    margin: 12px;
+    margin-bottom: 8px;
+    display: none;
+    text-align: center;
+    position: relative;
+}
+#hide-status-details {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    font-size: 0.8rem;
+    height: 27px;
+}
+#status-presence {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    padding-bottom: 4px;
+}
+#status-unlisted {
+    display: inline-block;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+.status-details-container {
+    text-align: center;
+    margin-left: -14px;
+}
+.status-details-container .material-icons {
+    vertical-align: text-top;
+    font-size: 14px;
+}
+.status-details-count {
+    font-family: 'Bruh Mono', monospace;
+    font-size: 14px;
+}
+.status-details-text {
+    text-align: center;
+    color: var(--mdc-theme-text-secondary-on-background);
+    font-size: 12px;
+}
+
 .mdc-list {
     padding: 0px;
 }
 
 .mdc-list-item {
     padding-right: 8px;
+}
+
+#unlisted-divider {
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    text-transform: uppercase;
+    font-weight: bold;
+    padding: 8px 16px;
+    letter-spacing: 0;
+    background-color: var(--gm-neutral-highlight-color);
+}
+#add-all-unlisted {
+    float: right;
+    height: min-content;
+    font-size: 0.8rem;
 }
 
 .class-entry {
@@ -180,7 +258,7 @@
 }
 
 .updates {
-    background-color: #058d80;
+    background-color: var(--mdc-theme-primary);
     color: white;
     overflow: visible;
 }
@@ -202,7 +280,7 @@
     height: 48px;
     justify-content: left;
     padding-left: 16px;
-    color: #058d80;
+    color: var(--mdc-theme-primary);
 }
 
 #addeth-class .mdc-button__icon {
@@ -210,7 +288,7 @@
     height: 24px;
     font-size: 24px;
     margin-right: 16px;
-    color: #058d80;
+    color: var(--mdc-theme-primary);
 }
 
 #edit-roster {
@@ -231,10 +309,6 @@
 
 .export-button {
     margin: 0 auto !important;
-}
-
-:root {
-    --text-offset: -10px;
 }
 
 .label {

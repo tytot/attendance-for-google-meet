@@ -268,35 +268,115 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                 </button>
             </div>
             <div class="mdc-list-divider" role="separator"></div>
+            <div style="text-align: center">
+                <button class="mdc-button" id="edit-roster">
+                    <div class="mdc-button__ripple"></div>
+                    <i
+                        class="material-icons mdc-button__icon"
+                        aria-hidden="true"
+                        >edit</i
+                    >
+                    <span class="mdc-button__label">Edit Class</span>
+                </button>
+            </div>
+            <div class="mdc-list-divider" role="separator"></div>
             <div>
-                <div style="text-align: center">
-                    <button class="mdc-button" id="edit-roster">
-                        <div class="mdc-button__ripple"></div>
-                        <i
-                            class="material-icons mdc-button__icon"
-                            aria-hidden="true"
-                            >edit</i
-                        >
-                        <span class="mdc-button__label">Edit Class</span>
-                    </button>
-                </div>
-                <div class="mdc-list-divider" role="separator"></div>
-                <div
-                    class="mdc-card-content"
-                    style="max-height: 50vh; overflow: auto"
+                <div 
+                    id="status-bar" 
+                    jscontroller="VXdfxd" 
+                    jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                    data-tooltip="Show Status Details" 
+                    data-tooltip-vertical-offset="-12" 
+                    data-tooltip-horizontal-offset="0"
+                    aria-label="Show Status Details"
+                    aria-pressed="false"
+                    aria-expanded="false"
+                    role="button" 
+                    tabindex="0"
                 >
-                    <div id="no-students" class="notification" style="display: none">
-                        <i class="material-icons"> warning </i>
-                        <p>
-                            Select edit or click the + button next to a name to add
-                            students to this class.
-                        </p>
-                    </div>
-                    <ul
-                        class="mdc-list mdc-list--dense mdc-list--two-line"
-                        id="roster-status"
-                    ></ul>
+                    <span 
+                        id="status-green" 
+                        style="width: 100%"
+                        aria-label="Present: 0/0"
+                    ></span>
+                    <span 
+                        id="status-yellow" 
+                        style="width: 0%"
+                        aria-label="Previously Present: 0/0"
+                    ></span>
+                    <span 
+                        id="status-red" 
+                        style="width: 0%"
+                        aria-label="Absent: 0/0"
+                    ></span>
                 </div>
+                <div id="status-details">
+                    <div id="status-presence">
+                        <div>
+                            <div class="status-details-container green">
+                                <span class="material-icons">lens</span>
+                                <span class="status-details-count"><b>0</b>/0</span>
+                            </div>
+                            <div class="status-details-text">present</div>
+                        </div>
+                        <div>
+                            <div class="status-details-container yellow">
+                                <span class="material-icons">lens</span>
+                                <span class="status-details-count"><b>0</b>/0</span>
+                            </div>
+                            <div class="status-details-text">previously present</div>
+                        </div>
+                        <div>
+                            <div class="status-details-container red">
+                                <span class="material-icons">lens</span>
+                                <span class="status-details-count"<b>0</b>/0</span>
+                            </div>
+                            <div class="status-details-text">absent</div>
+                        </div>
+                    </div>
+                    <div 
+                        id="status-unlisted" 
+                        class="mdc-ripple-surface"
+                        jscontroller="VXdfxd"
+                        jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                        data-tooltip="Jump to Unlisted"
+                        data-tooltip-vertical-offset="-12"
+                        data-tooltip-horizontal-offset="0"
+                        aria-label="Jump to Unlisted"
+                        aria-disabled="true"
+                        role="button" 
+                        tabindex="0"
+                    >
+                        <div class="status-details-container gray">
+                            <span class="material-icons">lens</span>
+                            <span class="status-details-count"><b>0</b></span>
+                        </div>
+                        <div class="status-details-text">
+                            Not on List
+                        </div>
+                    </div>
+                    <button id="hide-status-details" class="mdc-button">
+                        <span class="mdc-button__ripple"></span>
+                        <span class="mdc-button__label">Hide</span>
+                    </button>   
+                </div>
+            </div>
+            <div class="mdc-list-divider" role="separator"></div>
+            <div
+                class="mdc-card-content"
+                style="max-height: 50vh; overflow: auto"
+            >
+                <div id="no-students" class="notification" style="display: none">
+                    <i class="material-icons"> warning </i>
+                    <p>
+                        Select edit or click the + button next to a name to add
+                        students to this class.
+                    </p>
+                </div>
+                <ul
+                    class="mdc-list mdc-list--dense mdc-list--two-line"
+                    id="roster-status"
+                ></ul>
             </div>
             <div
                 role="progressbar"

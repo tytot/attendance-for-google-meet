@@ -86,6 +86,8 @@ chrome.storage.local.get('updates-dismissed', function (response) {
         </div>
     </div>`
 
+    const sheetsSVG = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="isolation:isolate;padding-right: 4px;" viewBox="0 0 64 88" width="12pt" height="12pt"><defs><clipPath id="_clipPath_KAvDqF0Ev6kg4Yj0RZmUZ8LSvIjixP4M"><rect height="88" width="64"></rect></clipPath></defs><g clip-path="url(#_clipPath_KAvDqF0Ev6kg4Yj0RZmUZ8LSvIjixP4M)"><clipPath id="_clipPath_tDC5NP6inp0FhE5TGFdi9OsXat0bSKFd"><rect transform="matrix(1,0,0,1,0,0)" height="88" width="64" y="0" x="0"></rect></clipPath><g clip-path="url(#_clipPath_tDC5NP6inp0FhE5TGFdi9OsXat0bSKFd)"><g><path d=" M 58 88 L 6 88 C 2.7 88 0 85.3 0 82 L 0 6 C 0 2.7 2.7 0 6 0 L 42 0 L 64 22 L 64 82 C 64 85.3 61.3 88 58 88 Z  M 17 39.5 L 29.5 39.5 L 29.5 46 L 17 46 L 17 39.5 L 17 39.5 L 17 39.5 L 17 39.5 L 17 39.5 Z  M 17 51 L 29.5 51 L 29.5 57.5 L 17 57.5 L 17 51 L 17 51 L 17 51 L 17 51 L 17 51 Z  M 47 57.5 L 34.5 57.5 L 34.5 51 L 47 51 L 47 57.5 L 47 57.5 L 47 57.5 L 47 57.5 L 47 57.5 Z  M 47 46 L 34.5 46 L 34.5 39.5 L 47 39.5 L 47 46 L 47 46 L 47 46 L 47 46 L 47 46 Z  M 12 34.5 L 12 62.5 L 52 62.5 L 52 34.5 L 12 34.5 L 12 34.5 L 12 34.5 L 12 34.5 L 12 34.5 Z " fill-rule="evenodd"></path></g></g></g></svg>`
+
     const cardHTML = `<div
         class="mdc-card"
         id="card"
@@ -104,6 +106,22 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                 <div>
                     <h2 class="CkXZgc card-title">Select Class</h2>
                 </div>
+                <button 
+                    class="mdc-icon-button mdc-icon-button--on medium-button right" 
+                    aria-label="Import and Export Classes" 
+                    style="padding-top: 6px; right: 88px;"
+                    jscontroller="VXdfxd"
+                    jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                    tabindex="0"
+                    data-tooltip="Import and Export Classes"
+                    data-tooltip-vertical-offset="-12"
+                    data-tooltip-horizontal-offset="0"
+                >
+                    <img 
+                        src="chrome-extension://gioogehddfnceeihfoeencjbhggblkkd/img/icons/drive.png" 
+                        class="mdc-icon-button__icon mdc-icon-button__icon--on"
+                    >
+                </button>
                 <button
                     class="mdc-icon-button medium-button material-icons right"
                     style="right: 48px"
@@ -174,9 +192,11 @@ chrome.storage.local.get('updates-dismissed', function (response) {
             <div class="mdc-card__actions">
                 <button
                     class="mdc-button mdc-button--raised mdc-card__action mdc-card__action--button export-button"
+                    style="fill: rgba(0, 0, 0, 0.38);"
                     disabled
                 >
                     <div class="mdc-button__ripple"></div>
+                    ${sheetsSVG}
                     <span class="mdc-button__label">Export</span>
                 </button>
             </div>
@@ -413,9 +433,11 @@ chrome.storage.local.get('updates-dismissed', function (response) {
             <div class="mdc-card__actions">
                 <button
                     class="mdc-button mdc-button--raised mdc-card__action mdc-card__action--button export-button"
+                    style="fill: white;"
                     id="export"
                 >
                     <div class="mdc-button__ripple"></div>
+                    ${sheetsSVG}
                     <span class="mdc-button__label">Export</span>
                 </button>
             </div>
@@ -555,9 +577,11 @@ chrome.storage.local.get('updates-dismissed', function (response) {
             <div class="mdc-card__actions">
                 <button
                     class="mdc-button mdc-button--raised mdc-card__action mdc-card__action--button export-button"
+                    style="fill: rgba(0, 0, 0, 0.38);"
                     disabled
                 >
                     <div class="mdc-button__ripple"></div>
+                    ${sheetsSVG}
                     <span class="mdc-button__label">Export</span>
                 </button>
             </div>

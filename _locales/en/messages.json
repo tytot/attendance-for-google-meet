@@ -30,5 +30,246 @@
                 "example": "English"
             }
         }
-    }
+    },
+    "succesfulDelete": {
+        "message": "Successfully deleted class $CLASS_NAME$?",
+        "description": "Message shown when succesfully deleting a class",
+        "placeholders": {
+            "class_name": {
+                "content": "$1",
+                "example": "The History of Anime"
+            }
+        }
+    },
+    "succesfulExport": {
+        "message": "Successfully exported to Google Sheets™!",
+        "description": "Message shown when succesfully exporting to Google Sheets™"
+    },
+    "joinedAt": {
+        "message": "Joined at $TIME_STRING$",
+        "description": "Message next to a present student",
+        "placeholders": {
+            "TIME_STRING": {
+                "content": "$1",
+                "example": "4:20 PM"
+            }
+        }
+    },
+    "lastSeen": {
+        "message": "Last seen $TIME_STRING$",
+        "description": "Message shown next to a previously present student",
+        "placeholders": {
+            "TIME_STRING": {
+                "content": "$1",
+                "example": "4:20 AM"
+            }
+        }
+    },
+    "notHere": {
+        "message": "Not here",
+        "description": "Message shown next to an absent student"
+    },
+    "firstName": {
+        "message": "firstName",
+        "description": "Message shown for sorting by first name option"
+    },
+    "lastName": {
+        "message": "lastName",
+        "description": "Message shown for sorting by last name option"
+    },
+    "presentFirst": {
+        "message": "presentFirst",
+        "description": "Message shown for sorting by those present option"
+    },
+    "addedToClass": {
+        "message": "Added $STUDENT_NAME$ to class",
+        "description": "Message shown when adding a student to a class",
+        "placeholders": {
+            "student_name": {
+                "content": "$1",
+                "example": "Venkata Narasimha Rajuvaripet"
+            }
+        }
+    },
+    "removeFromClass": {
+        "message": "Removed $STUDENT_NAME$ from class",
+        "description": "Message shown when removing a student from a class",
+        "placeholders": {
+            "student_name": {
+                "content": "$1",
+                "example": "Venkata Narasimha Rajuvaripet"
+            }
+        }
+    },
+    "succesfullySavedClass": {
+        "message": "Successfully saved class $CLASS_NAME$",
+        "description": "Message shown when saving a class",
+        "placeholders": {
+            "class_name": {
+                "content": "$1",
+                "example": "English"
+            }
+        }
+    },
+    "undoSuccess": {
+        "message": "Undo successful.",
+        "description": "Message shown when undo of an action is succesful"
+    },
+    "errorClassEmpty": {
+        "message": "Error: The class name cannot be empty.",
+        "description": "Error shown when class is made without a name"
+    },
+    "errorChar§": {
+        "message": "Error: The class name cannot contain the character §.",
+        "description": "Error shown when class is made with §"
+    },
+    "errorDuplicateName": {
+        "message": "Error: You already have a class with that name.",
+        "description": "Error shown when class is made with an already existing name"
+    },
+    "cancel": {
+        "message": "cancel",
+        "description": "Message shown to cancel something"
+    },
+
+    "presentTooltip": {
+        "message": "Present",
+        "description": "Message shown when hovering over active student icon"
+    },
+    "previouslyPresentTooltip": {
+        "message": "Previously Present",
+        "description": "Message shown when hovering over previously present student icon"
+    },
+    "notOnListTooltip": {
+        "message": "Not on List",
+        "description": "Message shown when hovering over student not on the list icon"
+    },
+    "absentTooltip": {
+        "message": "Absent",
+        "description": "Message shown when hovering over absent student icon"
+    },
+    "addToClassTooltip": {
+        "message": "Add to Class",
+        "description": "Message shown when hovering over add to class icon"
+    },
+    "removeFromClassTooltip": {
+        "message": "Remove from Class",
+        "description": "Message shown when hovering over remove from class icon"
+    },
+    "helpTooltip": {
+        "message": "help",
+        "description": "When you've fallen and you can't get up"
+    },
+    "exitTooltip": {
+        "message": "Exit",
+        "description": "When you need to dip"
+    },
+    "sortTooltip": {
+        "message": "Sort Options",
+        "description": "Sort that list"
+    },
+    "cancelTooltip": {
+        "message": "Cancel",
+        "description": "#CancelCultureIsBad"
+    },
+    "takeAttendanceTooltip": {
+        "message": "Take attendance",
+        "description": "bruh"
+    },
+    "errorUserAccess": {
+        "message": "The user did not approve access.",
+        "description": "Error shown when User did not authenthicate access"
+    },
+    "newInVersion": {
+        "message": "New in $VERSION_NAME$",
+        "description": "Message shown for what is new in the latest update",
+        "placeholders": {
+            "class_name": {
+                "content": "$1",
+                "example": "Version 1.3.0"
+            }
+        }
+    },
+    "selectClass": {
+        "message": "Select Class",
+        "description": "Button to select a class"
+    },
+    "YouDonutHaveClasses": {
+        "message": "You don't have any classes! Add a class by clicking the button below.",
+        "description": "Message shown to encourage a user to make a class"
+    },
+    "sortLastName": {
+        "message": "Sort by Last Name (A - Z)",
+        "description": "Message shown to sort by Last Name"
+    },
+    "sortFirstName": {
+        "message": "Sort by First Name (A - Z)",
+        "description": "Message shown to sort by First Name"
+    },
+    "sortPresentFirst": {
+        "message": "Sort by Presence (Present First)",
+        "description": "Message shown to sort who is Present, but present first"
+    },
+    "sortPresentLast": {
+        "message": "Sort by Presence (Absent First)",
+        "description": "Message shown to sort who is Present, but absent first"
+    },
+    "addStudentsToClass": {
+        "message": "Select edit or click the + button next to a name to add students to this class.",
+        "description": "Message shown to encourage users to add a student"
+    },
+    "className": {
+        "message": "Class Name",
+        "description": "Class Name"
+    },
+    "seperateWithEnter": {
+        "message": "Separate names with Enter.",
+        "description": "Instructions to write names"
+    },
+    "exampleClass": {
+        "message": "Ex: Period 1 Math",
+        "description": "An example Class"
+    },
+    "confirmDelete": {
+        "message": "Confirm Deletion",
+        "description": "how to confirm a deletion of a class"
+    },
+    "errorOccured": {
+        "message": "An error occurred. Please try again later.",
+        "description": "an error hath occured"
+    },
+    "hideAdvanced": {
+        "message": "Hide Advanced",
+        "description": "Hide Advanced"
+    },
+    "showAdvanced": {
+        "message": "An error occurred. Please try again later.",
+        "description": "Show Advanced"
+    },
+    "refreshAuthToken": {
+        "message": "Successfully refreshed auth token.",
+        "description": "refresh auto token"
+    },
+    "errorRefreshAuthToken": {
+        "message": "An error occurred while refreshing your auth token.",
+        "description": "error while trying to refresh auto token"
+    },
+    "waitRefreshAuthToken": {
+        "message": "Please wait until tomorrow to refresh your token again.",
+        "description": "wait to refresh auto token"
+    },
+    "successUnlinkSheet": {
+        "message": "Successfully unlinked spreadsheet.",
+        "description": "Succesfully unlinking your spreadsheet"
+    },
+    "successClearStorage": {
+        "message": "Successfully cleared storage.",
+        "description": "Succesfully clearing your storage"
+    },
+
+    
+    
+    
+    
+
 }

@@ -56,7 +56,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
             <i class="material-icons">important_devices</i>
             <div style="flex: 1">
                 <p style="margin-bottom: 0"><b>
-                    New in Version 1.3.0
+                    New in ${chrome.runtime.getManifest().version}
                 </b></p>
                 <ul>
                     <li>Increased storage; track up to 50x more classes and students</li>

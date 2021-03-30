@@ -198,9 +198,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 href="https://www.buymeacoffee.com/tyandadit"
-                >📖<span style="margin-left: 5px; font-size: 24px !important"
-                    >Buy us a book</span
-                ></a
+                >📖<span style="margin-left: 6px">Buy us a book</span></a
             >
             <div>
                 <button id="open" class="mdc-button mdc-button--raised">
@@ -235,7 +233,7 @@
                     <span class="mdc-button__label">Contact Us</span>
                 </button>
             </div>
-            <div id="auto-export">
+            <div id="auto-export" class="relative">
                 <div class="mdc-switch">
                     <div class="mdc-switch__track"></div>
                     <div class="mdc-switch__thumb-underlay">
@@ -255,9 +253,27 @@
                     for="export-switch"
                     >Export on Leave</label
                 >
+                <button
+                    class="help mdc-icon-button"
+                    aria-label="More information"
+                    aria-pressed="false"
+                >
+                    <i
+                        class="material-icons mdc-icon-button__icon mdc-icon-button__icon--on"
+                        >help</i
+                    >
+                    <i class="material-icons mdc-icon-button__icon"
+                        >help_outline</i
+                    >
+                </button>
+                <p class="description">
+                    If enabled, the extension will automatically export the
+                    attendance for your last selected class whenever you leave a
+                    Meet or close a Meet tab.
+                </p>
             </div>
             <hr class="divider" />
-            <div id="show-popup">
+            <div id="show-popup" class="relative">
                 <div class="mdc-switch">
                     <div class="mdc-switch__track"></div>
                     <div class="mdc-switch__thumb-underlay">
@@ -277,6 +293,23 @@
                     for="popup-switch"
                     >Show Popup on Join</label
                 >
+                <button
+                    class="help mdc-icon-button"
+                    aria-label="More information"
+                    aria-pressed="false"
+                >
+                    <i
+                        class="material-icons mdc-icon-button__icon mdc-icon-button__icon--on"
+                        >help</i
+                    >
+                    <i class="material-icons mdc-icon-button__icon"
+                        >help_outline</i
+                    >
+                </button>
+                <p class="description">
+                    If enabled, you will be presented with a class selection
+                    popup whenever you first join a Meet.
+                </p>
             </div>
             <hr class="divider" />
             <!-- <div id="sync-storage">
@@ -301,9 +334,9 @@
                 >
             </div>
             <hr class="divider" /> -->
-            <div id="reset-interval">
+            <div id="reset-interval" class="relative">
                 <label id="text-field-label" class="mdc-button"
-                    >Reset Data Every</label
+                    >Wipe Data Every</label
                 >
                 <label class="mdc-text-field mdc-text-field--outlined">
                     <span class="mdc-notched-outline">
@@ -316,12 +349,26 @@
                         aria-labelledby="label-id"
                     />
                 </label>
-                <label
-                    id="text-field-suffix"
-                    class="mdc-button"
-                    style="left: -8px"
-                    >Hours</label
+                <label id="text-field-suffix" class="mdc-button">Hrs.</label>
+                <button
+                    class="help mdc-icon-button"
+                    aria-label="More information"
+                    aria-pressed="false"
                 >
+                    <i
+                        class="material-icons mdc-icon-button__icon mdc-icon-button__icon--on"
+                        >help</i
+                    >
+                    <i class="material-icons mdc-icon-button__icon"
+                        >help_outline</i
+                    >
+                </button>
+                <p class="description">
+                    How often to wipe your attendance data to prevent student
+                    attendance from carrying over between classes. If you have a
+                    class once per day, it is suggested that you set this to
+                    around 12 hours.
+                </p>
             </div>
             <hr class="solid" />
             <div id="expand-bkg">

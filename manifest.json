@@ -28,6 +28,7 @@
         "storage",
         "identity",
         "tabs",
+        "notifications",
         "*://meet.google.com/**-**-**"
     ],
     "oauth2": {

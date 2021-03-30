@@ -2,6 +2,7 @@ const MDCRipple = mdc.ripple.MDCRipple
 for (const button of document.getElementsByClassName('mdc-button')) {
     new MDCRipple(button)
 }
+const MDCIconButtonToggle = mdc.iconButton.MDCIconButtonToggle
 // const iconButtonRipple = new MDCRipple(document.querySelector('#lang'));
 // iconButtonRipple.unbounded = true;
 // const MDCMenu = mdc.menu.MDCMenu
@@ -76,6 +77,15 @@ document.querySelector('#contact').addEventListener('click', function () {
     chrome.tabs.create({
         url:
             'mailto:tyleradit@gmail.com?subject=Regarding%20the%20Attendance%20for%20Google%20Meet%20Chrome%20Extension',
+    })
+})
+document.querySelectorAll('.help').forEach((butt) => {
+    const iconToggle = new MDCIconButtonToggle(butt)
+    iconToggle.listen('MDCIconButtonToggle:change', (event) => {
+        butt.parentElement.querySelector('.description').style.display = event
+            .detail.isOn
+            ? 'block'
+            : 'none'
     })
 })
 document.querySelector('#auto-export').addEventListener('click', function () {

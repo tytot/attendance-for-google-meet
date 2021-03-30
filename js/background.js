@@ -2,6 +2,50 @@ const meetTabs = new Map()
 const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/
 const codeRegex = /\w{3}-\w{4}-\w{3}/
 
+const notifierMap = new Map()
+
+class Notifier {
+    constructor(context1, context2) {
+        this.context1 = context1
+        this.context2 = context2
+        this.timestamp = Date.now()
+        this.created = false
+    }
+    post(port, message) {
+        try {
+            port.postMessage(message)
+        } catch (error) {
+            const options = {
+                type: message.error ? 'basic' : 'progress',
+                title: 'Attendance for Google Meet™',
+                message: message.error
+                    ? 'An error occurred when exporting to Google Sheets™.'
+                    : message.progress === 1
+                    ? 'Successfully exported to Google Sheets™!'
+                    : 'Exporting to Google Sheets™...',
+                contextMessage:
+                    message.error || `${this.context1}: ${this.context2}`,
+                iconUrl: '../img/icons/icon48.png',
+            }
+            if (!message.error) {
+                options.progress = message.progress * 100
+            }
+            if (!this.created) {
+                chrome.notifications.create(
+                    `a4gm-export-${this.context1}-${this.context2}-${this.timestamp}`,
+                    options
+                )
+                this.created = true
+            } else {
+                chrome.notifications.update(
+                    `a4gm-export-${this.context1}-${this.context2}-${this.timestamp}`,
+                    options
+                )
+            }
+        }
+    }
+}
+
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
     if (changeInfo.hasOwnProperty('url') && meetRegex.test(changeInfo.url)) {
         const code = codeRegex.exec(changeInfo.url)[0]
@@ -28,17 +72,14 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
     }
 })
 
-chrome.tabs.query(
-    { url: '*://meet.google.com/**-**-**' },
-    function (tabs) {
-        for (const tab of tabs) {
-            if (meetRegex.test(tab.url)) {
-                const code = codeRegex.exec(tab.url)[0]
-                meetTabs.set(tab.id, code)
-            }
+chrome.tabs.query({ url: '*://meet.google.com/**-**-**' }, function (tabs) {
+    for (const tab of tabs) {
+        if (meetRegex.test(tab.url)) {
+            const code = codeRegex.exec(tab.url)[0]
+            meetTabs.set(tab.id, code)
         }
     }
-)
+})
 
 chrome.runtime.onInstalled.addListener(function (details) {
     if (details.reason === 'update') {
@@ -115,7 +156,7 @@ chrome.runtime.onConnect.addListener(function (port) {
     port.onMessage.addListener(function (msg) {
         chrome.identity.getAuthToken({ interactive: true }, function (token) {
             if (token == undefined) {
-                postMessage(port, {
+                new Notifier('Error', 'Authorization failure').post(port, {
                     done: true,
                     error: 'The user did not approve access.',
                     progress: 0,
@@ -183,27 +224,20 @@ chrome.runtime.onConnect.addListener(function (port) {
     })
 })
 
-function postMessage(port, message) {
-    if (port) {
-        port.postMessage(message)
-    }
-}
-
 function tryExport(token, code, port, retry = false) {
-    Utils.log('Attempting export...')
     chrome.storage.local.get(['spreadsheet-id', code], async function (result) {
-        postMessage(port, { progress: 0 })
         const id = result['spreadsheet-id']
         if (result[code].hasOwnProperty('class')) {
             const className = result[code].class
-            Utils.log('Meet code: ' + code)
-            if (id == undefined) {
-                createSpreadsheet(token, className, code, port, retry)
-            } else {
-                updateSpreadsheet(token, className, code, id, port, retry)
+            if (retry || !notifierMap.has(`${className}-${code}`)) {
+                Utils.log('Attempting export...')
+                Utils.log('Meet code: ' + code)
+                if (id == undefined) {
+                    createSpreadsheet(token, className, code, port, retry)
+                } else {
+                    updateSpreadsheet(token, className, code, id, port, retry)
+                }
             }
-        } else {
-            Utils.log('Cancelled export; there was no class selected.')
         }
     })
 }
@@ -228,14 +262,20 @@ async function createSpreadsheet(token, className, code, port, retry) {
     let requests = []
     Utils.log('Creating new attendance spreadsheet...')
 
+    const notifierKey = `${className}-${code}`
+    if (!notifierMap.has(notifierKey)) {
+        notifierMap.set(notifierKey, new Notifier(className, code))
+    }
+    const notifier = notifierMap.get(notifierKey)
     try {
+        notifier.post(port, { progress: 0 })
         const newSpreadsheet = await (
             await fetch('https://sheets.googleapis.com/v4/spreadsheets', init)
         ).json()
         if (newSpreadsheet.spreadsheetId == undefined) {
             throw newSpreadsheet.error
         }
-        postMessage(port, { progress: 0.3 })
+        notifier.post(port, { progress: 0.3 })
         Utils.log(
             `Successfully created Attendance spreadsheet with id ${newSpreadsheet.spreadsheetId}.`
         )
@@ -248,10 +288,11 @@ async function createSpreadsheet(token, className, code, port, retry) {
         )
         requests = requests.concat(createHeaders(0))
         const icReqs = await initializeCells(code, 0)
-        postMessage(port, { progress: 0.6 })
+        notifier.post(port, { progress: 0.6 })
         requests = requests.concat(icReqs)
         const data = await batchUpdate(token, requests, spreadsheetId, 0)
-        postMessage(port, { done: true, progress: 1 })
+        notifier.post(port, { done: true, progress: 1 })
+        notifierMap.delete(notifierKey)
         Utils.log('Initialize spreadsheet response:')
         console.log(data)
     } catch (error) {
@@ -270,11 +311,12 @@ async function createSpreadsheet(token, className, code, port, retry) {
                 }
             )
         } else {
-            postMessage(port, {
+            notifier.post(port, {
                 done: true,
                 error: error.message,
                 progress: 0,
             })
+            notifierMap.delete(notifierKey)
         }
     }
 }
@@ -290,9 +332,15 @@ async function updateSpreadsheet(
     let requests = []
     Utils.log('Updating spreadsheet...')
 
+    const notifierKey = `${className}-${code}`
+    if (!notifierMap.has(notifierKey)) {
+        notifierMap.set(notifierKey, new Notifier(className, code))
+    }
+    const notifier = notifierMap.get(notifierKey)
     try {
+        notifier.post(port, { progress: 0 })
         const classMeta = await getMetaByKey(className, token, spreadsheetId)
-        postMessage(port, { progress: 0.15 })
+        notifier.post(port, { progress: 0.15 })
         if (classMeta == null) {
             const spreadsheet = await getSpreadsheet(token, spreadsheetId)
             var sheetId = 0
@@ -316,7 +364,7 @@ async function updateSpreadsheet(
             token,
             spreadsheetId
         )
-        postMessage(port, { progress: 0.3 })
+        notifier.post(port, { progress: 0.3 })
         if (codeMeta == null) {
             var startRow = 1
             var icReqs = await initializeCells(code, sheetId)
@@ -330,20 +378,21 @@ async function updateSpreadsheet(
                 startRow
             )
         }
-        postMessage(port, { progress: 0.4 })
+        notifier.post(port, { progress: 0.4 })
         requests = requests.concat(icReqs)
         let data = await batchUpdate(token, requests, spreadsheetId, sheetId)
-        postMessage(port, { progress: 0.65 })
+        notifier.post(port, { progress: 0.65 })
         Utils.log('Update spreadsheet response:')
         console.log(data)
         const cgReqs = await collapseGroup(token, code, spreadsheetId, sheetId)
-        postMessage(port, { progress: 0.75 })
+        notifier.post(port, { progress: 0.75 })
         if (cgReqs) {
             data = await batchUpdate(token, cgReqs, spreadsheetId, sheetId)
             Utils.log('Update metadata and groups response:')
             console.log(data)
         }
-        postMessage(port, { done: true, progress: 1 })
+        notifier.post(port, { done: true, progress: 1 })
+        notifierMap.delete(notifierKey)
     } catch (error) {
         if (!retry && error.status === 401) {
             chrome.identity.removeCachedAuthToken(
@@ -360,11 +409,12 @@ async function updateSpreadsheet(
                 }
             )
         } else {
-            postMessage(port, {
+            notifier.post(port, {
                 done: true,
                 error: error.message,
                 progress: 0,
             })
+            notifierMap.delete(notifierKey)
         }
     }
 }

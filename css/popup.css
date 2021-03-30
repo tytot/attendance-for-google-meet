@@ -1,21 +1,16 @@
 :root {
-    --mdc-theme-primary: #058d80 !important;
+    --mdc-theme-primary: var(--mdc-theme-secondary) !important;
+    --mdc-shape-medium: 8px;
+    --mdc-shape-small: 8px;
 }
 
 html {
-    min-width: 360px;
+    min-width: 500px;
 }
 
 body {
     text-align: center;
     margin: 0;
-    background: repeating-linear-gradient(
-        45deg,
-        #fffef2,
-        #fffef2 15px,
-        #fff7e0 1px,
-        #fff7e0 16px
-    );
 }
 
 #header {
@@ -36,20 +31,21 @@ body {
 }
 
 #title {
+    max-width: 150px;
     font-size: 20px;
     font-family: 'Inter', Arial, sans-serif;
     font-weight: bold;
-    padding: 8px;
     padding-left: 4px;
     text-align: left;
 }
 
 #meta {
+    flex-grow: 1;
     font-size: 12px;
     font-family: 'Inter', Arial, sans-serif;
     margin-right: 16px;
     text-align: right;
-    width: 250px;
+    min-width: max-content;
 }
 
 #version {
@@ -57,16 +53,22 @@ body {
 }
 
 #content {
-    padding-top: 12px;
+    margin-top: 12px;
 }
 
 .mdc-dialog__title {
     font-family: 'Inter', Arial, sans-serif !important;
+    letter-spacing: normal !important;
 }
 
 .mdc-dialog__content {
     text-align: left;
     font-family: 'Inter', Arial, sans-serif !important;
+    letter-spacing: normal !important;
+}
+
+.mdc-button {
+    border-radius: 8px !important;
 }
 
 .mdc-button--raised,
@@ -97,7 +99,7 @@ body {
 }
 
 hr.solid {
-    margin-block-start: 0;
+    margin-block-start: 6px;
     margin-block-end: 0;
     border: 0;
     height: 0.5px;
@@ -114,18 +116,40 @@ hr.dashed {
 hr.divider {
     margin-block-start: 2px;
     margin-block-end: 2px;
-    width: 256px;
+    width: 294px;
     border: 0;
     height: 0.5px;
     background: rgba(0, 0, 0, 0.16);
 }
 
-#more-options {
-    padding-bottom: 8px;
+.relative {
+    position: relative;
 }
 
-#expand-bkg {
-    background-color: #fffef2;
+.help {
+    position: absolute !important;
+    left: calc(50% + 120px);
+    width: 36px !important;
+    height: 36px !important;
+    padding: 2px 0 0 0 !important;
+    color: var(--mdc-theme-primary) !important;
+    --mdc-ripple-color: var(--mdc-theme-primary) !important;
+}
+.help i {
+    font-size: 18px;
+}
+
+.description {
+    display: none;
+    font-family: 'Inter', Arial, sans-serif;
+    width: 294px;
+    margin: 0 auto 8px auto;
+    text-align: left;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+#more-options {
+    padding-bottom: 8px;
 }
 
 #expand {
@@ -136,17 +160,8 @@ hr.divider {
     border-radius: 0;
 }
 
-#open .mdc-button__label,
-#docs .mdc-button__label,
-#contact .mdc-button__label {
-    width: 200px;
-}
-
-#expand .mdc-button__label,
-#refresh .mdc-button__label,
-#reset .mdc-button__label,
-#clear .mdc-button__label {
-    width: 280px;
+.mdc-button__label:not(.mdc-dialog__button .mdc-button__label) {
+    width: 240px;
 }
 
 .bmc-button img {
@@ -195,8 +210,8 @@ hr.divider {
 }
 
 .switch-label {
-    width: 200px;
-    padding: 0;
+    width: 240px;
+    left: -9px;
 }
 
 .mdc-text-field {
@@ -212,12 +227,11 @@ hr.divider {
     color: var(--mdc-theme-primary) !important;
 }
 
-#reset-interval {
-    margin-top: 4px;
-    margin-bottom: 4px;
-    margin-left: 8px;
-}
-
 #text-field-label {
     cursor: default;
+}
+#text-field-suffix {
+    cursor: default;
+    min-width: auto;
+    left: -8px;
 }

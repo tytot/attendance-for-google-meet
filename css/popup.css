@@ -110,7 +110,7 @@ hr.dashed {
     margin-block-start: 0;
     margin-block-end: 4px;
     border: 0;
-    border-top: 1px dashed var(--mdc-theme-primary);
+    border-top: 0.5px dashed var(--mdc-theme-primary);
 }
 
 hr.divider {
@@ -227,11 +227,11 @@ hr.divider {
     color: var(--mdc-theme-primary) !important;
 }
 
-#text-field-label {
-    cursor: default;
+.text-field-label {
+    cursor: default !important;
 }
-#text-field-suffix {
-    cursor: default;
-    min-width: auto;
+.text-field-suffix {
+    cursor: default !important;
+    min-width: auto !important;
     left: -8px;
 }

@@ -568,7 +568,7 @@ const white = {
     red: 1,
     green: 1,
     blue: 1,
-    alpha: 1
+    alpha: 1,
 }
 function generateAttendanceRows(code) {
     return new Promise((resolve) => {
@@ -578,6 +578,7 @@ function generateAttendanceRows(code) {
             const mins = Math.round((unix - startUnix) / 6) / 10
             const roster = result.rosters[result[code].class]
             const rawData = result[code].attendance
+            const presenceThreshold = result['presence-threshold']
 
             const dts = Utils.dateTimeString(startUnix, unix)
             const header = `${dts} (${mins} min): ${code}`
@@ -627,32 +628,20 @@ function generateAttendanceRows(code) {
                     timeOut = '',
                     joins = 0,
                     minsPresent = 0
-
-                for (const entry in rawData) {
-                    if (
-                        entry.toLocaleUpperCase() === name.toLocaleUpperCase()
-                    ) {
-                        const timestamps = rawData[entry]
-                        const l = timestamps.length
-                        if (l > 0) {
-                            present = 'Y'
-                            timeIn = Utils.toTimeString(timestamps[0])
-                            if ((l - 1) % 2 === 1) {
-                                timeOut = Utils.toTimeString(timestamps[l - 1])
-                            }
-                            joins = Math.ceil(l / 2)
-                            for (let i = 0; i < l; i += 2) {
-                                let secs
-                                if (i + 1 === l) {
-                                    secs = unix - timestamps[i]
-                                } else {
-                                    secs = timestamps[i + 1] - timestamps[i]
-                                }
-                                const mins = Math.round(secs / 6) / 10
-                                minsPresent += mins
-                            }
+                if (rawData.hasOwnProperty(name)) {
+                    const timestamps = rawData[name]
+                    const l = timestamps.length
+                    if (l > 0) {
+                        present = 'Y'
+                        timeIn = Utils.toTimeString(timestamps[0])
+                        if ((l - 1) % 2 === 1) {
+                            timeOut = Utils.toTimeString(timestamps[l - 1])
                         }
-                        break
+                    }
+                    joins = Math.ceil(l / 2)
+                    minsPresent = Utils.minsPresent(timestamps)
+                    if (present === 'Y' && minsPresent < presenceThreshold) {
+                        present = 'N'
                     }
                 }
 
@@ -677,12 +666,12 @@ function generateAttendanceRows(code) {
                                 borders: {
                                     top: {
                                         style: 'SOLID',
-                                        color: white
+                                        color: white,
                                     },
                                     bottom: {
                                         style: 'SOLID',
-                                        color: white
-                                    }
+                                        color: white,
+                                    },
                                 },
                                 horizontalAlignment: 'CENTER',
                                 textFormat: {

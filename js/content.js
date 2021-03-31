@@ -13,17 +13,20 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                         'afterbegin',
                         confirmDeleteDialogHTML
                     )
-                    document.body.insertAdjacentHTML('afterbegin', selectDialogHTML)
+                    document.body.insertAdjacentHTML(
+                        'afterbegin',
+                        selectDialogHTML
+                    )
                     document.body.insertAdjacentHTML('afterbegin', snackbarHTML)
-    
+
                     const bar = document.getElementsByClassName('NzPR9b')[0]
                     bar.insertAdjacentHTML('afterbegin', buttonHTML)
-    
+
                     const screen = document.getElementsByClassName('crqnQb')[0]
                     screen.insertAdjacentHTML('afterbegin', cardHTML)
-    
+
                     document.getElementById('card').style.visibility = 'hidden'
-    
+
                     try {
                         const showEveryone = document.querySelector(
                             '[aria-label="Show everyone"]'
@@ -37,7 +40,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
             }
         )
     }
-    
+
     function instantiate() {
         chrome.runtime.sendMessage(
             {
@@ -106,22 +109,25 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                 <div>
                     <h2 class="CkXZgc card-title">Select Class</h2>
                 </div>
-                <button 
-                    class="mdc-icon-button mdc-icon-button--on medium-button right" 
-                    aria-label="Import and Export Classes" 
-                    style="padding-top: 6px; right: 88px;"
-                    jscontroller="VXdfxd"
-                    jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
-                    tabindex="0"
-                    data-tooltip="Import and Export Classes"
-                    data-tooltip-vertical-offset="-12"
-                    data-tooltip-horizontal-offset="0"
-                >
-                    <img 
-                        src="chrome-extension://gioogehddfnceeihfoeencjbhggblkkd/img/icons/drive.png" 
-                        class="mdc-icon-button__icon mdc-icon-button__icon--on"
-                    >
-                </button>
+                ${
+                    // <button
+                    //     class="mdc-icon-button mdc-icon-button--on medium-button right"
+                    //     aria-label="Import and Export Classes"
+                    //     style="padding-top: 6px; right: 88px;"
+                    //     jscontroller="VXdfxd"
+                    //     jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                    //     tabindex="0"
+                    //     data-tooltip="Import and Export Classes"
+                    //     data-tooltip-vertical-offset="-12"
+                    //     data-tooltip-horizontal-offset="0"
+                    // >
+                    //     <img
+                    //         src="chrome-extension://gioogehddfnceeihfoeencjbhggblkkd/img/icons/drive.png"
+                    //         class="mdc-icon-button__icon mdc-icon-button__icon--on"
+                    //     >
+                    // </button>
+                    ''
+                }
                 <button
                     class="mdc-icon-button medium-button material-icons right"
                     style="right: 48px"
@@ -891,7 +897,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
             me.disconnect()
         }
     })
-    
+
     readyObserver.observe(document.getElementsByClassName('crqnQb')[0], {
         childList: true,
         subtree: true,

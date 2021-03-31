@@ -28,8 +28,11 @@ const popupSwitch = new MDCSwitch(
 )
 
 const MDCTextField = mdc.textField.MDCTextField
+const thresholdField = new MDCTextField(
+    document.querySelector('#presence-threshold .mdc-text-field')
+)
 const intervalField = new MDCTextField(
-    document.querySelector('.mdc-text-field')
+    document.querySelector('#reset-interval .mdc-text-field')
 )
 
 document.getElementById('version').textContent = `Version ${
@@ -37,23 +40,36 @@ document.getElementById('version').textContent = `Version ${
 }`
 const openButton = document.querySelector('#open')
 
-let autoExport = false
-let showPopup = false
+let presenceThreshold = 0
 let resetInterval = 12
 chrome.storage.local.get(
-    ['auto-export', 'show-popup', 'reset-interval', 'spreadsheet-id'],
+    [
+        'auto-export',
+        'show-popup',
+        'presence-threshold',
+        'reset-interval',
+        'spreadsheet-id',
+    ],
     function (result) {
         if (result['auto-export']) {
             exportSwitch.checked = true
-            autoExport = true
         }
         if (result['show-popup']) {
             popupSwitch.checked = true
-            showPopup = true
+        }
+        if (result.hasOwnProperty('presence-threshold')) {
+            thresholdField.value = result['presence-threshold']
+            presenceThreshold = result['presence-threshold']
+        } else {
+            thresholdField.value = 0
+            chrome.storage.local.set({ 'presence-threshold': 0 })
         }
         if (result.hasOwnProperty('reset-interval')) {
             intervalField.value = result['reset-interval']
             resetInterval = result['reset-interval']
+        } else {
+            intervalField.value = 12
+            chrome.storage.local.set({ 'reset-interval': 12 })
         }
 
         const id = result['spreadsheet-id']
@@ -89,17 +105,28 @@ document.querySelectorAll('.help').forEach((butt) => {
     })
 })
 document.querySelector('#auto-export').addEventListener('click', function () {
-    if (exportSwitch.checked !== autoExport) {
-        autoExport = exportSwitch.checked
-        chrome.storage.local.set({ 'auto-export': exportSwitch.checked })
-    }
+    chrome.storage.local.set({ 'auto-export': exportSwitch.checked })
 })
 document.querySelector('#show-popup').addEventListener('click', function () {
-    if (popupSwitch.checked !== showPopup) {
-        showPopup = popupSwitch.checked
-        chrome.storage.local.set({ 'show-popup': popupSwitch.checked })
-    }
+    chrome.storage.local.set({ 'show-popup': popupSwitch.checked })
 })
+document
+    .querySelector('#presence-threshold')
+    .addEventListener('input', function () {
+        if (
+            thresholdField.value !== '' &&
+            thresholdField.value !== presenceThreshold
+        ) {
+            const tempThreshold = parseFloat(thresholdField.value)
+            if (isNaN(tempThreshold)) thresholdField.value = presenceThreshold
+            else {
+                presenceThreshold = tempThreshold
+                chrome.storage.local.set({
+                    'presence-threshold': presenceThreshold,
+                })
+            }
+        }
+    })
 document
     .querySelector('#reset-interval')
     .addEventListener('input', function () {
@@ -193,15 +220,24 @@ document.querySelector('#clear').addEventListener('click', function () {
     clearDialog.open()
 })
 document.querySelector('#confirm-clear').addEventListener('click', function () {
+    exportSwitch.checked = false
+    popupSwitch.checked = false
+    thresholdField.value = 0
+    intervalField.value = 12
     chrome.storage.local.get(null, function (result) {
         for (const key in result) {
             if (key !== 'spreadsheet-id') {
                 chrome.storage.local.remove(key)
             }
         }
+        chrome.storage.local.set({ 'presence-threshold': 0 })
         chrome.storage.local.set({ 'reset-interval': 12 })
         snackbar.close()
         snackbar.labelText = 'Successfully cleared storage.'
         snackbar.open()
+
+        chrome.runtime.sendMessage({
+            data: 'refresh-meets',
+        })
     })
 })

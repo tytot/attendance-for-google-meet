@@ -32,6 +32,8 @@
     --red: #d93025;
     --yellow: #fabb04;
     --gray: #bababa;
+    --mdc-shape-medium: 8px;
+    --mdc-shape-small: 8px;
 }
 
 .material-icons {

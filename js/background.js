@@ -106,6 +106,9 @@ chrome.runtime.onInstalled.addListener(function (details) {
             if (!data.hasOwnProperty('show-popup')) {
                 chrome.storage.local.set({ 'show-popup': true })
             }
+            if (!data.hasOwnProperty('presence-threshold')) {
+                chrome.storage.local.set({ 'presence-threshold': 0 })
+            }
             if (!data.hasOwnProperty('reset-interval')) {
                 chrome.storage.local.set({ 'reset-interval': 12 })
             }
@@ -149,6 +152,10 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         return true
     } else if (message.data === 'delete-tab') {
         meetTabs.delete(sender.tab.id)
+    } else if (message.data === 'refresh-meets') {
+        meetTabs.forEach((value, key) => {
+            chrome.tabs.reload(key)
+        })
     }
 })
 

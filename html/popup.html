@@ -166,8 +166,10 @@
                                 to re-enter your classes.
                             </p>
                             <p>
-                                This option does not affect your spreadsheet. Do
-                                you want to proceed?
+                                This option does not affect your spreadsheet,
+                                but
+                                <b>your Google Meet tabs will be reloaded.</b>
+                                Do you want to proceed?
                             </p>
                         </div>
                         <div class="mdc-dialog__actions">
@@ -334,8 +336,42 @@
                 >
             </div>
             <hr class="divider" /> -->
+            <div id="presence-threshold" class="relative">
+                <label class="text-field-label mdc-button">Present After</label>
+                <label class="mdc-text-field mdc-text-field--outlined">
+                    <span class="mdc-notched-outline">
+                        <span class="mdc-notched-outline__leading"></span>
+                        <span class="mdc-notched-outline__trailing"></span>
+                    </span>
+                    <input
+                        type="text"
+                        class="mdc-text-field__input"
+                        aria-labelledby="label-id"
+                    />
+                </label>
+                <label class="text-field-suffix mdc-button">Mins.</label>
+                <button
+                    class="help mdc-icon-button"
+                    aria-label="More information"
+                    aria-pressed="false"
+                >
+                    <i
+                        class="material-icons mdc-icon-button__icon mdc-icon-button__icon--on"
+                        >help</i
+                    >
+                    <i class="material-icons mdc-icon-button__icon"
+                        >help_outline</i
+                    >
+                </button>
+                <p class="description">
+                    Students will only be marked present after being in the Meet
+                    for this amount of minutes. If set to 0, students will be
+                    marked present upon joining.
+                </p>
+            </div>
+            <hr class="divider" />
             <div id="reset-interval" class="relative">
-                <label id="text-field-label" class="mdc-button"
+                <label class="text-field-label mdc-button"
                     >Wipe Data Every</label
                 >
                 <label class="mdc-text-field mdc-text-field--outlined">
@@ -349,7 +385,7 @@
                         aria-labelledby="label-id"
                     />
                 </label>
-                <label id="text-field-suffix" class="mdc-button">Hrs.</label>
+                <label class="text-field-suffix mdc-button">Hrs.</label>
                 <button
                     class="help mdc-icon-button"
                     aria-label="More information"
@@ -374,7 +410,9 @@
             <div id="expand-bkg">
                 <button id="expand" class="mdc-button">
                     <div class="mdc-button__ripple"></div>
-                    <span class="mdc-button__label">Show Advanced</span>
+                    <span class="mdc-button__label" style="font-weight: bold"
+                        >Show Advanced</span
+                    >
                 </button>
             </div>
             <div id="more-options" hidden>

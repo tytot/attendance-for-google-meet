@@ -421,14 +421,24 @@
 
             const className = res.class
             if (className) {
-                updateRosterStatus(currentData, result.rosters, className)
+                updateRosterStatus(
+                    currentData,
+                    result.rosters,
+                    className,
+                    result['presence-threshold']
+                )
             }
 
             chrome.storage.local.set({ [code]: res })
         })
     }
 
-    function updateRosterStatus(attendance, rosters, className) {
+    function updateRosterStatus(
+        attendance,
+        rosters,
+        className,
+        presenceThreshold
+    ) {
         rosterStatus.innerHTML = ''
 
         const roster = rosters[className]
@@ -446,7 +456,7 @@
         }
         let changed = false
         for (const name in attendance) {
-            const arr = attendance[name]
+            const timestamps = attendance[name]
             let found = false
             let i = 0
             while (!found && i < roster.length) {
@@ -456,28 +466,45 @@
                     name.replace('|', ' ').trim().toLocaleUpperCase()
                 ) {
                     found = true
-                    if (arr.length % 2 === 1) {
-                        entries.push({
-                            name: name,
-                            color: 'green',
-                            tooltip: 'Present',
-                            icon: 'check_circle',
-                            text: `Joined at ${Utils.toTimeString(arr[0])}`,
-                            index: 2,
-                        })
-                        statusCounts.green++
+                    const minsPresent = Utils.minsPresent(timestamps)
+                    if (minsPresent >= presenceThreshold) {
+                        if (timestamps.length % 2 === 1) {
+                            entries.push({
+                                name: name,
+                                color: 'green',
+                                tooltip: 'Present',
+                                icon: 'check_circle',
+                                text: `Joined at ${Utils.toTimeString(
+                                    timestamps[0]
+                                )}`,
+                                index: 2,
+                            })
+                            statusCounts.green++
+                        } else {
+                            entries.push({
+                                name: name,
+                                color: 'yellow',
+                                tooltip: 'Previously Present',
+                                icon: 'watch_later',
+                                text: `Last seen at ${Utils.toTimeString(
+                                    timestamps[timestamps.length - 1]
+                                )}`,
+                                index: 1,
+                            })
+                            statusCounts.yellow++
+                        }
                     } else {
                         entries.push({
                             name: name,
-                            color: 'yellow',
-                            tooltip: 'Previously Present',
-                            icon: 'watch_later',
-                            text: `Last seen at ${Utils.toTimeString(
-                                arr[arr.length - 1]
+                            color: 'red',
+                            tooltip: 'Absent',
+                            icon: 'cancel',
+                            text: `Joined at ${Utils.toTimeString(
+                                timestamps[0]
                             )}`,
-                            index: 1,
+                            index: 0,
                         })
-                        statusCounts.yellow++
+                        statusCounts.red++
                     }
                     if (testName !== name) {
                         roster[i] = name
@@ -494,7 +521,7 @@
                     color: 'gray',
                     tooltip: 'Not on List',
                     icon: 'error',
-                    text: `Joined at ${Utils.toTimeString(arr[0])}`,
+                    text: `Joined at ${Utils.toTimeString(timestamps[0])}`,
                     index: -1,
                 })
                 statusCounts.gray++
@@ -1047,7 +1074,12 @@
             let res = result.rosters
             res[className].push(name)
             chrome.storage.local.set({ rosters: res })
-            updateRosterStatus(result[code].attendance, res, className)
+            updateRosterStatus(
+                result[code].attendance,
+                res,
+                className,
+                result['presence-threshold']
+            )
         })
     }
 
@@ -1060,7 +1092,12 @@
                 res[className].push(name)
             })
             chrome.storage.local.set({ rosters: res })
-            updateRosterStatus(result[code].attendance, res, className)
+            updateRosterStatus(
+                result[code].attendance,
+                res,
+                className,
+                result['presence-threshold']
+            )
         })
     }
 
@@ -1071,7 +1108,12 @@
             let res = result.rosters
             res[className] = res[className].filter((n) => n !== name)
             chrome.storage.local.set({ rosters: res })
-            updateRosterStatus(result[code].attendance, res, className)
+            updateRosterStatus(
+                result[code].attendance,
+                res,
+                className,
+                result['presence-threshold']
+            )
         })
     }
 
@@ -1080,7 +1122,12 @@
             const res = result[getMeetCode()]
             const className = res.class
             if (className) {
-                updateRosterStatus(res.attendance, result.rosters, className)
+                updateRosterStatus(
+                    res.attendance,
+                    result.rosters,
+                    className,
+                    result['presence-threshold']
+                )
             }
         })
     }
@@ -1333,7 +1380,8 @@
                         updateRosterStatus(
                             res.attendance,
                             result.rosters,
-                            res.class
+                            res.class,
+                            result['presence-threshold']
                         )
                         rosterStatus.parentElement.scrollTop = 0
                     })

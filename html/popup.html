@@ -268,11 +268,13 @@
                         >help_outline</i
                     >
                 </button>
-                <p class="description">
-                    If enabled, the extension will automatically export the
-                    attendance for your last selected class whenever you leave a
-                    Meet or close a Meet tab.
-                </p>
+                <div class="description collapsed">
+                    <p>
+                        If enabled, the extension will automatically export the
+                        attendance for your last selected class whenever you
+                        leave a Meet or close a Meet tab.
+                    </p>
+                </div>
             </div>
             <hr class="divider" />
             <div id="show-popup" class="relative">
@@ -308,10 +310,12 @@
                         >help_outline</i
                     >
                 </button>
-                <p class="description">
-                    If enabled, you will be presented with a class selection
-                    popup whenever you first join a Meet.
-                </p>
+                <div class="description collapsed">
+                    <p>
+                        If enabled, you will be presented with a class selection
+                        popup whenever you first join a Meet.
+                    </p>
+                </div>
             </div>
             <hr class="divider" />
             <!-- <div id="sync-storage">
@@ -363,11 +367,13 @@
                         >help_outline</i
                     >
                 </button>
-                <p class="description">
-                    Students will only be marked present after being in the Meet
-                    for this amount of minutes. If set to 0, students will be
-                    marked present upon joining.
-                </p>
+                <div class="description collapsed">
+                    <p>
+                        Students will only be marked present after being in the
+                        Meet for this amount of minutes. If set to 0, students
+                        will be marked present upon joining.
+                    </p>
+                </div>
             </div>
             <hr class="divider" />
             <div id="reset-interval" class="relative">
@@ -399,23 +405,23 @@
                         >help_outline</i
                     >
                 </button>
-                <p class="description">
-                    How often to wipe your attendance data to prevent student
-                    attendance from carrying over between classes. If you have a
-                    class once per day, it is suggested that you set this to
-                    around 12 hours.
-                </p>
+                <div class="description collapsed">
+                    <p>
+                        How often to wipe your attendance data to prevent
+                        student attendance from carrying over between classes.
+                        If you have a class once per day, it is suggested that
+                        you set this to around 12 hours.
+                    </p>
+                </div>
             </div>
             <hr class="solid" />
             <div id="expand-bkg">
                 <button id="expand" class="mdc-button">
                     <div class="mdc-button__ripple"></div>
-                    <span class="mdc-button__label" style="font-weight: bold"
-                        >Show Advanced</span
-                    >
+                    <span class="mdc-button__label">Show Advanced</span>
                 </button>
             </div>
-            <div id="more-options" hidden>
+            <div id="more-options" class="collapsed">
                 <hr class="dashed" />
                 <div>
                     <button
@@ -446,7 +452,7 @@
                         >
                     </button>
                 </div>
-                <div>
+                <div style="margin-bottom: 8px">
                     <button id="clear" class="mdc-button mdc-button--outlined">
                         <div class="mdc-button__ripple"></div>
                         <i

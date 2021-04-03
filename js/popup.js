@@ -51,11 +51,17 @@ chrome.storage.local.get(
         'spreadsheet-id',
     ],
     function (result) {
-        if (result['auto-export']) {
-            exportSwitch.checked = true
+        if (result.hasOwnProperty('auto-export')) {
+            exportSwitch.checked = result['auto-export']
+        } else {
+            exportSwitch.checked = false
+            chrome.storage.local.set({ 'auto-export': false })
         }
-        if (result['show-popup']) {
+        if (result.hasOwnProperty('show-popup')) {
+            popupSwitch.checked = result['show-popup']
+        } else {
             popupSwitch.checked = true
+            chrome.storage.local.set({ 'show-popup': true })
         }
         if (result.hasOwnProperty('presence-threshold')) {
             thresholdField.value = result['presence-threshold']
@@ -98,10 +104,12 @@ document.querySelector('#contact').addEventListener('click', function () {
 document.querySelectorAll('.help').forEach((butt) => {
     const iconToggle = new MDCIconButtonToggle(butt)
     iconToggle.listen('MDCIconButtonToggle:change', (event) => {
-        butt.parentElement.querySelector('.description').style.display = event
-            .detail.isOn
-            ? 'block'
-            : 'none'
+        const description = butt.parentElement.querySelector('.description')
+        if (event.detail.isOn) {
+            description.classList.remove('collapsed')
+        } else {
+            description.classList.add('collapsed')
+        }
     })
 })
 document.querySelector('#auto-export').addEventListener('click', function () {
@@ -146,12 +154,12 @@ document
 const moreOptions = document.querySelector('#more-options')
 const expandButton = document.querySelector('#expand')
 expandButton.addEventListener('click', function () {
-    if (moreOptions.hidden) {
-        moreOptions.hidden = false
+    if (moreOptions.classList.contains('collapsed')) {
+        moreOptions.classList.remove('collapsed')
         expandButton.querySelector('.mdc-button__label').innerHTML =
             'Hide Advanced'
     } else {
-        moreOptions.hidden = true
+        moreOptions.classList.add('collapsed')
         expandButton.querySelector('.mdc-button__label').innerHTML =
             'Show Advanced'
     }
@@ -221,7 +229,7 @@ document.querySelector('#clear').addEventListener('click', function () {
 })
 document.querySelector('#confirm-clear').addEventListener('click', function () {
     exportSwitch.checked = false
-    popupSwitch.checked = false
+    popupSwitch.checked = true
     thresholdField.value = 0
     intervalField.value = 12
     chrome.storage.local.get(null, function (result) {
@@ -230,6 +238,8 @@ document.querySelector('#confirm-clear').addEventListener('click', function () {
                 chrome.storage.local.remove(key)
             }
         }
+        chrome.storage.local.set({ 'auto-export': false })
+        chrome.storage.local.set({ 'show-popup': true })
         chrome.storage.local.set({ 'presence-threshold': 0 })
         chrome.storage.local.set({ 'reset-interval': 12 })
         snackbar.close()

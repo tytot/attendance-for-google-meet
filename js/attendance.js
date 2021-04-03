@@ -35,7 +35,7 @@
         element.addEventListener('click', () => {
             chrome.storage.local.set({ 'updates-dismissed': true }, () => {
                 document.querySelectorAll('.updates').forEach((panel) => {
-                    panel.remove()
+                    panel.classList.add('collapsed')
                 })
             })
         })
@@ -328,6 +328,10 @@
     for (const button of document.getElementsByClassName('mdc-button')) {
         new MDCRipple(button)
     }
+    for (const button of document.getElementsByClassName('mdc-icon-button')) {
+        const ripple = new MDCRipple(button)
+        ripple.unbounded = true
+    }
 
     function getMeetCode() {
         return document
@@ -588,7 +592,7 @@
             if (entry.index === -1) {
                 var metaIcon = 'add_circle'
                 var metaTooltip = 'Add to Class'
-                if (index > 0 && entries[index - 1].index !== -1) {
+                if (index === 0 || entries[index - 1].index !== -1) {
                     rosterStatus.insertAdjacentHTML(
                         'beforeend',
                         `<li class="mdc-list-divider" role="separator"></li>
@@ -695,7 +699,8 @@
                 })
             }
         })
-        rosterStatus.removeChild(rosterStatus.firstElementChild)
+        if (roster.length > 0)
+            rosterStatus.removeChild(rosterStatus.firstElementChild)
 
         if (roster.length !== 0) {
             ;['green', 'yellow', 'red'].forEach(function (color, index) {
@@ -745,7 +750,7 @@
     }
 
     function toggleCard() {
-        if (document.getElementById('card').style.visibility === 'hidden') {
+        if (document.getElementById('card').classList.contains('collapsed')) {
             showCard()
         } else {
             hideCard()
@@ -756,15 +761,17 @@
         document.getElementsByClassName('NzPR9b')[0].style.borderRadius = '0px'
         const attendanceButton = document.getElementById('attendance')
         attendanceButton.classList.remove('IeuGXd')
-        document.getElementById('card').style.visibility = 'visible'
+        document.getElementById('card').classList.remove('collapsed')
     }
 
     function hideCard() {
-        document.getElementsByClassName('NzPR9b')[0].style.borderRadius =
-            '0 0 0 8px'
+        setTimeout(() => {
+            document.getElementsByClassName('NzPR9b')[0].style.borderRadius =
+                '0 0 0 8px'
+        }, 250)
         const attendanceButton = document.getElementById('attendance')
         attendanceButton.classList.add('IeuGXd')
-        document.getElementById('card').style.visibility = 'hidden'
+        document.getElementById('card').classList.add('collapsed')
     }
 
     function toggleStatusDetails() {
@@ -772,11 +779,11 @@
         statusBar.setAttribute('aria-pressed', !expanded)
         statusBar.setAttribute('aria-expanded', !expanded)
         if (!expanded) {
-            statusDetails.style.display = 'block'
+            statusDetails.classList.remove('collapsed')
             statusBar.setAttribute('data-tooltip', 'Hide Status Details')
             statusBar.setAttribute('aria-label', 'Hide Status Details')
         } else {
-            statusDetails.style.display = 'none'
+            statusDetails.classList.add('collapsed')
             statusBar.setAttribute('data-tooltip', 'Show Status Details')
             statusBar.setAttribute('aria-label', 'Show Status Details')
         }

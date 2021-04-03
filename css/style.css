@@ -32,8 +32,6 @@
     --red: #d93025;
     --yellow: #fabb04;
     --gray: #bababa;
-    --mdc-shape-medium: 8px;
-    --mdc-shape-small: 8px;
 }
 
 .material-icons {
@@ -67,6 +65,12 @@
     max-width: none;
     font-size: 20px;
     height: 52px;
+}
+
+#card {
+    max-height: 100vh;
+    transition: max-height 0.25s;
+    overflow: hidden;
 }
 
 .card-title {
@@ -140,15 +144,16 @@
     background-color: var(--green);
 }
 #status-details {
-    margin: 12px;
-    margin-bottom: 8px;
-    display: none;
+    max-height: 100px;
+    overflow: hidden;
+    transition: max-height 0.25s;
+    margin: 0 12px;
     text-align: center;
     position: relative;
 }
 #hide-status-details {
     position: absolute;
-    bottom: 0;
+    bottom: 8px;
     right: 0;
     font-size: 0.8rem;
     height: 27px;
@@ -157,11 +162,12 @@
     display: flex;
     justify-content: space-evenly;
     align-items: center;
-    padding-bottom: 4px;
+    padding: 12px 0 4px 0;
 }
 #status-unlisted {
     display: inline-block;
     padding: 4px 8px;
+    margin-bottom: 8px;
     cursor: pointer;
     border-radius: 8px;
 }
@@ -227,29 +233,32 @@
 .notification {
     display: flex;
     align-items: center;
-    padding: 0 24px;
+    padding: 0 12px;
 }
 
 .notification i {
-    font-size: 48px;
-    color: #9e9e9e;
+    vertical-align: text-bottom;
+    padding-right: 4px;
 }
 
 .notification p {
-    font-size: 16px;
+    font-size: 20px;
     font-family: 'Google Sans', Roboto, Arial, sans-serif;
     text-align: center;
     margin: 1em;
 }
 
-.notification ul {
-    font-family: 'Google Sans', Roboto, Arial, sans-serif;
-}
-
 .updates {
+    max-height: 300px;
+    transition: max-height 0.25s;
     background-color: var(--mdc-theme-primary);
     color: white;
     overflow: visible;
+}
+
+.collapsed {
+    max-height: 0 !important;
+    overflow: hidden;
 }
 
 .updates i {

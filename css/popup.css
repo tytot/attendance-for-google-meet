@@ -1,7 +1,5 @@
 :root {
     --mdc-theme-primary: var(--mdc-theme-secondary) !important;
-    --mdc-shape-medium: 8px;
-    --mdc-shape-small: 8px;
 }
 
 html {
@@ -67,7 +65,7 @@ body {
     letter-spacing: normal !important;
 }
 
-.mdc-button {
+.mdc-dialog__surface {
     border-radius: 8px !important;
 }
 
@@ -140,16 +138,26 @@ hr.divider {
 }
 
 .description {
-    display: none;
-    font-family: 'Inter', Arial, sans-serif;
+    max-height: 100px;
+    transition: max-height 0.25s;
     width: 294px;
-    margin: 0 auto 8px auto;
+    margin: 0 auto;
+}
+.description p {
+    font-family: 'Inter', Arial, sans-serif;
+    margin: 2px 0 8px 0;
     text-align: left;
     color: rgba(0, 0, 0, 0.6);
 }
 
 #more-options {
-    padding-bottom: 8px;
+    max-height: 200px;
+    transition: max-height 0.25s;
+}
+
+.collapsed {
+    max-height: 0 !important;
+    overflow: hidden;
 }
 
 #expand {

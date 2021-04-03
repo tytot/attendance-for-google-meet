@@ -15,36 +15,55 @@ class Notifier {
         try {
             port.postMessage(message)
         } catch (error) {
-            const options = {
-                type: message.error ? 'basic' : 'progress',
-                title: 'Attendance for Google Meet™',
-                message: message.error
-                    ? 'An error occurred when exporting to Google Sheets™.'
-                    : message.progress === 1
-                    ? 'Successfully exported to Google Sheets™!'
-                    : 'Exporting to Google Sheets™...',
-                contextMessage:
-                    message.error || `${this.context1}: ${this.context2}`,
-                iconUrl: '../img/icons/icon48.png',
-            }
-            if (!message.error) {
-                options.progress = message.progress * 100
-            }
-            if (!this.created) {
-                chrome.notifications.create(
-                    `a4gm-export-${this.context1}-${this.context2}-${this.timestamp}`,
-                    options
-                )
-                this.created = true
-            } else {
-                chrome.notifications.update(
-                    `a4gm-export-${this.context1}-${this.context2}-${this.timestamp}`,
-                    options
-                )
+            if (message.progress === 0 || message.progress === 1) {
+                const options = {
+                    type: message.error ? 'basic' : 'progress',
+                    title: 'Attendance for Google Meet™',
+                    message: message.error
+                        ? 'An error occurred when exporting to Google Sheets™.'
+                        : message.progress === 1
+                        ? 'Successfully exported to Google Sheets™!'
+                        : 'Exporting to Google Sheets™...',
+                    contextMessage:
+                        message.error || `${this.context1}: ${this.context2}`,
+                    iconUrl: '../img/icons/icon48.png',
+                    priority: 2,
+                }
+                if (!message.error) {
+                    options.progress = message.progress * 100
+                    if (message.progress === 1) {
+                        options.buttons = [
+                            {
+                                title: 'OPEN',
+                            },
+                        ]
+                    }
+                }
+                if (!this.created) {
+                    chrome.notifications.create(
+                        `a4gm-export-${this.context1}-${this.context2}-${this.timestamp}`,
+                        options
+                    )
+                    this.created = true
+                } else {
+                    chrome.notifications.update(
+                        `a4gm-export-${this.context1}-${this.context2}-${this.timestamp}`,
+                        options
+                    )
+                }
             }
         }
     }
 }
+chrome.notifications.onButtonClicked.addListener((id) => {
+    if (id.startsWith('a4gm-export-')) {
+        chrome.storage.local.get('spreadsheet-id', function (result) {
+            const id = result['spreadsheet-id']
+            const url = `https://docs.google.com/spreadsheets/d/${id}`
+            chrome.tabs.create({ url: url })
+        })
+    }
+})
 
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
     if (changeInfo.hasOwnProperty('url') && meetRegex.test(changeInfo.url)) {

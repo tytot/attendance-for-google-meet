@@ -1,8 +1,9 @@
 UI:
-    ✔ Use O.S. notifications for export on leave @done(21-03-29 23:35)
+    ✔ Expand card on open using transitions @done(21-04-03 13:43)
+    ✔ Use O.S. notifications for export on leave @started(21-04-01 17:11) @done(21-04-03 13:44) @lasted(1d20h33m2s)
     ✔ Status bar in class view which shows proportion of students present @done(21-03-24 19:16)
     ✔ Separate section for unlisted students and option to add all @started(21-03-22 09:47) @done(21-03-24 19:15) @lasted(2d9h28m17s)
-    ☐ Minimum limit for student presence time
+    ✔ Minimum limit for student presence time @done(21-04-01 17:11)
     ✔ Close card by clicking on logo @done(21-03-07 22:08)
     ✔ Fix scrolling issues on select dialog @done(21-03-08 22:39)
     ✔ Option on popup to verify extension @started(20-10-03 21:32) @done(20-10-03 22:02) @lasted(30m12s)

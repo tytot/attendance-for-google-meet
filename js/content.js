@@ -25,8 +25,6 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                     const screen = document.getElementsByClassName('crqnQb')[0]
                     screen.insertAdjacentHTML('afterbegin', cardHTML)
 
-                    document.getElementById('card').style.visibility = 'hidden'
-
                     try {
                         const showEveryone = document.querySelector(
                             '[aria-label="Show everyone"]'
@@ -52,27 +50,27 @@ chrome.storage.local.get('updates-dismissed', function (response) {
         )
     }
 
-    const updatesHTML = response['updates-dismissed']
-        ? ''
-        : `<div class="updates">
+    const updatesHTML = `<div class="updates ${
+        response['updates-dismissed'] ? 'collapsed' : ''
+    } mdc-elevation--z2">
         <div class="notification">
-            <i class="material-icons">important_devices</i>
             <div style="flex: 1">
-                <p style="margin-bottom: 0"><b>
-                    New in Version ${chrome.runtime.getManifest().version}
-                </b></p>
+                <p style="margin-bottom: 0">
+                    <i class="material-icons">important_devices</i>
+                    <b>New in Version ${
+                        chrome.runtime.getManifest().version
+                    }</b>
+                </p>
                 <ul>
-                    <li>Status bar that shows how many students are present at a glance
+                    <li>Present threshold setting
                         <ul>
-                            <li>Click on it to see detailed numbers</li>
+                            <li>Set how long a student must be in the Meet before being considered present</li>
+                            <li>Default: 0 minutes</li>
                         </ul>
                     </li>
-                    <li>Separate section for students not on the class list
-                        <ul>
-                            <li>Jump to it from the status bar details</li>
-                            <li>Option to add all unlisted students to class at once</li>
-                        </ul>
-                    <li>U.I. polish</li>
+                    <li>Export on leave now creates operating system notifications to track progress
+                    <li>Help sections below certain settings to clarify their purpose
+                    <li>Various visual changes and bug fixes</li>
                 </ul>
             </div>
         </div>
@@ -92,7 +90,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
     const sheetsSVG = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="isolation:isolate;padding-right: 4px;" viewBox="0 0 64 88" width="12pt" height="12pt"><defs><clipPath id="_clipPath_KAvDqF0Ev6kg4Yj0RZmUZ8LSvIjixP4M"><rect height="88" width="64"></rect></clipPath></defs><g clip-path="url(#_clipPath_KAvDqF0Ev6kg4Yj0RZmUZ8LSvIjixP4M)"><clipPath id="_clipPath_tDC5NP6inp0FhE5TGFdi9OsXat0bSKFd"><rect transform="matrix(1,0,0,1,0,0)" height="88" width="64" y="0" x="0"></rect></clipPath><g clip-path="url(#_clipPath_tDC5NP6inp0FhE5TGFdi9OsXat0bSKFd)"><g><path d=" M 58 88 L 6 88 C 2.7 88 0 85.3 0 82 L 0 6 C 0 2.7 2.7 0 6 0 L 42 0 L 64 22 L 64 82 C 64 85.3 61.3 88 58 88 Z  M 17 39.5 L 29.5 39.5 L 29.5 46 L 17 46 L 17 39.5 L 17 39.5 L 17 39.5 L 17 39.5 L 17 39.5 Z  M 17 51 L 29.5 51 L 29.5 57.5 L 17 57.5 L 17 51 L 17 51 L 17 51 L 17 51 L 17 51 Z  M 47 57.5 L 34.5 57.5 L 34.5 51 L 47 51 L 47 57.5 L 47 57.5 L 47 57.5 L 47 57.5 L 47 57.5 Z  M 47 46 L 34.5 46 L 34.5 39.5 L 47 39.5 L 47 46 L 47 46 L 47 46 L 47 46 L 47 46 Z  M 12 34.5 L 12 62.5 L 52 62.5 L 52 34.5 L 12 34.5 L 12 34.5 L 12 34.5 L 12 34.5 L 12 34.5 Z " fill-rule="evenodd"></path></g></g></g></svg>`
 
     const cardHTML = `<div
-        class="mdc-card"
+        class="mdc-card collapsed"
         id="card"
         style="
             position: fixed;
@@ -344,7 +342,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                         aria-label="Absent: 0/0"
                     ></span>
                 </div>
-                <div id="status-details">
+                <div id="status-details" class="collapsed">
                     <div id="status-presence">
                         <div>
                             <div class="status-details-container green">

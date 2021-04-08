@@ -578,7 +578,7 @@ function generateAttendanceRows(code) {
             const mins = Math.round((unix - startUnix) / 6) / 10
             const roster = result.rosters[result[code].class]
             const rawData = result[code].attendance
-            const presenceThreshold = result['presence-threshold']
+            const presenceThreshold = result['presence-threshold'] || 0
 
             const dts = Utils.dateTimeString(startUnix, unix)
             const header = `${dts} (${mins} min): ${code}`

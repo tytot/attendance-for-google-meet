@@ -62,9 +62,9 @@
 #dialog-title {
     text-align: center;
     top: -6px;
-    max-width: none;
     font-size: 20px;
     height: 52px;
+    max-width: none;
 }
 
 #card {
@@ -121,7 +121,7 @@
 }
 
 #select .mdc-dialog__surface {
-    max-width: none;
+    max-width: 600px;
     border-radius: 8px;
 }
 
@@ -233,19 +233,35 @@
 .notification {
     display: flex;
     align-items: center;
-    padding: 0 12px;
+    padding: 0 16px;
+}
+
+.notification:not(.updates .notification) {
+    background-color: var(--gm-neutral-highlight-color);
 }
 
 .notification i {
-    vertical-align: text-bottom;
-    padding-right: 4px;
+    font-size: 36px;
+    color: var(--gm-hint-color);
 }
 
 .notification p {
+    font-size: 16px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    margin-left: 1em;
+    color: var(--gm-hint-color);
+}
+
+.notification h2 {
     font-size: 20px;
     font-family: 'Google Sans', Roboto, Arial, sans-serif;
     text-align: center;
     margin: 1em;
+}
+.notification h2 i {
+    font-size: 24px;
+    vertical-align: text-bottom;
+    padding-right: 4px;
 }
 
 .updates {

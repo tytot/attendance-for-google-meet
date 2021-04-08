@@ -117,22 +117,21 @@ chrome.runtime.onInstalled.addListener(function (details) {
             }
             chrome.storage.local.set({ 'updates-dismissed': false })
         }
-    } else if (details.reason === 'install') {
-        chrome.storage.local.get(null, function (data) {
-            if (!data.hasOwnProperty('auto-export')) {
-                chrome.storage.local.set({ 'auto-export': false })
-            }
-            if (!data.hasOwnProperty('show-popup')) {
-                chrome.storage.local.set({ 'show-popup': true })
-            }
-            if (!data.hasOwnProperty('presence-threshold')) {
-                chrome.storage.local.set({ 'presence-threshold': 0 })
-            }
-            if (!data.hasOwnProperty('reset-interval')) {
-                chrome.storage.local.set({ 'reset-interval': 12 })
-            }
-        })
     }
+    chrome.storage.local.get(null, function (data) {
+        if (!data.hasOwnProperty('auto-export')) {
+            chrome.storage.local.set({ 'auto-export': false })
+        }
+        if (!data.hasOwnProperty('show-popup')) {
+            chrome.storage.local.set({ 'show-popup': true })
+        }
+        if (!data.hasOwnProperty('presence-threshold')) {
+            chrome.storage.local.set({ 'presence-threshold': 0 })
+        }
+        if (!data.hasOwnProperty('reset-interval')) {
+            chrome.storage.local.set({ 'reset-interval': 12 })
+        }
+    })
 })
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {

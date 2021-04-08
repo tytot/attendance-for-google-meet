@@ -1,4 +1,5 @@
 ;(function () {
+    // initialize material design components
     const MDCRipple = mdc.ripple.MDCRipple
     const MDCList = mdc.list.MDCList
     const MDCDialog = mdc.dialog.MDCDialog
@@ -8,11 +9,14 @@
     const MDCTextField = mdc.textField.MDCTextField
     const MDCChipSet = mdc.chips.MDCChipSet
 
+    // connect to background page
     let port = chrome.runtime.connect()
+
     let rostersCache = null
     let sortMethod = 'lastName'
     let classTextField, stuTextFieldEl, stuTextField, chipSetEl, chipSet
 
+    // listen for attendance messages from inject.js
     window.addEventListener('message', function (event) {
         if (event.origin !== 'https://meet.google.com') return
         if (event.data.sender !== 'Ya boi') return
@@ -180,43 +184,56 @@
     const selectDialog = new MDCDialog(document.getElementById('select'))
     chrome.storage.local.get(null, function (result) {
         const code = getMeetCode()
-        if (result['show-popup'] && !result.hasOwnProperty(code)) {
-            selectDialog.open()
-            selectDialog.scrimClickAction = ''
-            selectDialog.escapeKeyAction = ''
-            selectDialog.autoStackButtons = false
-            selectDialog.listen('MDCDialog:closed', (event) => {
-                initCard()
+        let showDialog = false
+        if (!result.hasOwnProperty(code)) {
+            // add data boilerplate for this Meet to local storage
+            chrome.storage.local.set({
+                [code]: {
+                    attendance: {},
+                    'start-timestamp': ~~(Date.now() / 1000),
+                },
             })
+            if (result['show-popup']) {
+                showDialog = true
 
-            prepareChips(null, 'dialog-default-view', 'dialog-edit-view')
-
-            document.getElementById('later').addEventListener('click', () => {
-                document.getElementById('card-class-view').hidden = false
-                document.getElementById('card-default-view').hidden = true
-            })
-            selectButton.addEventListener('click', () => {
-                const className =
-                    classList.listElements[classList.selectedIndex].name
-                const code = getMeetCode()
-                chrome.storage.local.get(code, function (result) {
-                    let res = result[code]
-                    res.class = className
-                    chrome.storage.local.set({ [code]: res })
-                    document.getElementById(
-                        'class-label'
-                    ).textContent = className
+                selectDialog.open()
+                selectDialog.scrimClickAction = ''
+                selectDialog.escapeKeyAction = ''
+                selectDialog.autoStackButtons = false
+                selectDialog.listen('MDCDialog:closed', (event) => {
+                    initCard()
                 })
-            })
-            document
-                .getElementById('cancel-class')
-                .addEventListener('click', function () {
-                    document.getElementById(
-                        'dialog-default-view'
-                    ).hidden = false
-                    document.getElementById('dialog-edit-view').hidden = true
+    
+                prepareChips(null, 'dialog-default-view', 'dialog-edit-view')
+    
+                document.getElementById('later').addEventListener('click', () => {
+                    document.getElementById('card-class-view').hidden = false
+                    document.getElementById('card-default-view').hidden = true
                 })
-        } else {
+                selectButton.addEventListener('click', () => {
+                    const className =
+                        classList.listElements[classList.selectedIndex].name
+                    const code = getMeetCode()
+                    chrome.storage.local.get(code, function (result) {
+                        let res = result[code]
+                        res.class = className
+                        chrome.storage.local.set({ [code]: res })
+                        document.getElementById(
+                            'class-label'
+                        ).textContent = className
+                    })
+                })
+                document
+                    .getElementById('cancel-class')
+                    .addEventListener('click', function () {
+                        document.getElementById(
+                            'dialog-default-view'
+                        ).hidden = false
+                        document.getElementById('dialog-edit-view').hidden = true
+                    })
+            }
+        }
+        if (!showDialog) {
             document.getElementById('card-class-view').hidden = false
             document.getElementById('card-default-view').hidden = true
             initCard()
@@ -370,13 +387,9 @@
                             chrome.storage.local.remove([key])
                             delete result[key]
                         } else {
-                            const className = result[key].class
                             result[key] = {
                                 attendance: {},
                                 'start-timestamp': timestamp,
-                            }
-                            if (className) {
-                                result[key].class = className
                             }
                         }
                     }
@@ -441,7 +454,7 @@
         attendance,
         rosters,
         className,
-        presenceThreshold
+        presenceThreshold = 0
     ) {
         rosterStatus.innerHTML = ''
 

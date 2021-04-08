@@ -55,22 +55,13 @@ chrome.storage.local.get('updates-dismissed', function (response) {
     } mdc-elevation--z2">
         <div class="notification">
             <div style="flex: 1">
-                <p style="margin-bottom: 0">
+                <h2 style="margin-bottom: 0">
                     <i class="material-icons">important_devices</i>
-                    <b>New in Version ${
-                        chrome.runtime.getManifest().version
-                    }</b>
-                </p>
+                    New in Version ${chrome.runtime.getManifest().version}
+                </h2>
                 <ul>
-                    <li>Present threshold setting
-                        <ul>
-                            <li>Set how long a student must be in the Meet before being considered present</li>
-                            <li>Default: 0 minutes</li>
-                        </ul>
-                    </li>
-                    <li>Export on leave now creates operating system notifications to track progress
-                    <li>Help sections below certain settings to clarify their purpose
-                    <li>Various visual changes and bug fixes</li>
+                    <li>Fixed bug with the presence threshold so that students are not always marked absent</li>
+                    <li>Visual updates</li>
                 </ul>
             </div>
         </div>
@@ -631,7 +622,6 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                         <button 
                             class="mdc-button" 
                             id="addeth-class" 
-                            style="min-width: 400px !important;"
                         >
                             <div class="mdc-button__ripple"></div>
                             <i

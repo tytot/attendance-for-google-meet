@@ -228,20 +228,21 @@ document.querySelector('#clear').addEventListener('click', function () {
     clearDialog.open()
 })
 document.querySelector('#confirm-clear').addEventListener('click', function () {
-    exportSwitch.checked = false
-    popupSwitch.checked = true
-    thresholdField.value = 0
-    intervalField.value = 12
     chrome.storage.local.get(null, function (result) {
         for (const key in result) {
             if (key !== 'spreadsheet-id') {
                 chrome.storage.local.remove(key)
             }
         }
+        exportSwitch.checked = false
+        popupSwitch.checked = true
+        thresholdField.value = 0
+        intervalField.value = 12
         chrome.storage.local.set({ 'auto-export': false })
         chrome.storage.local.set({ 'show-popup': true })
         chrome.storage.local.set({ 'presence-threshold': 0 })
         chrome.storage.local.set({ 'reset-interval': 12 })
+        
         snackbar.close()
         snackbar.labelText = 'Successfully cleared storage.'
         snackbar.open()

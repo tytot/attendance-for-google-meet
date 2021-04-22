@@ -1,4 +1,5 @@
-;(function () {
+'use strict'
+{
     let dataPath = []
     let arrayKey = null
 
@@ -110,13 +111,12 @@
             const array = v[arrayKey]
             if (array[4] && array[6].length === 0 && array[20] == undefined) {
                 const fullName = array[1]
+                let firstName = array[28]
+                let lastName = fullName.replace(firstName, '')
                 if (fullName.includes(',')) {
                     const names = fullName.split(/,(.+)/)
-                    var firstName = names[1]
-                    var lastName = names[0]
-                } else {
-                    firstName = array[28]
-                    lastName = fullName.replace(firstName, '')
+                    firstName = names[1]
+                    lastName = names[0]
                 }
                 firstName = firstName.replace(nameRegex, '').trim()
                 lastName = lastName.replace(nameRegex, '').trim()
@@ -140,4 +140,4 @@
             'font-weight:bold;color:#058D80;'
         )
     }
-})()
+}

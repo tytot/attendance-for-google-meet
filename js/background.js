@@ -1,3 +1,5 @@
+'use strict'
+
 const meetTabs = new Map()
 const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/
 const codeRegex = /\w{3}-\w{4}-\w{3}/
@@ -366,9 +368,11 @@ async function updateSpreadsheet(
         notifier.post(port, { progress: 0 })
         const classMeta = await getMetaByKey(className, token, spreadsheetId)
         notifier.post(port, { progress: 0.15 })
+
+        let sheetId = classMeta.location.sheetId
         if (classMeta == null) {
             const spreadsheet = await getSpreadsheet(token, spreadsheetId)
-            var sheetId = 0
+            sheetId = 0
             for (const sheet of spreadsheet.sheets) {
                 newSheetId = sheet.properties.sheetId
                 if (newSheetId > sheetId) {
@@ -381,8 +385,6 @@ async function updateSpreadsheet(
             Utils.log(
                 `Creating new sheet for class ${className}, ID ${sheetId}`
             )
-        } else {
-            sheetId = classMeta.location.sheetId
         }
         const codeMeta = await getMetaByKey(
             `${code}§${sheetId}`,
@@ -390,19 +392,18 @@ async function updateSpreadsheet(
             spreadsheetId
         )
         notifier.post(port, { progress: 0.3 })
-        if (codeMeta == null) {
-            var startRow = 1
-            var icReqs = await initializeCells(code, sheetId)
-        } else {
-            startRow = codeMeta.location.dimensionRange.startIndex
-            icReqs = await updateCells(
-                token,
-                code,
-                spreadsheetId,
-                sheetId,
-                startRow
-            )
-        }
+        const startRow =
+            codeMeta == null ? 1 : codeMeta.location.dimensionRange.startIndex
+        const icReqs =
+            codeMeta == null
+                ? await initializeCells(code, sheetId)
+                : await updateCells(
+                      token,
+                      code,
+                      spreadsheetId,
+                      sheetId,
+                      startRow
+                  )
         notifier.post(port, { progress: 0.4 })
         requests = requests.concat(icReqs)
         let data = await batchUpdate(token, requests, spreadsheetId, sheetId)

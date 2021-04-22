@@ -1,12 +1,12 @@
-chrome.storage.local.get('updates-dismissed', function (response) {
-    console.log(response)
+'use strict'
 
+chrome.storage.local.get(null, function (result) {
     function initialize() {
         chrome.runtime.sendMessage(
             {
                 data: 'check-active',
             },
-            function (response) {
+            async function (response) {
                 if (response.ready) {
                     Utils.log('Initializing extension...')
                     document.body.insertAdjacentHTML(
@@ -25,18 +25,51 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                     const screen = document.getElementsByClassName('crqnQb')[0]
                     screen.insertAdjacentHTML('afterbegin', cardHTML)
 
-                    try {
-                        const showEveryone = document.querySelector(
-                            '[aria-label="Show everyone"]'
-                        )
+                    const showEveryone = document.querySelector(
+                        '[aria-label="Show everyone"]'
+                    )
+                    if (showEveryone) {
                         showEveryone.classList.remove('IeuGXd')
-                    } catch {
-                    } finally {
-                        instantiate()
                     }
+
+                    const code = document
+                        .getElementsByTagName('c-wiz')[0]
+                        .getAttribute('data-unresolved-meeting-id')
+
+                    if (!result.hasOwnProperty(code)) {
+                        await addAttendanceBoilerplate(code)
+                    }
+                    if (!result.hasOwnProperty('rosters')) {
+                        await addRosterBoilerplate()
+                    }
+                    instantiate()
                 }
             }
         )
+    }
+
+    function addAttendanceBoilerplate(code) {
+        return new Promise(function (resolve) {
+            chrome.storage.local.set(
+                {
+                    [code]: {
+                        attendance: {},
+                        'start-timestamp': ~~(Date.now() / 1000),
+                    },
+                },
+                function () {
+                    resolve()
+                }
+            )
+        })
+    }
+
+    function addRosterBoilerplate() {
+        return new Promise(function (resolve) {
+            chrome.storage.local.set({ rosters: {} }, function () {
+                resolve()
+            })
+        })
     }
 
     function instantiate() {
@@ -51,7 +84,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
     }
 
     const updatesHTML = `<div class="updates ${
-        response['updates-dismissed'] ? 'collapsed' : ''
+        result['updates-dismissed'] ? 'collapsed' : ''
     } mdc-elevation--z2">
         <div class="notification">
             <div style="flex: 1">
@@ -93,7 +126,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
         "
         aria-label="Attendance management"
         >
-        <div hidden id="card-class-view">
+        <div class="class-view">
             <div class="mdc-card-header">
                 <div>
                     <h2 class="CkXZgc card-title">Select Class</h2>
@@ -118,7 +151,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                     ''
                 }
                 <button
-                    class="mdc-icon-button medium-button material-icons right"
+                    class="help mdc-icon-button medium-button material-icons right"
                     style="right: 48px"
                     aria-label="Help"
                     jscontroller="VXdfxd"
@@ -146,15 +179,60 @@ chrome.storage.local.get('updates-dismissed', function (response) {
             <div class="mdc-list-divider" role="separator"></div>
             ${updatesHTML}
             <div class="class-content">
-                <ul class="mdc-list" id="class-list" role="listbox"></ul>
-                <div id="no-classes" class="notification" style="display: none">
+                <ul class="mdc-list class-list" role="listbox">
+                    <template id="class-item-template">
+                        <li
+                            class="mdc-list-item mdc-list-item--class"
+                            role="option"
+                            tabindex="0"
+                        >
+                            <span class="mdc-list-item__ripple"></span>
+                            <span
+                                class="mdc-list-item__graphic material-icons"
+                                aria-hidden="true"
+                            >
+                                perm_identity
+                            </span>
+                            <span class="mdc-list-item__text class-entry">
+                                My Class
+                            </span>
+                            <div class="mdc-list-item__meta">
+                                <button
+                                    class="mdc-icon-button material-icons medium-button edit-class"
+                                    aria-label="Edit"
+                                    jscontroller="VXdfxd"
+                                    jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                                    tabindex="0"
+                                    data-tooltip="Edit"
+                                    data-tooltip-vertical-offset="-12"
+                                    data-tooltip-horizontal-offset="0"
+                                >
+                                    edit
+                                </button>
+                                <button
+                                    class="mdc-icon-button material-icons medium-button delete-class"
+                                    aria-label="Delete"
+                                    jscontroller="VXdfxd"
+                                    jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                                    tabindex="0"
+                                    data-tooltip="Delete"
+                                    data-tooltip-vertical-offset="-12"
+                                    data-tooltip-horizontal-offset="0"
+                                >
+                                    delete
+                                </button>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+                <div class="no-classes notification" style="display: none">
                     <i class="material-icons"> warning </i>
                     <p>
                         You don't have any classes! Add a class by clicking the
                         button below.
                     </p>
                 </div>
-                <button class="mdc-button" id="addeth-class">
+                <button class="mdc-button addeth-class">
                     <div class="mdc-button__ripple"></div>
                     <i class="material-icons mdc-button__icon" aria-hidden="true"
                         >add</i
@@ -196,7 +274,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                 </button>
             </div>
         </div>
-        <div id="card-default-view">
+        <div class="student-view" hidden>
             <div class="mdc-card-header">
                 <div class="mdc-menu-surface--anchor right" style="right: 48px">
                     <div
@@ -207,7 +285,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                         <ul class="mdc-list mdc-list--dense">
                             <li
                                 class="mdc-list-item mdc-ripple-surface"
-                                id="lastName"
+                                id="last-name"
                                 role="menuitem"
                                 tabindex="0"
                             >
@@ -217,7 +295,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                             </li>
                             <li
                                 class="mdc-list-item mdc-ripple-surface"
-                                id="firstName"
+                                id="first-name"
                                 role="menuitem"
                                 tabindex="0"
                             >
@@ -227,7 +305,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                             </li>
                             <li
                                 class="mdc-list-item mdc-ripple-surface"
-                                id="presentFirst"
+                                id="present-first"
                                 role="menuitem"
                                 tabindex="0"
                             >
@@ -237,7 +315,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                             </li>
                             <li
                                 class="mdc-list-item mdc-ripple-surface"
-                                id="absentFirst"
+                                id="absent-first"
                                 role="menuitem"
                                 tabindex="0"
                             >
@@ -249,8 +327,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                     </div>
                 </div>
                 <button
-                    class="mdc-icon-button medium-button material-icons left"
-                    id="default-back"
+                    class="back mdc-icon-button medium-button material-icons left"
                     aria-label="Back"
                     jscontroller="VXdfxd"
                     jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
@@ -262,7 +339,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                     arrow_back
                 </button>
                 <div>
-                    <h2 class="CkXZgc card-title" id="class-label">View Class</h2>
+                    <h2 class="CkXZgc card-title class-label">View Class</h2>
                 </div>
                 <button
                     class="mdc-icon-button medium-button material-icons right more"
@@ -303,7 +380,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                 </button>
             </div>
             <div class="mdc-list-divider" role="separator"></div>
-            <div>
+            <div id="status-container">
                 <div 
                     id="status-bar" 
                     jscontroller="VXdfxd" 
@@ -389,7 +466,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                 class="mdc-card-content"
                 style="max-height: 50vh; overflow: auto"
             >
-                <div id="no-students" class="notification" style="display: none">
+                <div class="no-students notification" style="display: none">
                     <i class="material-icons"> warning </i>
                     <p>
                         Select edit or click the + button next to a name to add
@@ -399,7 +476,57 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                 <ul
                     class="mdc-list mdc-list--dense mdc-list--two-line"
                     id="roster-status"
-                ></ul>
+                >
+                    <template id="unlisted-template">
+                        <li class="mdc-list-divider" role="separator"></li>
+                        <li id="unlisted-divider">
+                            Not on List
+                            <button id="add-all-unlisted" class="mdc-button">
+                                <span class="mdc-button__ripple"></span>
+                                <span class="mdc-button__label">Add All</span>
+                            </button>
+                        </li>
+                    </template>
+                    <template id="student-template">
+                        <li class="mdc-list-divider" role="separator"></li>
+                        <li class="mdc-list-item" tabindex="0">
+                            <span
+                                class="mdc-list-item__graphic material-icons"
+                                jscontroller="VXdfxd"
+                                jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                                tabindex="0"
+                                aria-label="Not on List"
+                                data-tooltip="Not on List"
+                                data-tooltip-vertical-offset="-12"
+                                data-tooltip-horizontal-offset="0"
+                            >
+                                error
+                            </span>
+                            <span class="mdc-list-item__text">
+                                <span class="mdc-list-item__primary-text">
+                                    First Last
+                                </span>
+                                <span class="mdc-list-item__secondary-text">
+                                    Joined at 12:00 AM
+                                </span>
+                            </span>
+                            <div class="mdc-list-item__meta">
+                                <button
+                                    class="mdc-icon-button material-icons medium-button"
+                                    aria-label="Add to Class"
+                                    jscontroller="VXdfxd"
+                                    jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                                    tabindex="0"
+                                    data-tooltip="Add to Class"
+                                    data-tooltip-vertical-offset="-12"
+                                    data-tooltip-horizontal-offset="0"
+                                >
+                                    add_circle
+                                </button>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
             </div>
             <div
                 role="progressbar"
@@ -437,11 +564,10 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                 </button>
             </div>
         </div>
-        <div hidden id="card-edit-view">
+        <div hidden class="edit-view">
             <div class="mdc-card-header">
                 <button
-                    class="mdc-icon-button medium-button material-icons left"
-                    id="edit-back"
+                    class="back mdc-icon-button medium-button material-icons left"
                     aria-label="Cancel"
                     jscontroller="VXdfxd"
                     jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
@@ -456,7 +582,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                     <h2 class="CkXZgc card-title">Add/Edit Class</h2>
                 </div>
                 <button
-                    class="mdc-icon-button medium-button material-icons right"
+                    class="help mdc-icon-button medium-button material-icons right"
                     style="right: 48px"
                     aria-label="Help"
                     jscontroller="VXdfxd"
@@ -484,7 +610,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
             <div class="mdc-list-divider" role="separator"></div>
             <div>
                 <div style="text-align: center">
-                    <button class="mdc-button confirm-roster" id="save-class">
+                    <button class="mdc-button confirm-roster save-class">
                         <div class="mdc-button__ripple"></div>
                         <i
                             class="material-icons mdc-button__icon"
@@ -518,14 +644,35 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                             <div
                                 class="mdc-chip-set mdc-chip-set--input"
                                 role="grid"
-                            ></div>
+                            >
+                                <template id="chip-template">
+                                    <div class="mdc-chip" role="row">
+                                        <div class="mdc-chip__ripple"></div>
+                                        <span role="gridcell">
+                                            <span role="button" tabindex="0" class="mdc-chip__primary-action">
+                                                <span class="mdc-chip__text">First Last</span>
+                                            </span>
+                                            <span role="gridcell">
+                                                <i
+                                                    class="material-icons mdc-chip__icon mdc-chip__icon--trailing"
+                                                    tabindex="0"
+                                                    role="button"
+                                                    style="margin-left: 0;"
+                                                    >cancel</i
+                                                >
+                                            </span>
+                                        </span>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="highlighter"></div>
                             <textarea
                                 class="mdc-text-field__input"
                                 rows="6"
                                 cols="100"
                                 aria-label="Enter Student Names"
-                                aria-controls="student-helper-id"
-                                aria-describedby="student-helper-id"
+                                aria-controls="student-helper-card"
+                                aria-describedby="student-helper-card"
                             ></textarea>
                             <span class="mdc-notched-outline">
                                 <span class="mdc-notched-outline__leading"></span>
@@ -539,7 +686,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                         >
                             <div
                                 class="mdc-text-field-helper-text"
-                                id="student-helper-id"
+                                id="student-helper-card"
                                 aria-hidden="true"
                             >
                                 Separate names with Enter.
@@ -585,44 +732,40 @@ chrome.storage.local.get('updates-dismissed', function (response) {
 
     const selectDialogHTML = `<div class="mdc-dialog" id="select">
         <div class="mdc-dialog__container">
-            <div
-                class="mdc-dialog__surface"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="dialog-title"
-                aria-describedby="dialog-content"
-            >
-                <div>
-                    <h2 class="mdc-dialog__title CkXZgc" id="dialog-title">
-                        Select Class
-                    </h2>
-                    <button class="mdc-icon-button material-icons medium-button right"
-                        aria-label="Help"
-                        jscontroller="VXdfxd"
-                        jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
-                        tabindex="0"
-                        data-tooltip="Help"
-                        data-tooltip-vertical-offset="-12"
-                        data-tooltip-horizontal-offset="0"
-                    >
-                        help_outline
-                    </button>
-                </div>
-                <div class="mdc-list-divider" role="separator"></div>
-                ${updatesHTML}
-                <div id="dialog-default-view">
-                    <div class="mdc-dialog__content class-content" id="dialog-content">
-                        <ul class="mdc-list" id="class-list" role="listbox"></ul>
-                        <div id="no-classes" class="notification" style="display:none;">
+            <div class="class-view">
+                <div
+                    class="mdc-dialog__surface"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="dialog-class-title"
+                >
+                    <div>
+                        <h2 class="mdc-dialog__title CkXZgc" id="dialog-class-title">
+                            Select Class
+                        </h2>
+                        <button class="help mdc-icon-button material-icons medium-button right"
+                            aria-label="Help"
+                            jscontroller="VXdfxd"
+                            jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                            tabindex="0"
+                            data-tooltip="Help"
+                            data-tooltip-vertical-offset="-12"
+                            data-tooltip-horizontal-offset="0"
+                        >
+                            help_outline
+                        </button>
+                    </div>
+                    <div class="mdc-list-divider" role="separator"></div>
+                    ${updatesHTML}
+                    <div class="mdc-dialog__content class-content">
+                        <ul class="mdc-list class-list" role="listbox"></ul>
+                        <div class="no-classes notification" style="display:none;">
                             <i class="material-icons">
                                 warning
                             </i>
                             <p>You don't have any classes! Add a class by clicking the button below.</p>
                         </div>
-                        <button 
-                            class="mdc-button" 
-                            id="addeth-class" 
-                        >
+                        <button class="mdc-button addeth-class">
                             <div class="mdc-button__ripple"></div>
                             <i
                                 class="material-icons mdc-button__icon"
@@ -656,8 +799,32 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                         </button>
                     </div>
                 </div>
-                <div id="dialog-edit-view" hidden>
-                    <div class="mdc-dialog__content" id="dialog-content">
+            </div>
+            <div class="edit-view" hidden>
+                <div
+                    class="mdc-dialog__surface"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="dialog-edit-title"
+                >
+                    <div>
+                        <h2 class="mdc-dialog__title CkXZgc" id="dialog-edit-title">
+                            Add/Edit Class
+                        </h2>
+                        <button class="help mdc-icon-button material-icons medium-button right"
+                            aria-label="Help"
+                            jscontroller="VXdfxd"
+                            jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
+                            tabindex="0"
+                            data-tooltip="Help"
+                            data-tooltip-vertical-offset="-12"
+                            data-tooltip-horizontal-offset="0"
+                        >
+                            help_outline
+                        </button>
+                    </div>
+                    <div class="mdc-list-divider" role="separator"></div>
+                    <div class="mdc-dialog__content">
                         <div class="label CkXZgc" style="margin-top: 16px;">
                             Class Name
                         </div>
@@ -667,8 +834,8 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                             <input
                                 type="text"
                                 class="mdc-text-field__input"
-                                aria-controls="class-helper-id"
-                                aria-describedby="class-helper-id"
+                                aria-controls="class-helper"
+                                aria-describedby="class-helper"
                             />
                             <span class="mdc-notched-outline">
                                 <span class="mdc-notched-outline__leading"></span>
@@ -678,7 +845,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                         <div class="mdc-text-field-helper-line">
                             <div
                                 class="mdc-text-field-helper-text"
-                                id="class-helper-id"
+                                id="class-helper"
                                 aria-hidden="true"
                             >
                                 Ex: Period 1 Math
@@ -697,8 +864,8 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                                 rows="6"
                                 cols="100"
                                 aria-label="Enter Student Names"
-                                aria-controls="student-helper-id"
-                                aria-describedby="student-helper-id"
+                                aria-controls="student-helper-dialog"
+                                aria-describedby="student-helper-dialog"
                             ></textarea>
                             <span class="mdc-notched-outline">
                                 <span class="mdc-notched-outline__leading"></span>
@@ -712,7 +879,7 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                         >
                             <div
                                 class="mdc-text-field-helper-text"
-                                id="student-helper-id"
+                                id="student-helper-dialog"
                                 aria-hidden="true"
                             >
                                 Separate names with Enter.
@@ -723,16 +890,14 @@ chrome.storage.local.get('updates-dismissed', function (response) {
                     <div class="mdc-dialog__actions">
                         <button
                             type="button"
-                            class="mdc-button mdc-button--outlined mdc-dialog__button"
-                            id="cancel-class"
+                            class="back mdc-button mdc-button--outlined mdc-dialog__button"
                         >
                             <div class="mdc-button__ripple"></div>
                             <span class="mdc-button__label">Cancel</span>
                         </button>
                         <button
                             type="button"
-                            class="mdc-button mdc-button--raised mdc-dialog__button"
-                            id="save-class"
+                            class="mdc-button mdc-button--raised mdc-dialog__button save-class"
                             data-mdc-dialog-button-default
                         >
                             <div class="mdc-button__ripple"></div>

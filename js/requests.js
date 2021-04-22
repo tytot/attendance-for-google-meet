@@ -1,5 +1,7 @@
+'use strict'
+
 function updateSheetProperties(className, code, sheetId, fields) {
-    let requests = [
+    const requests = [
         {
             updateSheetProperties: {
                 properties: {
@@ -20,7 +22,7 @@ function updateSheetProperties(className, code, sheetId, fields) {
 }
 
 function addSheet(className, code, sheetId) {
-    let requests = [
+    const requests = [
         {
             addSheet: {
                 properties: {
@@ -522,7 +524,7 @@ function collapseGroup(token, code, spreadsheetId, sheetId) {
             spreadsheetId
         )
         const startRow = meta.location.dimensionRange.startIndex
-        let requests = []
+        const requests = []
         for (const sheet of spreadsheet.sheets) {
             if (sheet.properties.sheetId === sheetId) {
                 for (const rowGroup of sheet.rowGroups) {
@@ -582,7 +584,7 @@ function generateAttendanceRows(code) {
 
             const dts = Utils.dateTimeString(startUnix, unix)
             const header = `${dts} (${mins} min): ${code}`
-            let rowData = [
+            const rowData = [
                 {
                     values: [
                         {
@@ -618,7 +620,7 @@ function generateAttendanceRows(code) {
                 },
             ]
 
-            let names = Array.from(roster)
+            const names = Array.from(roster)
             names.sort(Utils.compareLast)
             for (const name of names) {
                 const firstName = Utils.getFirstName(name)

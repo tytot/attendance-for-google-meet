@@ -1,5 +1,9 @@
 class Utils {
     static nameMap = new Map()
+    static collator = new Intl.Collator(undefined, {
+        numeric: true,
+        sensitivity: 'base',
+    })
 
     static log(message) {
         console.log(
@@ -10,9 +14,9 @@ class Utils {
     }
 
     static hashCode(s) {
-        var nHash = 0
+        let nHash = 0
         if (!s.length) return nHash
-        for (var i = 0, imax = s.length, n; i < imax; ++i) {
+        for (let i = 0, imax = s.length, n; i < imax; ++i) {
             n = s.charCodeAt(i)
             nHash = (nHash << 5) - nHash + n
             nHash = nHash & nHash // Convert to 32-bit integer
@@ -23,11 +27,10 @@ class Utils {
     static minsPresent(timestamps) {
         let minsPresent = 0
         for (let i = 0; i < timestamps.length; i += 2) {
-            if (i + 1 === timestamps.length) {
-                var secs = ~~(Date.now() / 1000) - timestamps[i]
-            } else {
-                secs = timestamps[i + 1] - timestamps[i]
-            }
+            const secs =
+                i + 1 === timestamps.length
+                    ? ~~(Date.now() / 1000) - timestamps[i]
+                    : timestamps[i + 1] - timestamps[i]
             const mins = Math.round(secs / 6) / 10
             minsPresent += mins
         }
@@ -67,9 +70,10 @@ class Utils {
     }
 
     static splitNames(fullName) {
+        let splitNames
         if (fullName.includes('|')) {
-            var splitNames = fullName.split('|')
-        } else if (fullName.includes(', ')) {
+            splitNames = fullName.split('|')
+        } else if (fullName.includes(',')) {
             splitNames = fullName.split(/,(.+)/)
             splitNames = [splitNames[1].trim(), splitNames[0].trim()]
         } else {
@@ -86,7 +90,8 @@ class Utils {
             if (names.length === 1) {
                 splitNames = [fullName, '']
             } else {
-                for (var i = names.length - 1; i > 1; i--) {
+                let i = names.length - 1
+                for (; i > 1; i--) {
                     const name = names[i]
                     if (name.charAt(0) === name.charAt(0).toLowerCase()) {
                         break
@@ -103,10 +108,13 @@ class Utils {
     }
 
     static compareFirst(a, b) {
-        return Utils.getFirstName(a).localeCompare(Utils.getFirstName(b))
+        return Utils.collator.compare(
+            Utils.getFirstName(a),
+            Utils.getFirstName(b)
+        )
     }
 
     static compareLast(a, b) {
-        return Utils.getLastName(a).localeCompare(Utils.getLastName(b))
+        return Utils.collator.compare(Utils.getLastName(a), Utils.getLastName(b))
     }
 }

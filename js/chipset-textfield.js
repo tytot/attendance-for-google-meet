@@ -125,7 +125,10 @@ class MDCChipSetTextField extends MDCTextField {
         )
         const id = `nick-chubb-${++this.chipCounter}`
         chipEl.id = id
+        chipEl.rawText = text
         chipEl.querySelector('.mdc-chip__text').textContent = text
+            .replace('|', ' ')
+            .trim()
         this.chipSetEl.appendChild(chipEl)
         this.chipSet.addChip(chipEl)
         const chip = this.chipSet.chips[this.chipSet.chips.length - 1]
@@ -178,8 +181,6 @@ class MDCChipSetTextField extends MDCTextField {
         return newValue
     }
     get chipTexts() {
-        return this.chipSet.chips.map((chip) =>
-            chip.root.outerText.replace('cancel', '').trim()
-        )
+        return this.chipSet.chips.map((chip) => chip.root.rawText)
     }
 }

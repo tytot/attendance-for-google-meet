@@ -1,6 +1,6 @@
 'use strict'
 {
-    // initialize material design components
+    // Initialize material design components
     const MDCRipple = mdc.ripple.MDCRipple
     const MDCList = mdc.list.MDCList
     const MDCDialog = mdc.dialog.MDCDialog
@@ -9,10 +9,10 @@
     const MDCLinearProgress = mdc.linearProgress.MDCLinearProgress
     const MDCTextField = mdc.textField.MDCTextField
 
-    // connect to background page
+    // Establish connection to background page
     const port = chrome.runtime.connect()
 
-    // listen for attendance messages from inject.js
+    // Listen for attendance data from proxied function
     window.addEventListener('message', (event) => {
         if (event.origin !== 'https://meet.google.com') return
         if (event.data.sender !== 'Ya boi') return
@@ -21,7 +21,22 @@
         }
     })
 
+    /**
+     * Represents a view that displays the user's classes in a list.
+     *
+     * @callback ClassScreen~addClassCallback
+     *
+     * @callback ClassScreen~editClassCallback
+     * @param {string} className - The name of the class to be edited.
+     *
+     * @callback ClassScreen~selectClassCallback
+     * @param {string} className - The name of the selected class.
+     */
     class ClassScreen {
+        /**
+         * Creates a class screen.
+         * @param {HTMLElement} containerEl - The element that will back the screen.
+         */
         constructor(containerEl) {
             this.container = containerEl
             this.classEls = []
@@ -33,27 +48,32 @@
             this.classIdMap = new Map()
             this.noClassesEl = this.container.querySelector('.no-classes')
 
+            /**
+             * Callback called when the user requests to add a class.
+             * @type {ClassScreen~addClassCallback}
+             */
             this.onAdd = () => {}
+
+            /**
+             * Callback called when the user requests to edit a class.
+             * @type {ClassScreen~editClassCallback}
+             */
             this.onEdit = (className) => {}
+
+            /**
+             * Callback called when the user selects a class.
+             * @type {ClassScreen~selectClassCallback}
+             */
             this.onSelect = (className) => {}
         }
+        /**
+         * Initializes the screen.
+         * @returns {Promise} Promise indicating completion.
+         */
         initialize() {
-            return new Promise(async (resolve) => {
+            return new Promise((resolve) => {
                 chrome.storage.local.get('rosters', (result) => {
                     const rosters = result.rosters
-                    if (!rosters) {
-                        rosters = {}
-                        await(
-                            new Promise((resolve) => {
-                                chrome.storage.local.set(
-                                    { rosters: rosters },
-                                    () => {
-                                        resolve()
-                                    }
-                                )
-                            })
-                        )
-                    }
                     for (const className in rosters) {
                         const classEl = this.initializeClassElement(className)
                         this.classListEl.appendChild(classEl)
@@ -96,6 +116,11 @@
                 })
             })
         }
+        /**
+         * Initializes a class list item element to append to the class list.
+         * @param {string} className - The name of the class.
+         * @returns {HTMLElement} The class list item element.
+         */
         initializeClassElement(className) {
             const classEl = this.classElTemplate.content.firstElementChild.cloneNode(
                 true
@@ -127,11 +152,20 @@
             MDCRipple.attachTo(classEl)
             return classEl
         }
+        /**
+         * Adds a class to the screen.
+         * @param {string} className - The name of the class.
+         */
         addClass(className) {
             const classEl = this.initializeClassElement(className)
             this.classListEl.appendChild(classEl)
             this.noClassesEl.style.display = 'none'
         }
+        /**
+         * Renames a class in the screen.
+         * @param {string} oldClassName - The name of the class to rename.
+         * @param {string} newClassName - The new name to rename the class to.
+         */
         renameClass(oldClassName, newClassName) {
             const classElId = this.classIdMap.get(oldClassName)
             const classEl = document.getElementById(classElId)
@@ -140,13 +174,17 @@
             this.classIdMap.delete(oldClassName)
             this.classIdMap.set(newClassName, classElId)
         }
+        /**
+         * Deletes a class from the screen.
+         * @param {string} className - The name of the class.
+         * @returns {Promise} Promise indicating completion.
+         */
         deleteClass(className) {
             return new Promise((resolve) => {
                 chrome.storage.local.get(null, (result) => {
                     const rosters = result.rosters
                     delete rosters[className]
                     const items = { rosters: rosters }
-
                     for (const key of Object.keys(result)) {
                         if (
                             result[key].hasOwnProperty('class') &&
@@ -177,7 +215,20 @@
             this.container.hidden = value
         }
     }
+
+    /**
+     * Represents a view that displays the attendance of the participants in the Meet with respect to the selected class.
+     *
+     * @callback StudentScreen~goBackCallback
+     *
+     * @callback StudentScreen~editClassCallback
+     * @param {string} className - The name of the class to be edited.
+     */
     class StudentScreen {
+        /**
+         * Creates and initializes a class screen.
+         * @param {HTMLElement} containerEl - The element that will back the screen.
+         */
         constructor(containerEl) {
             this.container = containerEl
             this.classLabelEl = this.container.querySelector('.class-label')
@@ -271,9 +322,13 @@
                     }
                 },
             })
+            /**
+             * The position of the unlisted students divider on the y-axis of the screen.
+             * @type {number}
+             */
             this.unlistedPos = 0
             this.jumpButtonEl.addEventListener('click', () => {
-                if (this.primed) {
+                if (this.jumpButtonEl.primed) {
                     this.rosterStatusEl.parentElement.scrollTop = this.unlistedPos
                 }
             })
@@ -282,7 +337,7 @@
                     (event.key === ' ' ||
                         event.key === 'Enter' ||
                         event.key === 'Spacebar') &&
-                    this.primed
+                    this.jumpButtonEl.primed
                 ) {
                     this.rosterStatusEl.parentElement.scrollTop = this.unlistedPos
                 }
@@ -330,8 +385,18 @@
                 })
             }
 
+            /**
+             * Callback called when the user requests to go back to the previous screen.
+             * @type {StudentScreen~goBackCallback}
+             */
             this.onBack = () => {}
+
+            /**
+             * Callback called when the user requests to edit the selected class.
+             * @type {StudentScreen~editClassCallback}
+             */
             this.onEdit = (className) => {}
+
             this.container
                 .querySelector('.back')
                 .addEventListener('click', () => {
@@ -343,6 +408,11 @@
                     this.onEdit(this.selectedClass)
                 })
         }
+        /**
+         * Changes the selected class and refreshes the screen.
+         * @param {string} className - The name of the class to choose.
+         * @returns {Promise} Promise indicating completion.
+         */
         chooseClass(className) {
             const code = getMeetCode()
             return new Promise((resolve) => {
@@ -360,13 +430,17 @@
                 })
             })
         }
+        /**
+         * Refreshes the screen with the latest attendance data for the chosen class.
+         * @param {string} className - The name of the class to choose.
+         * @returns {Promise} Promise indicating completion.
+         */
         update() {
             return new Promise((resolve) => {
                 chrome.storage.local.get(null, async (result) => {
                     const meetData = result[getMeetCode()]
                     if (!meetData.hasOwnProperty('class')) {
-                        resolve()
-                        return
+                        return resolve()
                     }
                     const className = meetData.class
                     const attendance = meetData.attendance
@@ -387,77 +461,22 @@
                     let rosterChanged = false
                     for (const name in attendance) {
                         const timestamps = attendance[name]
-                        let inRoster = false
-                        let i = 0
-                        while (!inRoster && i < roster.length) {
-                            const testName = roster[i]
-                            if (
-                                testName
-                                    .replace('|', ' ')
-                                    .trim()
-                                    .toLocaleUpperCase() ===
-                                name
-                                    .replace('|', ' ')
-                                    .trim()
-                                    .toLocaleUpperCase()
-                            ) {
-                                inRoster = true
-                                const minsPresent = Utils.minsPresent(
-                                    timestamps
-                                )
-                                if (
-                                    minsPresent >= result['presence-threshold']
-                                ) {
-                                    if (timestamps.length % 2 === 1) {
-                                        entries.push({
-                                            name: name,
-                                            color: 'green',
-                                            tooltip: 'Present',
-                                            icon: 'check_circle',
-                                            text: `Joined at ${Utils.toTimeString(
-                                                timestamps[0]
-                                            )}`,
-                                            index: 2,
-                                        })
-                                        statusCounts.green++
-                                    } else {
-                                        entries.push({
-                                            name: name,
-                                            color: 'yellow',
-                                            tooltip: 'Previously Present',
-                                            icon: 'watch_later',
-                                            text: `Last seen at ${Utils.toTimeString(
-                                                timestamps[
-                                                    timestamps.length - 1
-                                                ]
-                                            )}`,
-                                            index: 1,
-                                        })
-                                        statusCounts.yellow++
-                                    }
-                                } else {
-                                    entries.push({
-                                        name: name,
-                                        color: 'red',
-                                        tooltip: 'Absent',
-                                        icon: 'cancel',
-                                        text: `Joined at ${Utils.toTimeString(
-                                            timestamps[0]
-                                        )}`,
-                                        index: 0,
-                                    })
-                                    statusCounts.red++
-                                }
-                                if (testName !== name) {
-                                    roster[i] = name
-                                    if (!rosterChanged) {
-                                        rosterChanged = true
-                                    }
-                                }
-                            }
-                            i++
-                        }
-                        if (!inRoster) {
+                        /***
+                         * Two names are considered equivalent if either
+                         * 1. Their calculated first and last names are equal (e.g. Lin, Tyler and Tyler|Lin)
+                         * or
+                         * 2. They are equal without vertical bars (e.g. Wardell|Stephen Curry and Wardell Stephen|Curry)
+                         */
+                        const rosterIndex = roster.findIndex(
+                            (testName) =>
+                                (Utils.compareFirst(testName, name) === 0 &&
+                                    Utils.compareLast(testName, name) === 0) ||
+                                Utils.collator.compare(
+                                    testName.replace('|', ' ').trim(),
+                                    name.replace('|', ' ').trim()
+                                ) === 0
+                        )
+                        if (rosterIndex === -1) {
                             entries.push({
                                 name: name,
                                 color: 'gray',
@@ -469,6 +488,57 @@
                                 index: -1,
                             })
                             statusCounts.gray++
+                            continue
+                        }
+                        const minsPresent = Utils.minsPresent(timestamps)
+                        const matchName = roster[rosterIndex]
+                        /***
+                         * If the roster and attendance names were considered equivalent, but their raw forms are inequal,
+                         * set the name in the roster to the name from the attendance;
+                         * this corrects instances in which the guessed first and last names were incorrect
+                         */
+                        if (matchName !== name) {
+                            roster[rosterIndex] = name
+                            rosterChanged = true
+                        }
+                        if (minsPresent >= result['presence-threshold']) {
+                            if (timestamps.length % 2 === 1) {
+                                entries.push({
+                                    name: name,
+                                    color: 'green',
+                                    tooltip: 'Present',
+                                    icon: 'check_circle',
+                                    text: `Joined at ${Utils.toTimeString(
+                                        timestamps[0]
+                                    )}`,
+                                    index: 2,
+                                })
+                                statusCounts.green++
+                            } else {
+                                entries.push({
+                                    name: name,
+                                    color: 'yellow',
+                                    tooltip: 'Previously Present',
+                                    icon: 'watch_later',
+                                    text: `Last seen at ${Utils.toTimeString(
+                                        timestamps[timestamps.length - 1]
+                                    )}`,
+                                    index: 1,
+                                })
+                                statusCounts.yellow++
+                            }
+                        } else {
+                            entries.push({
+                                name: name,
+                                color: 'red',
+                                tooltip: 'Absent',
+                                icon: 'cancel',
+                                text: `Joined at ${Utils.toTimeString(
+                                    timestamps[0]
+                                )}`,
+                                index: 0,
+                            })
+                            statusCounts.red++
                         }
                     }
                     if (rosterChanged) {
@@ -501,15 +571,16 @@
                         this.jumpButtonEl.primed = false
                     }
                     this.rosterStatusEl.innerHTML = ''
-                    entries.forEach((entry, index) => {
+                    for (let i = 0; i < entries.length; i++) {
+                        const entry = entries[i]
                         if (
                             entry.index === -1 &&
-                            (index === 0 || entries[index - 1].index !== -1)
+                            (i === 0 || entries[i - 1].index !== -1)
                         ) {
                             this.rosterStatusEl.appendChild(
                                 this.unlistedTemplate.content.cloneNode(true)
                             )
-                            this.unlistedPos = 61 * index
+                            this.unlistedPos = 61 * i
 
                             if (!this.jumpButtonEl.primed) {
                                 this.jumpButtonEl.primed = true
@@ -559,7 +630,7 @@
                             })
                         }
                         this.rosterStatusEl.appendChild(entryEl)
-                    })
+                    }
                     if (roster.length > 0) {
                         this.rosterStatusEl.removeChild(
                             this.rosterStatusEl.firstElementChild
@@ -597,6 +668,17 @@
                 })
             })
         }
+        /**
+         * Initializes a student list item element to append to the student list.
+         * @param {Object} entry - The details of the student's attendance status.
+         * @param {number} entry.index - The status index of the entry.
+         * @param {string} entry.name - The student's name.
+         * @param {string} entry.color - The color of the status icon.
+         * @param {string} entry.tooltip - The label for the student's status.
+         * @param {string} entry.icon - The identifier of the status icon.
+         * @param {string} entry.text - The secondary text below the student's name.
+         * @returns {HTMLElement} The student list item element.
+         */
         initializeStudentElement(entry) {
             const metaIcon = entry.index === -1 ? 'add_circle' : 'remove_circle'
             const metaTooltip =
@@ -619,6 +701,11 @@
             metaButton.textContent = metaIcon
             return entryEl
         }
+        /**
+         * Adds students to the roster of the selected class.
+         * @param {...string} names - The names of the students to add.
+         * @returns {Promise} Promise indicating completion.
+         */
         addStudents(...names) {
             return new Promise((resolve) => {
                 chrome.storage.local.get(null, (result) => {
@@ -633,6 +720,11 @@
                 })
             })
         }
+        /**
+         * Removes a student from the roster of the selected class.
+         * @param {string} name - The name of the student to remove.
+         * @returns {Promise} Promise indicating completion.
+         */
         removeStudent(name) {
             return new Promise((resolve) => {
                 chrome.storage.local.get(null, (result) => {
@@ -649,21 +741,21 @@
                 })
             })
         }
+        /**
+         * Undoes the last edit made to the roster of the selected class.
+         * @returns {Promise} Promise indicating completion.
+         */
         undo() {
             return new Promise((resolve) => {
                 if (this.rostersCache == undefined) {
-                    resolve()
-                } else {
-                    chrome.storage.local.set(
-                        { rosters: this.rostersCache },
-                        () => {
-                            this.update().then(() => {
-                                showSnackbar('Undo successful.')
-                                resolve()
-                            })
-                        }
-                    )
+                    return resolve()
                 }
+                chrome.storage.local.set({ rosters: this.rostersCache }, () => {
+                    this.update().then(() => {
+                        showSnackbar('Undo successful.')
+                        resolve()
+                    })
+                })
             })
         }
         get hidden() {
@@ -673,16 +765,41 @@
             this.container.hidden = value
         }
     }
+
+    /**
+     * Represents a view that allows the user to edit the name and roster of a class.
+     *
+     * @callback EditScreen~cancelEditCallback
+     * @param {Object} referrer - The screen that requested the current edit operation.
+     *
+     * @callback EditScreen~saveClassCallback
+     * @param {Object} referrer - The screen that requested the current edit operation.
+     * @param {string} previousClassName - The previous name of the class.
+     * @param {string} className - The new name of the class.
+     */
     class EditScreen {
+        /**
+         * Creates an edit screen.
+         * @param {HTMLElement} containerEl - The element that will back the screen.
+         */
         constructor(containerEl) {
             this.container = containerEl
-            const textFieldEls = this.container.querySelectorAll(
-                '.mdc-text-field'
+            const textFieldEls = this.container.getElementsByClassName(
+                'mdc-text-field'
             )
             this.classNameField = new MDCTextField(textFieldEls[0])
             this.rosterField = new MDCChipSetTextField(textFieldEls[1])
 
+            /**
+             * Callback called when the user cancels the edit operation.
+             * @type {EditScreen~cancelEditCallback}
+             */
             this.onCancel = (referrer) => {}
+
+            /**
+             * Callback called when the user saves the class.
+             * @type {EditScreen~saveClassCallback}
+             */
             this.onSave = (referrer, previousClassName, className) => {}
 
             this.container
@@ -757,6 +874,12 @@
                 .querySelector('.help')
                 .addEventListener('click', iveFallenAndICantGetUp)
         }
+        /**
+         * Begins an edit operation for a class.
+         * @param {Object} referrer - The screen that requested the edit operation.
+         * @param {string} className - The name of the class to edit.
+         * @returns {Promise} Promise indicating completion.
+         */
         startEditing(referrer, className) {
             this.referrer = referrer
             this.classNameField.value = className
@@ -767,9 +890,7 @@
                     const roster = rosters.hasOwnProperty(className)
                         ? rosters[className]
                         : []
-                    this.rosterField.refresh(
-                        roster.map((name) => name.replace('|', ' ').trim())
-                    )
+                    this.rosterField.refresh(roster)
                     resolve()
                 })
             })
@@ -781,6 +902,8 @@
             this.container.hidden = value
         }
     }
+
+    const buttonTray = document.querySelector('.NzPR9b')
 
     const selectDialogEl = document.getElementById('select')
     const selectDialog = new MDCDialog(selectDialogEl)
@@ -821,7 +944,7 @@
     // show selection dialog if necessary
     chrome.storage.local.get(null, (result) => {
         const code = getMeetCode()
-        if (!result.hasOwnProperty(code) && result['show-popup']) {
+        if (!result[code].hasOwnProperty('class') && result['show-popup']) {
             initializeDialog().then(() => {
                 selectDialog.open()
                 selectDialog.scrimClickAction = ''
@@ -860,12 +983,13 @@
                 selectDialogEl.querySelector('.class-list')
             )
             classList.singleSelection = true
+            selectDialog.listen('MDCDialog:closing', initializeCard)
             selectButton.addEventListener('click', () => {
-                initializeCard().then(() => {
-                    const className =
-                        classList.listElements[classList.selectedIndex].name
-                    cardStudentScreen.chooseClass(className)
-                })
+                const className =
+                    classList.listElements[classList.selectedIndex].name
+                cardStudentScreen.chooseClass(className)
+                cardClassScreen.hidden = true
+                cardStudentScreen.hidden = false
             })
 
             const dialogClassScreen = new ClassScreen(
@@ -907,9 +1031,8 @@
                 }
                 referrer.hidden = false
                 dialogEditScreen.hidden = true
-                selectButton.disabled = true
             }
-            deleteButtonEl.operation = (className) => {
+            deleteButtonEl.operation = async (className) => {
                 classList.selectedIndex = -1
                 selectButton.disabled = true
                 dialogClassScreen.deleteClass(className)
@@ -921,6 +1044,7 @@
     }
 
     function initializeCard() {
+        resizeCard()
         return new Promise((resolve) => {
             cardClassScreen.onAdd = () => {
                 cardClassScreen.hidden = true
@@ -964,6 +1088,8 @@
                 if (referrer === cardStudentScreen) {
                     if (previousClassName !== className) {
                         await cardStudentScreen.chooseClass(className)
+                    } else {
+                        await cardStudentScreen.update()
                     }
                 }
                 referrer.hidden = false
@@ -978,16 +1104,14 @@
         })
     }
 
-    const buttonTray = document.querySelector('.NzPR9b')
-
     // DOM observers and event listeners
-    resizeCard()
+
     window.addEventListener('resize', resizeCard)
     new MutationObserver(resizeCard).observe(buttonTray, {
         childList: true,
         subtree: true,
     })
-
+    // Detect when the user leaves the meet and exports if Export on Leave is enabled
     new MutationObserver((mutations, me) => {
         if (document.querySelector('.CX8SS')) {
             chrome.runtime.sendMessage({ data: 'delete-tab' })
@@ -1021,13 +1145,10 @@
     for (let i = bigButtons.length - 2; i <= bigButtons.length - 1; i++) {
         bigButtons[i].addEventListener('click', () => {
             cardEl.style.borderRadius = '8px 0 0 8px'
-            closedObserver.observe(
-                document.getElementsByClassName('mKBhCf')[0],
-                {
-                    childList: true,
-                    subtree: true,
-                }
-            )
+            closedObserver.observe(document.querySelector('.mKBhCf'), {
+                childList: true,
+                subtree: true,
+            })
         })
     }
 
@@ -1043,7 +1164,7 @@
         }
     })
 
-    for (const closeButton of document.querySelectorAll('.close-card')) {
+    for (const closeButton of document.getElementsByClassName('close-card')) {
         closeButton.addEventListener('click', () => {
             cardEl.expanded = false
         })
@@ -1116,7 +1237,7 @@
     })
 
     for (const button of document.getElementsByClassName('mdc-button')) {
-        new MDCRipple(button)
+        MDCRipple.attachTo(button)
     }
     for (const button of document.getElementsByClassName('mdc-icon-button')) {
         const ripple = new MDCRipple(button)
@@ -1186,7 +1307,7 @@
 
     function getMeetCode() {
         return document
-            .getElementsByTagName('c-wiz')[0]
+            .querySelector('c-wiz')
             .getAttribute('data-unresolved-meeting-id')
     }
 

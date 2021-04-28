@@ -1,55 +1,50 @@
 'use strict'
 
-chrome.storage.local.get(null, function (result) {
+chrome.storage.local.get(null, (result) => {
     function initialize() {
         chrome.runtime.sendMessage(
             {
                 data: 'check-active',
             },
-            async function (response) {
-                if (response.ready) {
-                    Utils.log('Initializing extension...')
-                    document.body.insertAdjacentHTML(
-                        'afterbegin',
-                        confirmDeleteDialogHTML
-                    )
-                    document.body.insertAdjacentHTML(
-                        'afterbegin',
-                        selectDialogHTML
-                    )
-                    document.body.insertAdjacentHTML('afterbegin', snackbarHTML)
+            async (response) => {
+                Utils.log('Initializing extension...')
+                document.body.insertAdjacentHTML(
+                    'afterbegin',
+                    confirmDeleteDialogHTML
+                )
+                document.body.insertAdjacentHTML('afterbegin', selectDialogHTML)
+                document.body.insertAdjacentHTML('afterbegin', snackbarHTML)
 
-                    const bar = document.getElementsByClassName('NzPR9b')[0]
-                    bar.insertAdjacentHTML('afterbegin', buttonHTML)
+                const bar = document.querySelector('.NzPR9b')
+                bar.insertAdjacentHTML('afterbegin', buttonHTML)
 
-                    const screen = document.getElementsByClassName('crqnQb')[0]
-                    screen.insertAdjacentHTML('afterbegin', cardHTML)
+                const screen = document.querySelector('.crqnQb')
+                screen.insertAdjacentHTML('afterbegin', cardHTML)
 
-                    const showEveryone = document.querySelector(
-                        '[aria-label="Show everyone"]'
-                    )
-                    if (showEveryone) {
-                        showEveryone.classList.remove('IeuGXd')
-                    }
-
-                    const code = document
-                        .getElementsByTagName('c-wiz')[0]
-                        .getAttribute('data-unresolved-meeting-id')
-
-                    if (!result.hasOwnProperty(code)) {
-                        await addAttendanceBoilerplate(code)
-                    }
-                    if (!result.hasOwnProperty('rosters')) {
-                        await addRosterBoilerplate()
-                    }
-                    instantiate()
+                const showEveryone = document.querySelector(
+                    '[aria-label="Show everyone"]'
+                )
+                if (showEveryone) {
+                    showEveryone.classList.remove('IeuGXd')
                 }
+
+                const code = document
+                    .querySelector('c-wiz')
+                    .getAttribute('data-unresolved-meeting-id')
+
+                if (!result.hasOwnProperty(code)) {
+                    await addAttendanceBoilerplate(code)
+                }
+                if (!result.hasOwnProperty('rosters')) {
+                    await addRosterBoilerplate()
+                }
+                instantiate()
             }
         )
     }
 
     function addAttendanceBoilerplate(code) {
-        return new Promise(function (resolve) {
+        return new Promise((resolve) => {
             chrome.storage.local.set(
                 {
                     [code]: {
@@ -57,7 +52,7 @@ chrome.storage.local.get(null, function (result) {
                         'start-timestamp': ~~(Date.now() / 1000),
                     },
                 },
-                function () {
+                () => {
                     resolve()
                 }
             )
@@ -65,8 +60,8 @@ chrome.storage.local.get(null, function (result) {
     }
 
     function addRosterBoilerplate() {
-        return new Promise(function (resolve) {
-            chrome.storage.local.set({ rosters: {} }, function () {
+        return new Promise((resolve) => {
+            chrome.storage.local.set({ rosters: {} }, () => {
                 resolve()
             })
         })
@@ -77,7 +72,7 @@ chrome.storage.local.get(null, function (result) {
             {
                 data: 'instantiate',
             },
-            function () {
+            () => {
                 Utils.log('Successfully initialized extension.')
             }
         )
@@ -179,7 +174,7 @@ chrome.storage.local.get(null, function (result) {
             <div class="mdc-list-divider" role="separator"></div>
             ${updatesHTML}
             <div class="class-content">
-                <ul class="mdc-list class-list" role="listbox">
+                <ul class="mdc-list class-list">
                     <template id="class-item-template">
                         <li
                             class="mdc-list-item mdc-list-item--class"
@@ -791,7 +786,6 @@ chrome.storage.local.get(null, function (result) {
                             class="mdc-button mdc-button--raised mdc-dialog__button"
                             id="select-button"
                             data-mdc-dialog-action="accept"
-                            data-mdc-dialog-button-default
                             disabled
                         >
                             <div class="mdc-button__ripple"></div>
@@ -859,6 +853,7 @@ chrome.storage.local.get(null, function (result) {
                                 class="mdc-chip-set mdc-chip-set--input"
                                 role="grid"
                             ></div>
+                            <div class="highlighter"></div>
                             <textarea
                                 class="mdc-text-field__input"
                                 rows="6"
@@ -898,7 +893,6 @@ chrome.storage.local.get(null, function (result) {
                         <button
                             type="button"
                             class="mdc-button mdc-button--raised mdc-dialog__button save-class"
-                            data-mdc-dialog-button-default
                         >
                             <div class="mdc-button__ripple"></div>
                             <span class="mdc-button__label">Save</span>
@@ -1041,17 +1035,15 @@ chrome.storage.local.get(null, function (result) {
         </div>
     </div>`
 
-    const readyObserver = new MutationObserver(function (mutations, me) {
-        if (document.getElementsByClassName('c8mVDd')[0]) {
+    new MutationObserver((mutations, me) => {
+        if (document.querySelector('.c8mVDd')) {
             let s = document.createElement('script')
             s.src = chrome.runtime.getURL('js/inject.js')
             document.documentElement.appendChild(s)
             initialize()
             me.disconnect()
         }
-    })
-
-    readyObserver.observe(document.getElementsByClassName('crqnQb')[0], {
+    }).observe(document.querySelector('.crqnQb'), {
         childList: true,
         subtree: true,
     })

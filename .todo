@@ -15,7 +15,8 @@ UI:
     ✔ Ability to paste names into text box @done(20-08-19 12:00)
 
 Backend:
-    ☐ Comprehensive refactor of attendance.js 
+    ✔ Compatibility between "Last, First" names and "First Last" names @started(21-04-26 19:19) @done(21-04-27 21:16) @lasted(1d1h57m40s)
+    ☐ Comprehensive refactor of source code
     ☐ Option to download and upload class rosters @started(21-03-28 17:20)
     ☐ Update to Manifest V3 @high
     ✔ Resolve issues with non-English names @done(21-03-08 22:39)

@@ -2,21 +2,13 @@
 {
     const MDCRipple = mdc.ripple.MDCRipple
     for (const button of document.getElementsByClassName('mdc-button')) {
-        new MDCRipple(button)
+        MDCRipple.attachTo(button)
     }
     const MDCIconButtonToggle = mdc.iconButton.MDCIconButtonToggle
-    // const iconButtonRipple = new MDCRipple(document.querySelector('#lang'));
-    // iconButtonRipple.unbounded = true;
-    // const MDCMenu = mdc.menu.MDCMenu
-    // const menu = new MDCMenu(document.querySelector('.mdc-menu'))
-    // menu.setFixedPosition(true)
-    // document.querySelector('#lang').addEventListener('click', function () {
-    //     menu.open = true
-    // })
 
     const MDCDialog = mdc.dialog.MDCDialog
-    const resetDialog = new MDCDialog(document.querySelector('#reset-dialog'))
-    const clearDialog = new MDCDialog(document.querySelector('#clear-dialog'))
+    const resetDialog = new MDCDialog(document.getElementById('reset-dialog'))
+    const clearDialog = new MDCDialog(document.getElementById('clear-dialog'))
 
     const MDCSnackbar = mdc.snackbar.MDCSnackbar
     const snackbar = new MDCSnackbar(document.querySelector('.mdc-snackbar'))
@@ -40,7 +32,7 @@
     document.getElementById('version').textContent = `Version ${
         chrome.runtime.getManifest().version
     }`
-    const openButton = document.querySelector('#open')
+    const openButton = document.getElementById('open')
 
     let presenceThreshold = 0
     let resetInterval = 12
@@ -52,7 +44,7 @@
             'reset-interval',
             'spreadsheet-id',
         ],
-        function (result) {
+        (result) => {
             if (result.hasOwnProperty('auto-export')) {
                 exportSwitch.checked = result['auto-export']
             } else {
@@ -84,7 +76,7 @@
             if (id == undefined) {
                 openButton.disabled = true
             } else {
-                openButton.addEventListener('click', function () {
+                openButton.addEventListener('click', () => {
                     const url = `https://docs.google.com/spreadsheets/d/${id}`
                     chrome.tabs.create({ url: url })
                 })
@@ -92,18 +84,18 @@
         }
     )
 
-    document.querySelector('#docs').addEventListener('click', function () {
+    document.getElementById('docs').addEventListener('click', () => {
         chrome.tabs.create({
             url: 'https://github.com/tytot/attendance-for-google-meet#usage',
         })
     })
-    document.querySelector('#contact').addEventListener('click', function () {
+    document.getElementById('contact').addEventListener('click', () => {
         chrome.tabs.create({
             url:
                 'mailto:tyleradit@gmail.com?subject=Regarding%20the%20Attendance%20for%20Google%20Meet%20Chrome%20Extension',
         })
     })
-    document.querySelectorAll('.help').forEach((butt) => {
+    for (const butt of document.getElementsByClassName('help')) {
         const iconToggle = new MDCIconButtonToggle(butt)
         iconToggle.listen('MDCIconButtonToggle:change', (event) => {
             const description = butt.parentElement.querySelector('.description')
@@ -113,20 +105,16 @@
                 description.classList.add('collapsed')
             }
         })
+    }
+    document.getElementById('auto-export').addEventListener('click', () => {
+        chrome.storage.local.set({ 'auto-export': exportSwitch.checked })
+    })
+    document.getElementById('show-popup').addEventListener('click', () => {
+        chrome.storage.local.set({ 'show-popup': popupSwitch.checked })
     })
     document
-        .querySelector('#auto-export')
-        .addEventListener('click', function () {
-            chrome.storage.local.set({ 'auto-export': exportSwitch.checked })
-        })
-    document
-        .querySelector('#show-popup')
-        .addEventListener('click', function () {
-            chrome.storage.local.set({ 'show-popup': popupSwitch.checked })
-        })
-    document
-        .querySelector('#presence-threshold')
-        .addEventListener('input', function () {
+        .getElementById('presence-threshold')
+        .addEventListener('input', () => {
             if (
                 thresholdField.value !== '' &&
                 thresholdField.value !== presenceThreshold
@@ -142,27 +130,25 @@
                 }
             }
         })
-    document
-        .querySelector('#reset-interval')
-        .addEventListener('input', function () {
-            if (
-                intervalField.value !== '' &&
-                intervalField.value !== resetInterval
-            ) {
-                const tempInterval = parseFloat(intervalField.value)
-                if (isNaN(tempInterval)) intervalField.value = resetInterval
-                else {
-                    resetInterval = tempInterval
-                    chrome.storage.local.set({
-                        'reset-interval': resetInterval,
-                    })
-                }
+    document.getElementById('reset-interval').addEventListener('input', () => {
+        if (
+            intervalField.value !== '' &&
+            intervalField.value !== resetInterval
+        ) {
+            const tempInterval = parseFloat(intervalField.value)
+            if (isNaN(tempInterval)) intervalField.value = resetInterval
+            else {
+                resetInterval = tempInterval
+                chrome.storage.local.set({
+                    'reset-interval': resetInterval,
+                })
             }
-        })
+        }
+    })
 
-    const moreOptions = document.querySelector('#more-options')
-    const expandButton = document.querySelector('#expand')
-    expandButton.addEventListener('click', function () {
+    const moreOptions = document.getElementById('more-options')
+    const expandButton = document.getElementById('expand')
+    expandButton.addEventListener('click', () => {
         if (moreOptions.classList.contains('collapsed')) {
             moreOptions.classList.remove('collapsed')
             expandButton.querySelector('.mdc-button__label').innerHTML =
@@ -174,9 +160,9 @@
         }
     })
 
-    const refreshButton = document.querySelector('#refresh')
-    refreshButton.addEventListener('click', function () {
-        chrome.storage.local.get('last-token-refresh', function (result) {
+    const refreshButton = document.getElementById('refresh')
+    refreshButton.addEventListener('click', () => {
+        chrome.storage.local.get('last-token-refresh', (result) => {
             const unix = ~~(Date.now() / 1000)
             let valid = true
             if (result.hasOwnProperty('last-token-refresh')) {
@@ -190,10 +176,10 @@
                 try {
                     chrome.identity.getAuthToken(
                         { interactive: false },
-                        function (token) {
+                        (token) => {
                             chrome.identity.removeCachedAuthToken(
                                 { token: token },
-                                function () {
+                                () => {
                                     console.log(`Removed auth token ${token}.`)
                                     snackbar.close()
                                     snackbar.labelText =
@@ -221,48 +207,44 @@
         })
     })
 
-    document.querySelector('#reset').addEventListener('click', function () {
+    document.getElementById('reset').addEventListener('click', () => {
         resetDialog.open()
     })
-    document
-        .querySelector('#confirm-reset')
-        .addEventListener('click', function () {
-            chrome.storage.local.remove('spreadsheet-id', function () {
-                snackbar.close()
-                snackbar.labelText = 'Successfully unlinked spreadsheet.'
-                snackbar.open()
-                openButton.disabled = true
-            })
+    document.getElementById('confirm-reset').addEventListener('click', () => {
+        chrome.storage.local.remove('spreadsheet-id', () => {
+            snackbar.close()
+            snackbar.labelText = 'Successfully unlinked spreadsheet.'
+            snackbar.open()
+            openButton.disabled = true
         })
+    })
 
-    document.querySelector('#clear').addEventListener('click', function () {
+    document.getElementById('clear').addEventListener('click', () => {
         clearDialog.open()
     })
-    document
-        .querySelector('#confirm-clear')
-        .addEventListener('click', function () {
-            chrome.storage.local.get(null, function (result) {
-                for (const key in result) {
-                    if (key !== 'spreadsheet-id') {
-                        chrome.storage.local.remove(key)
-                    }
+    document.getElementById('confirm-clear').addEventListener('click', () => {
+        chrome.storage.local.get(null, (result) => {
+            for (const key in result) {
+                if (key !== 'spreadsheet-id') {
+                    chrome.storage.local.remove(key)
                 }
-                exportSwitch.checked = false
-                popupSwitch.checked = true
-                thresholdField.value = 0
-                intervalField.value = 12
-                chrome.storage.local.set({ 'auto-export': false })
-                chrome.storage.local.set({ 'show-popup': true })
-                chrome.storage.local.set({ 'presence-threshold': 0 })
-                chrome.storage.local.set({ 'reset-interval': 12 })
+            }
+            exportSwitch.checked = false
+            popupSwitch.checked = true
+            thresholdField.value = 0
+            intervalField.value = 12
+            chrome.storage.local.set({ 'auto-export': false })
+            chrome.storage.local.set({ 'show-popup': true })
+            chrome.storage.local.set({ 'presence-threshold': 0 })
+            chrome.storage.local.set({ 'reset-interval': 12 })
 
-                snackbar.close()
-                snackbar.labelText = 'Successfully cleared storage.'
-                snackbar.open()
+            snackbar.close()
+            snackbar.labelText = 'Successfully cleared storage.'
+            snackbar.open()
 
-                chrome.runtime.sendMessage({
-                    data: 'refresh-meets',
-                })
+            chrome.runtime.sendMessage({
+                data: 'refresh-meets',
             })
         })
+    })
 }

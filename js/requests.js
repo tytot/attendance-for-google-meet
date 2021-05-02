@@ -606,7 +606,7 @@ async function generateAttendanceRows(code) {
                 timeIn = '',
                 timeOut = '',
                 joins = 0,
-                minsPresent = 0
+                cumMin = 0
             if (rawData.hasOwnProperty(name)) {
                 const timestamps = rawData[name]
                 const l = timestamps.length
@@ -618,8 +618,8 @@ async function generateAttendanceRows(code) {
                     }
                 }
                 joins = Math.ceil(l / 2)
-                minsPresent = Utils.minsPresent(timestamps)
-                if (present === 'Y' && minsPresent < presenceThreshold) {
+                cumMin = Utils.minsPresent(timestamps)
+                if (present === 'Y' && cumMin < presenceThreshold) {
                     present = 'N'
                 }
             }
@@ -690,7 +690,7 @@ async function generateAttendanceRows(code) {
                     },
                     {
                         userEnteredValue: {
-                            numberValue: minsPresent,
+                            numberValue: cumMin,
                         },
                     },
                 ],

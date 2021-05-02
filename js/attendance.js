@@ -979,10 +979,13 @@
     function initializeDialog() {
         return new Promise((resolve) => {
             const selectButton = document.getElementById('select-button')
-            const classList = new MDCList(
+            let classList = new MDCList(
                 selectDialogEl.querySelector('.class-list')
             )
             classList.singleSelection = true
+            classList.listen('MDCList:action', () => {
+                selectButton.disabled = false
+            })
             selectDialog.listen('MDCDialog:closing', initializeCard)
             selectButton.addEventListener('click', () => {
                 const className =
@@ -1007,13 +1010,6 @@
                 dialogClassScreen.hidden = true
                 dialogEditScreen.hidden = false
                 dialogEditScreen.startEditing(dialogClassScreen, className)
-            }
-            dialogClassScreen.onSelect = () => {
-                if (classList.selectedIndex === -1) {
-                    selectButton.disabled = true
-                } else {
-                    selectButton.disabled = false
-                }
             }
             dialogEditScreen.onCancel = (referrer) => {
                 referrer.hidden = false
@@ -1273,6 +1269,11 @@
                         data: 'delete-meta',
                         codes: codesToDelete,
                     })
+                    await new Promise((resolve) => {
+                        chrome.storage.local.remove(codesToDelete, () => {
+                            resolve()
+                        })
+                    })
                 }
                 const meetData = result[code]
                 const attendance = meetData.attendance
@@ -1295,12 +1296,11 @@
                         }
                     }
                 }
-                chrome.storage.local.remove(codesToDelete, () => {
-                    chrome.storage.local.set({ [code]: meetData }, () =>
+                chrome.storage.local.set({ [code]: meetData }, () => {
+                    cardStudentScreen.update().then(() => {
                         resolve()
-                    )
+                    })
                 })
-                await cardStudentScreen.update()
             })
         })
     }

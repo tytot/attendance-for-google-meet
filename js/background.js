@@ -352,7 +352,7 @@ async function updateSpreadsheet(
         const classMeta = await getMetaByKey(className, token, spreadsheetId)
         notifier.post(port, { progress: 0.15 })
 
-        let sheetId = classMeta.location.sheetId
+        let sheetId
         if (classMeta == null) {
             const spreadsheet = await getSpreadsheet(token, spreadsheetId)
             sheetId =
@@ -365,6 +365,8 @@ async function updateSpreadsheet(
             Utils.log(
                 `Creating new sheet for class ${className}, ID ${sheetId}`
             )
+        } else {
+           sheetId = classMeta.location.sheetId
         }
         const codeMeta = await getMetaByKey(
             `${code}§${sheetId}`,

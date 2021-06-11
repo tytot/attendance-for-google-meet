@@ -12,15 +12,6 @@
     // Establish connection to background page
     const port = chrome.runtime.connect()
 
-    // Listen for attendance data from proxied function
-    window.addEventListener('message', (event) => {
-        if (event.origin !== 'https://meet.google.com') return
-        if (event.data.sender !== 'Ya boi') return
-        if (event.data.attendance) {
-            processAttendance(event.data.attendance)
-        }
-    })
-
     /**
      * Represents a view that displays the user's classes in a list.
      *
@@ -1239,7 +1230,7 @@
         const ripple = new MDCRipple(button)
         ripple.unbounded = true
     }
-
+    
     function processAttendance(names) {
         const code = getMeetCode()
         return new Promise((resolve) => {
@@ -1254,14 +1245,7 @@
                             result['reset-interval'] * 3600
                     ) {
                         codesToDelete.push(key)
-                        if (key !== code) {
-                            delete result[key]
-                        } else {
-                            result[key] = {
-                                attendance: {},
-                                'start-timestamp': timestamp,
-                            }
-                        }
+                        delete result[key]
                     }
                 }
                 if (codesToDelete.length > 0) {
@@ -1275,7 +1259,10 @@
                         })
                     })
                 }
-                const meetData = result[code]
+                const meetData = result[code] || {
+                    attendance: {},
+                    'start-timestamp': timestamp,
+                }
                 const attendance = meetData.attendance
                 meetData.timestamp = timestamp
 
@@ -1297,9 +1284,7 @@
                     }
                 }
                 chrome.storage.local.set({ [code]: meetData }, () => {
-                    cardStudentScreen.update().then(() => {
-                        resolve()
-                    })
+                    resolve()
                 })
             })
         })
@@ -1334,4 +1319,14 @@
             url: 'https://github.com/tytot/attendance-for-google-meet#usage',
         })
     }
+
+    // Listen for attendance data from proxied function
+    window.addEventListener('message', (event) => {
+        if (event.origin !== 'https://meet.google.com') return
+        if (event.data.sender !== 'Ya boi') return
+        processAttendance(event.data.attendance).then(() => {
+            cardStudentScreen.update()
+        })
+        console.log('Updating...')
+    })
 }

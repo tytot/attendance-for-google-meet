@@ -1,4 +1,5 @@
 UI:
+    ✔ Compatibility with new Google Meet UI @done(21-06-30 16:31)
     ✔ Fix glitches with the select class dialog @done(21-05-01 20:06)
     ✔ Expand card on open using transitions @done(21-04-03 13:43)
     ✔ Use O.S. notifications for export on leave @started(21-04-01 17:11) @done(21-04-03 13:44) @lasted(1d20h33m2s)
@@ -17,7 +18,7 @@ UI:
 
 Backend:
     ✔ Compatibility between "Last, First" names and "First Last" names @started(21-04-26 19:19) @done(21-04-27 21:16) @lasted(1d1h57m40s)
-    ☐ Comprehensive refactor of source code
+    ✔ Comprehensive refactor of source code @done(21-06-30 16:31)
     ☐ Option to download and upload class rosters @started(21-03-28 17:20)
     ☐ Update to Manifest V3 @high
     ✔ Resolve issues with non-English names @done(21-03-08 22:39)

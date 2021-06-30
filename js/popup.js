@@ -17,9 +17,9 @@
     const exportSwitch = new MDCSwitch(
         document.querySelector('#auto-export .mdc-switch')
     )
-    const popupSwitch = new MDCSwitch(
-        document.querySelector('#show-popup .mdc-switch')
-    )
+    // const popupSwitch = new MDCSwitch(
+    //     document.querySelector('#show-popup .mdc-switch')
+    // )
 
     const MDCTextField = mdc.textField.MDCTextField
     const thresholdField = new MDCTextField(
@@ -39,7 +39,7 @@
     chrome.storage.local.get(
         [
             'auto-export',
-            'show-popup',
+            // 'show-popup',
             'presence-threshold',
             'reset-interval',
             'spreadsheet-id',
@@ -51,12 +51,12 @@
                 exportSwitch.checked = false
                 chrome.storage.local.set({ 'auto-export': false })
             }
-            if (result.hasOwnProperty('show-popup')) {
-                popupSwitch.checked = result['show-popup']
-            } else {
-                popupSwitch.checked = true
-                chrome.storage.local.set({ 'show-popup': true })
-            }
+            // if (result.hasOwnProperty('show-popup')) {
+            //     popupSwitch.checked = result['show-popup']
+            // } else {
+            //     popupSwitch.checked = true
+            //     chrome.storage.local.set({ 'show-popup': true })
+            // }
             if (result.hasOwnProperty('presence-threshold')) {
                 thresholdField.value = result['presence-threshold']
                 presenceThreshold = result['presence-threshold']
@@ -109,9 +109,9 @@
     document.getElementById('auto-export').addEventListener('click', () => {
         chrome.storage.local.set({ 'auto-export': exportSwitch.checked })
     })
-    document.getElementById('show-popup').addEventListener('click', () => {
-        chrome.storage.local.set({ 'show-popup': popupSwitch.checked })
-    })
+    // document.getElementById('show-popup').addEventListener('click', () => {
+    //     chrome.storage.local.set({ 'show-popup': popupSwitch.checked })
+    // })
     document
         .getElementById('presence-threshold')
         .addEventListener('input', () => {
@@ -160,50 +160,15 @@
         }
     })
 
-    const refreshButton = document.getElementById('refresh')
-    refreshButton.addEventListener('click', () => {
-        chrome.storage.local.get('last-token-refresh', (result) => {
-            const unix = ~~(Date.now() / 1000)
-            let valid = true
-            if (result.hasOwnProperty('last-token-refresh')) {
-                if (unix - result['last-token-refresh'] < 86400) {
-                    valid = false
-                }
-            }
-            if (valid) {
-                chrome.storage.local.set({ 'last-token-refresh': unix })
-                refreshButton.disabled = true
-                try {
-                    chrome.identity.getAuthToken(
-                        { interactive: false },
-                        (token) => {
-                            chrome.identity.removeCachedAuthToken(
-                                { token: token },
-                                () => {
-                                    console.log(`Removed auth token ${token}.`)
-                                    snackbar.close()
-                                    snackbar.labelText =
-                                        'Successfully refreshed auth token.'
-                                    snackbar.open()
-                                    refreshButton.disabled = false
-                                }
-                            )
-                        }
-                    )
-                } catch (error) {
-                    console.log(error)
-                    snackbar.close()
-                    snackbar.labelText =
-                        'An error occurred while refreshing your auth token.'
-                    snackbar.open()
-                    refreshButton.disabled = false
-                }
-            } else {
-                snackbar.close()
-                snackbar.labelText =
-                    'Please wait until tomorrow to refresh your token again.'
-                snackbar.open()
-            }
+    const resetAuthButton = document.getElementById('reset-auth')
+    resetAuthButton.addEventListener('click', () => {
+        resetAuthButton.disabled = true
+        chrome.identity.clearAllCachedAuthTokens(() => {
+            snackbar.close()
+            snackbar.labelText =
+                'Successfully reset authentication flow.'
+            snackbar.open()
+            resetAuthButton.disabled = false
         })
     })
 
@@ -230,11 +195,11 @@
                 }
             }
             exportSwitch.checked = false
-            popupSwitch.checked = true
+            // popupSwitch.checked = true
             thresholdField.value = 0
             intervalField.value = 12
             chrome.storage.local.set({ 'auto-export': false })
-            chrome.storage.local.set({ 'show-popup': true })
+            // chrome.storage.local.set({ 'show-popup': true })
             chrome.storage.local.set({ 'presence-threshold': 0 })
             chrome.storage.local.set({ 'reset-interval': 12 })
 

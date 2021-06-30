@@ -131,8 +131,7 @@ function createHeaders(sheetId) {
                                         bold: true,
                                     },
                                 },
-                                note:
-                                    'Whether or not the student appeared in the meeting.',
+                                note: 'Whether or not the student appeared in the meeting.',
                             },
                             {
                                 userEnteredValue: {
@@ -144,8 +143,7 @@ function createHeaders(sheetId) {
                                         bold: true,
                                     },
                                 },
-                                note:
-                                    'When the student first joined the meeting, or empty if the student never joined.',
+                                note: 'When the student first joined the meeting, or empty if the student never joined.',
                             },
                             {
                                 userEnteredValue: {
@@ -157,8 +155,7 @@ function createHeaders(sheetId) {
                                         bold: true,
                                     },
                                 },
-                                note:
-                                    'When the student left the meeting, or empty if the student was in the meeting at time of export.',
+                                note: 'When the student left the meeting, or empty if the student was in the meeting at time of export.',
                             },
                             {
                                 userEnteredValue: {
@@ -170,8 +167,7 @@ function createHeaders(sheetId) {
                                         bold: true,
                                     },
                                 },
-                                note:
-                                    'How many times the student joined the meeting.',
+                                note: 'How many times the student joined the meeting.',
                             },
                             {
                                 userEnteredValue: {
@@ -183,8 +179,7 @@ function createHeaders(sheetId) {
                                         bold: true,
                                     },
                                 },
-                                note:
-                                    'The cumulative number of minutes that the student was present in the meeting.',
+                                note: 'The cumulative number of minutes that the student was present in the meeting.',
                             },
                         ],
                     },
@@ -551,153 +546,156 @@ const white = {
     alpha: 1,
 }
 async function generateAttendanceRows(code) {
-    chrome.storage.local.get(null, (result) => {
-        const startUnix = result[code]['start-timestamp']
-        const unix = ~~(Date.now() / 1000)
-        const mins = Math.round((unix - startUnix) / 6) / 10
-        const roster = result.rosters[result[code].class]
-        const rawData = result[code].attendance
-        const presenceThreshold = result['presence-threshold'] || 0
+    const result = await new Promise((resolve) => {
+        chrome.storage.local.get(null, (result) => {
+            resolve(result)
+        })
+    })
+    const startUnix = result[code]['start-timestamp']
+    const unix = ~~(Date.now() / 1000)
+    const mins = Math.round((unix - startUnix) / 6) / 10
+    const roster = result.rosters[result[code].class]
+    const rawData = result[code].attendance
+    const presenceThreshold = result['presence-threshold'] || 0
 
-        const dts = Utils.dateTimeString(startUnix, unix)
-        const header = `${dts} (${mins} min): ${code}`
-        const rowData = [
-            {
-                values: [
-                    {
-                        userEnteredValue: {
-                            stringValue: header,
-                        },
-                        userEnteredFormat: {
-                            horizontalAlignment: 'CENTER',
-                            backgroundColor: {
-                                red: 0.95,
-                                green: 0.95,
-                                blue: 0.95,
-                                alpha: 1,
-                            },
-                        },
-                        textFormatRuns: [
-                            {
-                                startIndex: 0,
-                                format: {
-                                    bold: true,
-                                },
-                            },
-                            {
-                                startIndex: header.length - code.length,
-                                format: {
-                                    bold: true,
-                                    italic: true,
-                                },
-                            },
-                        ],
+    const dts = Utils.dateTimeString(startUnix, unix)
+    const header = `${dts} (${mins} min): ${code}`
+    const rowData = [
+        {
+            values: [
+                {
+                    userEnteredValue: {
+                        stringValue: header,
                     },
-                ],
-            },
-        ]
-
-        const names = Array.from(roster)
-        names.sort(Utils.compareLast)
-        for (const name of names) {
-            const firstName = Utils.getFirstName(name)
-            const lastName = Utils.getLastName(name)
-            let present = 'N',
-                timeIn = '',
-                timeOut = '',
-                joins = 0,
-                cumMin = 0
-            if (rawData.hasOwnProperty(name)) {
-                const timestamps = rawData[name]
-                const l = timestamps.length
-                if (l > 0) {
-                    present = 'Y'
-                    timeIn = Utils.toTimeString(timestamps[0])
-                    if ((l - 1) % 2 === 1) {
-                        timeOut = Utils.toTimeString(timestamps[l - 1])
-                    }
-                }
-                joins = Math.ceil(l / 2)
-                cumMin = Utils.minsPresent(timestamps)
-                if (present === 'Y' && cumMin < presenceThreshold) {
-                    present = 'N'
-                }
-            }
-
-            rowData.push({
-                values: [
-                    {
-                        userEnteredValue: {
-                            stringValue: lastName,
+                    userEnteredFormat: {
+                        horizontalAlignment: 'CENTER',
+                        backgroundColor: {
+                            red: 0.95,
+                            green: 0.95,
+                            blue: 0.95,
+                            alpha: 1,
                         },
                     },
-                    {
-                        userEnteredValue: {
-                            stringValue: firstName,
-                        },
-                    },
-                    {
-                        userEnteredValue: {
-                            stringValue: present,
-                        },
-                        userEnteredFormat: {
-                            backgroundColor: present === 'N' ? red : green,
-                            borders: {
-                                top: {
-                                    style: 'SOLID',
-                                    color: white,
-                                },
-                                bottom: {
-                                    style: 'SOLID',
-                                    color: white,
-                                },
-                            },
-                            horizontalAlignment: 'CENTER',
-                            textFormat: {
-                                foregroundColor: white,
+                    textFormatRuns: [
+                        {
+                            startIndex: 0,
+                            format: {
                                 bold: true,
                             },
                         },
-                    },
-                    {
-                        userEnteredValue: {
-                            stringValue: timeIn,
-                        },
-                        userEnteredFormat: {
-                            horizontalAlignment: 'RIGHT',
-                            numberFormat: {
-                                type: 'TIME',
-                                pattern: 'hh:mm A/P"M"',
+                        {
+                            startIndex: header.length - code.length,
+                            format: {
+                                bold: true,
+                                italic: true,
                             },
                         },
-                    },
-                    {
-                        userEnteredValue: {
-                            stringValue: timeOut,
-                        },
-                        userEnteredFormat: {
-                            horizontalAlignment: 'RIGHT',
-                            numberFormat: {
-                                type: 'TIME',
-                                pattern: 'hh:mm A/P"M"',
-                            },
-                        },
-                    },
-                    {
-                        userEnteredValue: {
-                            numberValue: joins,
-                        },
-                    },
-                    {
-                        userEnteredValue: {
-                            numberValue: cumMin,
-                        },
-                    },
-                ],
-            })
+                    ],
+                },
+            ],
+        },
+    ]
+
+    const names = Array.from(roster)
+    names.sort(Utils.compareLast)
+    for (const name of names) {
+        const firstName = Utils.getFirstName(name)
+        const lastName = Utils.getLastName(name)
+        let present = 'N',
+            timeIn = '',
+            timeOut = '',
+            joins = 0,
+            cumMin = 0
+        if (rawData.hasOwnProperty(name)) {
+            const timestamps = rawData[name]
+            const l = timestamps.length
+            if (l > 0) {
+                present = 'Y'
+                timeIn = Utils.toTimeString(timestamps[0])
+                if ((l - 1) % 2 === 1) {
+                    timeOut = Utils.toTimeString(timestamps[l - 1])
+                }
+            }
+            joins = Math.ceil(l / 2)
+            cumMin = Utils.minsPresent(timestamps)
+            if (present === 'Y' && cumMin < presenceThreshold) {
+                present = 'N'
+            }
         }
-        return rowData
-    })
+
+        rowData.push({
+            values: [
+                {
+                    userEnteredValue: {
+                        stringValue: lastName,
+                    },
+                },
+                {
+                    userEnteredValue: {
+                        stringValue: firstName,
+                    },
+                },
+                {
+                    userEnteredValue: {
+                        stringValue: present,
+                    },
+                    userEnteredFormat: {
+                        backgroundColor: present === 'N' ? red : green,
+                        borders: {
+                            top: {
+                                style: 'SOLID',
+                                color: white,
+                            },
+                            bottom: {
+                                style: 'SOLID',
+                                color: white,
+                            },
+                        },
+                        horizontalAlignment: 'CENTER',
+                        textFormat: {
+                            foregroundColor: white,
+                            bold: true,
+                        },
+                    },
+                },
+                {
+                    userEnteredValue: {
+                        stringValue: timeIn,
+                    },
+                    userEnteredFormat: {
+                        horizontalAlignment: 'RIGHT',
+                        numberFormat: {
+                            type: 'TIME',
+                            pattern: 'hh:mm A/P"M"',
+                        },
+                    },
+                },
+                {
+                    userEnteredValue: {
+                        stringValue: timeOut,
+                    },
+                    userEnteredFormat: {
+                        horizontalAlignment: 'RIGHT',
+                        numberFormat: {
+                            type: 'TIME',
+                            pattern: 'hh:mm A/P"M"',
+                        },
+                    },
+                },
+                {
+                    userEnteredValue: {
+                        numberValue: joins,
+                    },
+                },
+                {
+                    userEnteredValue: {
+                        numberValue: cumMin,
+                    },
+                },
+            ],
+        })
+    }
+    return rowData
 }
 
 function getSpreadsheetTheme() {

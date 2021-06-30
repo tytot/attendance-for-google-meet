@@ -97,9 +97,6 @@
                                 }
                             )
                         })
-                    this.container
-                        .querySelector('.help')
-                        .addEventListener('click', iveFallenAndICantGetUp)
                     if (this.classEls.length === 0) {
                         this.noClassesEl.style.display = 'flex'
                     }
@@ -113,9 +110,8 @@
          * @returns {HTMLElement} The class list item element.
          */
         initializeClassElement(className) {
-            const classEl = this.classElTemplate.content.firstElementChild.cloneNode(
-                true
-            )
+            const classEl =
+                this.classElTemplate.content.firstElementChild.cloneNode(true)
             const id = `baker-mayfield-${++this.classCounter}`
             classEl.id = id
             this.classIdMap.set(className, id)
@@ -217,15 +213,13 @@
      */
     class StudentScreen {
         /**
-         * Creates and initializes a class screen.
+         * Creates and initializes a student screen.
          * @param {HTMLElement} containerEl - The element that will back the screen.
          */
         constructor(containerEl) {
             this.container = containerEl
-            this.classLabelEl = this.container.querySelector('.class-label')
-            this.cardContentEl = this.container.querySelector(
-                '.mdc-card-content'
-            )
+            this.contentEl = this.container.querySelector('.student-content')
+            this.classHeaderEl = this.container.querySelector('.class-header')
             this.noStudentsEl = this.container.querySelector('.no-students')
             this.rosterStatusEl = document.getElementById('roster-status')
             this.unlistedTemplate = document.getElementById('unlisted-template')
@@ -320,7 +314,8 @@
             this.unlistedPos = 0
             this.jumpButtonEl.addEventListener('click', () => {
                 if (this.jumpButtonEl.primed) {
-                    this.rosterStatusEl.parentElement.scrollTop = this.unlistedPos
+                    this.rosterStatusEl.parentElement.scrollTop =
+                        this.unlistedPos
                 }
             })
             this.jumpButtonEl.addEventListener('keydown', (event) => {
@@ -330,7 +325,8 @@
                         event.key === 'Spacebar') &&
                     this.jumpButtonEl.primed
                 ) {
-                    this.rosterStatusEl.parentElement.scrollTop = this.unlistedPos
+                    this.rosterStatusEl.parentElement.scrollTop =
+                        this.unlistedPos
                 }
             })
 
@@ -393,8 +389,8 @@
                 .addEventListener('click', () => {
                     this.onBack()
                 })
-            document
-                .getElementById('edit-roster')
+            this.container
+                .querySelector('.edit-roster')
                 .addEventListener('click', () => {
                     this.onEdit(this.selectedClass)
                 })
@@ -411,8 +407,8 @@
                     const meetData = result[code]
                     meetData.class = className
                     chrome.storage.local.set({ [code]: meetData }, () => {
-                        this.classLabelEl.textContent = className
-                        this.cardContentEl.scrollTop = 0
+                        this.contentEl.scrollTop = 0
+                        this.classHeaderEl.textContent = className
                         this.selectedClass = className
                         this.update().then(() => {
                             resolve()
@@ -423,7 +419,6 @@
         }
         /**
          * Refreshes the screen with the latest attendance data for the chosen class.
-         * @param {string} className - The name of the class to choose.
          * @returns {Promise} Promise indicating completion.
          */
         update() {
@@ -593,9 +588,8 @@
                                 })
                         }
                         const entryEl = this.initializeStudentElement(entry)
-                        const metaButton = entryEl.querySelector(
-                            '.mdc-icon-button'
-                        )
+                        const metaButton =
+                            entryEl.querySelector('.mdc-icon-button')
                         const displayName = entryEl.querySelector(
                             '.mdc-list-item__primary-text'
                         ).textContent
@@ -680,9 +674,8 @@
             statusIcon.classList.add(entry.color)
             statusIcon.setAttribute('aria-label', entry.tooltip)
             statusIcon.setAttribute('data-tooltip', entry.tooltip)
-            entryEl.querySelector(
-                '.mdc-list-item__primary-text'
-            ).textContent = realName
+            entryEl.querySelector('.mdc-list-item__primary-text').textContent =
+                realName
             entryEl.querySelector(
                 '.mdc-list-item__secondary-text'
             ).textContent = entry.text
@@ -775,9 +768,8 @@
          */
         constructor(containerEl) {
             this.container = containerEl
-            const textFieldEls = this.container.getElementsByClassName(
-                'mdc-text-field'
-            )
+            const textFieldEls =
+                this.container.getElementsByClassName('mdc-text-field')
             this.classNameField = new MDCTextField(textFieldEls[0])
             this.rosterField = new MDCChipSetTextField(textFieldEls[1])
 
@@ -861,9 +853,6 @@
                 .addEventListener('click', () => {
                     this.onCancel(this.referrer)
                 })
-            this.container
-                .querySelector('.help')
-                .addEventListener('click', iveFallenAndICantGetUp)
         }
         /**
          * Begins an edit operation for a class.
@@ -894,58 +883,32 @@
         }
     }
 
-    const buttonTray = document.querySelector('.NzPR9b')
+    // const selectDialogEl = document.getElementById('select')
+    // const selectDialog = new MDCDialog(selectDialogEl)
 
-    const selectDialogEl = document.getElementById('select')
-    const selectDialog = new MDCDialog(selectDialogEl)
-
-    const cardEl = document.getElementById('card')
-    function toggleCard() {
-        cardEl.expanded = !cardEl.expanded
-    }
-    function resizeCard() {
-        if (buttonTray) {
-            cardEl.style.width = buttonTray.offsetWidth + 'px'
-        }
-    }
-    Object.defineProperty(cardEl, 'expanded', {
-        get: function () {
-            return !this.classList.contains('collapsed')
-        },
-        set: function (value) {
-            if (value) {
-                buttonTray.style.borderRadius = '0px'
-                attendanceButton.classList.remove('IeuGXd')
-                cardEl.classList.remove('collapsed')
-            } else {
-                setTimeout(() => {
-                    buttonTray.style.borderRadius = '0 0 0 8px'
-                }, 250)
-                attendanceButton.classList.add('IeuGXd')
-                cardEl.classList.add('collapsed')
-            }
-        },
-    })
-    const cardClassScreen = new ClassScreen(cardEl.querySelector('.class-view'))
-    const cardStudentScreen = new StudentScreen(
-        cardEl.querySelector('.student-view')
+    const panelEl = document.getElementById('panel')
+    const panelClassScreen = new ClassScreen(
+        panelEl.querySelector('.class-view')
     )
-    const cardEditScreen = new EditScreen(cardEl.querySelector('.edit-view'))
+    const panelStudentScreen = new StudentScreen(
+        panelEl.querySelector('.student-view')
+    )
+    const panelEditScreen = new EditScreen(panelEl.querySelector('.edit-view'))
 
     // show selection dialog if necessary
-    chrome.storage.local.get(null, (result) => {
-        const code = getMeetCode()
-        if (!result[code].hasOwnProperty('class') && result['show-popup']) {
-            initializeDialog().then(() => {
-                selectDialog.open()
-                selectDialog.scrimClickAction = ''
-                selectDialog.escapeKeyAction = ''
-                selectDialog.autoStackButtons = false
-            })
-        } else {
-            initializeCard()
-        }
-    })
+    // chrome.storage.local.get(null, (result) => {
+    //     const code = getMeetCode()
+    //     if (!result[code].hasOwnProperty('class') && result['show-popup']) {
+    //         initializeDialog().then(() => {
+    //             selectDialog.open()
+    //             selectDialog.scrimClickAction = ''
+    //             selectDialog.escapeKeyAction = ''
+    //             selectDialog.autoStackButtons = false
+    //         })
+    //     } else {
+    //         initializePanel()
+    //     }
+    // })
 
     const confirmDeleteDialog = new MDCDialog(
         document.getElementById('delete-dialog')
@@ -954,7 +917,7 @@
     confirmDeleteDialog.listen('MDCDialog:opening', () => {
         document.getElementById(
             'delete-dialog-content'
-        ).textContent = `Are you sure you want to delete the class ${deleteButtonEl.classToDelete}?`
+        ).innerHTML = `Are you sure you want to delete the class <b>${deleteButtonEl.classToDelete}</b>?`
     })
     function confirmDelete(className) {
         deleteButtonEl.classToDelete = className
@@ -967,137 +930,146 @@
         })
     })
 
-    function initializeDialog() {
-        return new Promise((resolve) => {
-            const selectButton = document.getElementById('select-button')
-            let classList = new MDCList(
-                selectDialogEl.querySelector('.class-list')
-            )
-            classList.singleSelection = true
-            classList.listen('MDCList:action', () => {
-                selectButton.disabled = false
-            })
-            selectDialog.listen('MDCDialog:closing', initializeCard)
-            selectButton.addEventListener('click', () => {
-                const className =
-                    classList.listElements[classList.selectedIndex].name
-                cardStudentScreen.chooseClass(className)
-                cardClassScreen.hidden = true
-                cardStudentScreen.hidden = false
-            })
+    initializePanel()
 
-            const dialogClassScreen = new ClassScreen(
-                selectDialogEl.querySelector('.class-view')
-            )
-            const dialogEditScreen = new EditScreen(
-                selectDialogEl.querySelector('.edit-view')
-            )
-            dialogClassScreen.onAdd = () => {
-                dialogClassScreen.hidden = true
-                dialogEditScreen.hidden = false
-                dialogEditScreen.startEditing(dialogClassScreen, '')
-            }
-            dialogClassScreen.onEdit = (className) => {
-                dialogClassScreen.hidden = true
-                dialogEditScreen.hidden = false
-                dialogEditScreen.startEditing(dialogClassScreen, className)
-            }
-            dialogEditScreen.onCancel = (referrer) => {
-                referrer.hidden = false
-                dialogEditScreen.hidden = true
-            }
-            dialogEditScreen.onSave = (
-                referrer,
-                previousClassName,
-                className
-            ) => {
-                if (previousClassName === '') {
-                    dialogClassScreen.addClass(className)
-                } else if (previousClassName !== className) {
-                    dialogClassScreen.renameClass(previousClassName, className)
-                }
-                referrer.hidden = false
-                dialogEditScreen.hidden = true
-            }
-            deleteButtonEl.operation = async (className) => {
-                classList.selectedIndex = -1
-                selectButton.disabled = true
-                dialogClassScreen.deleteClass(className)
-            }
-            dialogClassScreen.initialize().then(() => {
-                resolve()
-            })
-        })
-    }
+    // function initializeDialog() {
+    //     return new Promise((resolve) => {
+    //         const selectButton = document.getElementById('select-button')
+    //         let classList = new MDCList(
+    //             selectDialogEl.querySelector('.class-list')
+    //         )
+    //         classList.singleSelection = true
+    //         classList.listen('MDCList:action', () => {
+    //             selectButton.disabled = false
+    //         })
+    //         selectDialog.listen('MDCDialog:closing', initializePanel)
+    //         selectButton.addEventListener('click', () => {
+    //             const className =
+    //                 classList.listElements[classList.selectedIndex].name
+    //             panelStudentScreen.chooseClass(className)
+    //             panelClassScreen.hidden = true
+    //             panelStudentScreen.hidden = false
+    //         })
 
-    function initializeCard() {
-        resizeCard()
+    //         const dialogClassScreen = new ClassScreen(
+    //             selectDialogEl.querySelector('.class-view')
+    //         )
+    //         const dialogEditScreen = new EditScreen(
+    //             selectDialogEl.querySelector('.edit-view')
+    //         )
+    //         dialogClassScreen.onAdd = () => {
+    //             dialogClassScreen.hidden = true
+    //             dialogEditScreen.hidden = false
+    //             dialogEditScreen.startEditing(dialogClassScreen, '')
+    //         }
+    //         dialogClassScreen.onEdit = (className) => {
+    //             dialogClassScreen.hidden = true
+    //             dialogEditScreen.hidden = false
+    //             dialogEditScreen.startEditing(dialogClassScreen, className)
+    //         }
+    //         dialogEditScreen.onCancel = (referrer) => {
+    //             referrer.hidden = false
+    //             dialogEditScreen.hidden = true
+    //         }
+    //         dialogEditScreen.onSave = (
+    //             referrer,
+    //             previousClassName,
+    //             className
+    //         ) => {
+    //             if (previousClassName === '') {
+    //                 dialogClassScreen.addClass(className)
+    //             } else if (previousClassName !== className) {
+    //                 dialogClassScreen.renameClass(previousClassName, className)
+    //             }
+    //             referrer.hidden = false
+    //             dialogEditScreen.hidden = true
+    //         }
+    //         deleteButtonEl.operation = async (className) => {
+    //             classList.selectedIndex = -1
+    //             selectButton.disabled = true
+    //             dialogClassScreen.deleteClass(className)
+    //         }
+    //         dialogClassScreen.initialize().then(() => {
+    //             resolve()
+    //         })
+    //     })
+    // }
+
+    function initializePanel() {
+        document
+            .getElementById('panel')
+            .querySelector('.help')
+            .addEventListener('click', iveFallenAndICantGetUp)
         return new Promise((resolve) => {
-            cardClassScreen.onAdd = () => {
-                cardClassScreen.hidden = true
-                cardEditScreen.hidden = false
-                cardEditScreen.startEditing(cardClassScreen, '')
+            panelClassScreen.onAdd = () => {
+                panelClassScreen.hidden = true
+                panelEditScreen.hidden = false
+                panelEditScreen.startEditing(panelClassScreen, '')
             }
-            cardClassScreen.onEdit = (className) => {
-                cardClassScreen.hidden = true
-                cardEditScreen.hidden = false
-                cardEditScreen.startEditing(cardClassScreen, className)
+            panelClassScreen.onEdit = (className) => {
+                panelClassScreen.hidden = true
+                panelEditScreen.hidden = false
+                panelEditScreen.startEditing(panelClassScreen, className)
             }
-            cardClassScreen.onSelect = (className) => {
-                cardStudentScreen.chooseClass(className).then(() => {
-                    cardClassScreen.hidden = true
-                    cardStudentScreen.hidden = false
+            panelClassScreen.onSelect = (className) => {
+                panelStudentScreen.chooseClass(className).then(() => {
+                    panelClassScreen.hidden = true
+                    panelStudentScreen.hidden = false
                 })
             }
-            cardStudentScreen.onBack = () => {
-                cardClassScreen.hidden = false
-                cardStudentScreen.hidden = true
+            panelStudentScreen.onBack = () => {
+                panelClassScreen.hidden = false
+                panelStudentScreen.hidden = true
             }
-            cardStudentScreen.onEdit = (className) => {
-                cardStudentScreen.hidden = true
-                cardEditScreen.hidden = false
-                cardEditScreen.startEditing(cardStudentScreen, className)
+            panelStudentScreen.onEdit = (className) => {
+                panelStudentScreen.hidden = true
+                panelEditScreen.hidden = false
+                panelEditScreen.startEditing(panelStudentScreen, className)
             }
-            cardEditScreen.onCancel = (referrer) => {
+            panelEditScreen.onCancel = (referrer) => {
                 referrer.hidden = false
-                cardEditScreen.hidden = true
+                panelEditScreen.hidden = true
             }
-            cardEditScreen.onSave = async (
+            panelEditScreen.onSave = async (
                 referrer,
                 previousClassName,
                 className
             ) => {
                 if (previousClassName === '') {
-                    cardClassScreen.addClass(className)
+                    panelClassScreen.addClass(className)
                 } else if (previousClassName !== className) {
-                    cardClassScreen.renameClass(previousClassName, className)
+                    panelClassScreen.renameClass(previousClassName, className)
                 }
-                if (referrer === cardStudentScreen) {
+                if (referrer === panelStudentScreen) {
                     if (previousClassName !== className) {
-                        await cardStudentScreen.chooseClass(className)
+                        await panelStudentScreen.chooseClass(className)
                     } else {
-                        await cardStudentScreen.update()
+                        await panelStudentScreen.update()
                     }
                 }
                 referrer.hidden = false
-                cardEditScreen.hidden = true
+                panelEditScreen.hidden = true
             }
-            deleteButtonEl.operation = cardClassScreen.deleteClass.bind(
-                cardClassScreen
-            )
-            cardClassScreen.initialize().then(() => {
-                resolve()
+            deleteButtonEl.operation =
+                panelClassScreen.deleteClass.bind(panelClassScreen)
+            panelClassScreen.initialize().then(() => {
+                const code = getMeetCode()
+                chrome.storage.local.get(code, (result) => {
+                    if (
+                        result.hasOwnProperty(code) &&
+                        result[code].hasOwnProperty('class')
+                    ) {
+                        panelClassScreen.hidden = true
+                        panelStudentScreen.hidden = false
+                        console.log(result[code].class)
+                        panelStudentScreen.chooseClass(result[code].class)
+                    }
+                    resolve()
+                })
             })
         })
     }
 
-    // DOM observers and event listeners
-
-    window.addEventListener('resize', resizeCard)
-    new MutationObserver(resizeCard).observe(buttonTray, {
-        childList: true,
-        subtree: true,
-    })
     // Detect when the user leaves the meet and exports if Export on Leave is enabled
     new MutationObserver((mutations, me) => {
         if (document.querySelector('.CX8SS')) {
@@ -1105,7 +1077,6 @@
             chrome.storage.local.get('auto-export', (result) => {
                 if (result['auto-export']) {
                     port.postMessage({ data: 'export', code: getMeetCode() })
-                    Utils.log(`Exporting...`)
                 }
                 me.disconnect()
             })
@@ -1115,53 +1086,10 @@
         subtree: true,
     })
 
-    const closedObserver = new MutationObserver((mutations, me) => {
-        if (
-            !document.querySelector(
-                '.VfPpkd-Bz112c-LgbsSe.yHy1rc.eT1oJ.IWtuld.wBYOYb'
-            )
-        ) {
-            cardEl.style.borderRadius = '0 0 0 8px'
-            me.disconnect()
-        }
-    })
-
-    const bigButtons = [...buttonTray.children].filter((child) =>
-        child.classList.contains('uArJ5e')
-    )
-    for (let i = bigButtons.length - 2; i <= bigButtons.length - 1; i++) {
-        bigButtons[i].addEventListener('click', () => {
-            cardEl.style.borderRadius = '8px 0 0 8px'
-            closedObserver.observe(document.querySelector('.mKBhCf'), {
-                childList: true,
-                subtree: true,
-            })
-        })
-    }
-
-    const attendanceButton = document.getElementById('attendance')
-    attendanceButton.addEventListener('click', toggleCard)
-    attendanceButton.addEventListener('keydown', (event) => {
-        if (
-            event.key === ' ' ||
-            event.key === 'Enter' ||
-            event.key === 'Spacebar'
-        ) {
-            toggleCard()
-        }
-    })
-
-    for (const closeButton of document.getElementsByClassName('close-card')) {
-        closeButton.addEventListener('click', () => {
-            cardEl.expanded = false
-        })
-    }
-
     const exportButton = document.getElementById('export')
     exportButton.addEventListener('click', () => {
         port.postMessage({ data: 'export', code: getMeetCode() })
         exportButton.disabled = true
-        Utils.log(`Exporting...`)
     })
 
     // snackbar management
@@ -1174,7 +1102,7 @@
     snackbarButtons.help.addEventListener('click', troubleshoot)
     snackbarButtons.open.addEventListener('click', openSpreadsheet)
     snackbarButtons.undo.addEventListener('click', () => {
-        cardStudentScreen.undo()
+        panelStudentScreen.undo()
     })
 
     let expectedLabel = ''
@@ -1230,7 +1158,7 @@
         const ripple = new MDCRipple(button)
         ripple.unbounded = true
     }
-    
+
     function processAttendance(names) {
         const code = getMeetCode()
         return new Promise((resolve) => {
@@ -1309,8 +1237,7 @@
     function troubleshoot() {
         chrome.runtime.sendMessage({
             data: 'open-url',
-            url:
-                'https://github.com/tytot/attendance-for-google-meet#troubleshoot',
+            url: 'https://github.com/tytot/attendance-for-google-meet#troubleshoot',
         })
     }
     function iveFallenAndICantGetUp() {
@@ -1325,8 +1252,8 @@
         if (event.origin !== 'https://meet.google.com') return
         if (event.data.sender !== 'Ya boi') return
         processAttendance(event.data.attendance).then(() => {
-            cardStudentScreen.update()
+            panelStudentScreen.update()
         })
-        console.log('Updating...')
+        // console.log('Updating...')
     })
 }

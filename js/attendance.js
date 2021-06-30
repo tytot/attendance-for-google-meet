@@ -1,5 +1,6 @@
-;(function () {
-    // initialize material design components
+'use strict'
+{
+    // Initialize material design components
     const MDCRipple = mdc.ripple.MDCRipple
     const MDCList = mdc.list.MDCList
     const MDCDialog = mdc.dialog.MDCDialog
@@ -7,51 +8,1075 @@
     const MDCSnackbar = mdc.snackbar.MDCSnackbar
     const MDCLinearProgress = mdc.linearProgress.MDCLinearProgress
     const MDCTextField = mdc.textField.MDCTextField
-    const MDCChipSet = mdc.chips.MDCChipSet
 
-    // connect to background page
-    let port = chrome.runtime.connect()
+    // Establish connection to background page
+    const port = chrome.runtime.connect()
 
-    let rostersCache = null
-    let sortMethod = 'lastName'
-    let classTextField, stuTextFieldEl, stuTextField, chipSetEl, chipSet
+    /**
+     * Represents a view that displays the user's classes in a list.
+     *
+     * @callback ClassScreen~addClassCallback
+     *
+     * @callback ClassScreen~editClassCallback
+     * @param {string} className - The name of the class to be edited.
+     *
+     * @callback ClassScreen~selectClassCallback
+     * @param {string} className - The name of the selected class.
+     */
+    class ClassScreen {
+        /**
+         * Creates a class screen.
+         * @param {HTMLElement} containerEl - The element that will back the screen.
+         */
+        constructor(containerEl) {
+            this.container = containerEl
+            this.classEls = []
+            this.classCounter = 0
+            this.classElTemplate = document.getElementById(
+                'class-item-template'
+            )
+            this.classListEl = this.container.querySelector('.class-list')
+            this.classIdMap = new Map()
+            this.noClassesEl = this.container.querySelector('.no-classes')
 
-    // listen for attendance messages from inject.js
-    window.addEventListener('message', function (event) {
-        if (event.origin !== 'https://meet.google.com') return
-        if (event.data.sender !== 'Ya boi') return
-        if (event.data.attendance) {
-            storeNames(event.data.attendance)
+            /**
+             * Callback called when the user requests to add a class.
+             * @type {ClassScreen~addClassCallback}
+             */
+            this.onAdd = () => {}
+
+            /**
+             * Callback called when the user requests to edit a class.
+             * @type {ClassScreen~editClassCallback}
+             */
+            this.onEdit = (className) => {}
+
+            /**
+             * Callback called when the user selects a class.
+             * @type {ClassScreen~selectClassCallback}
+             */
+            this.onSelect = (className) => {}
         }
-    })
-
-    document.querySelectorAll('.view-changelog').forEach((element) => {
-        element.addEventListener('click', () => {
-            chrome.runtime.sendMessage({
-                data: 'open-url',
-                url: `https://github.com/tytot/attendance-for-google-meet/releases/tag/v${
-                    chrome.runtime.getManifest().version
-                }`,
+        /**
+         * Initializes the screen.
+         * @returns {Promise} Promise indicating completion.
+         */
+        initialize() {
+            return new Promise((resolve) => {
+                chrome.storage.local.get('rosters', (result) => {
+                    const rosters = result.rosters
+                    for (const className in rosters) {
+                        const classEl = this.initializeClassElement(className)
+                        this.classListEl.appendChild(classEl)
+                        this.classEls.push(classEl)
+                    }
+                    this.container
+                        .querySelector('.addeth-class')
+                        .addEventListener('click', () => {
+                            this.onAdd()
+                        })
+                    this.container
+                        .querySelector('.view-changelog')
+                        .addEventListener('click', () => {
+                            chrome.runtime.sendMessage({
+                                data: 'open-url',
+                                url: `https://github.com/tytot/attendance-for-google-meet/releases/tag/v${
+                                    chrome.runtime.getManifest().version
+                                }`,
+                            })
+                        })
+                    this.container
+                        .querySelector('.dismiss-updates')
+                        .addEventListener('click', () => {
+                            chrome.storage.local.set(
+                                { 'updates-dismissed': true },
+                                () => {
+                                    this.container
+                                        .querySelector('.updates')
+                                        .classList.add('collapsed')
+                                }
+                            )
+                        })
+                    if (this.classEls.length === 0) {
+                        this.noClassesEl.style.display = 'flex'
+                    }
+                    resolve()
+                })
             })
+        }
+        /**
+         * Initializes a class list item element to append to the class list.
+         * @param {string} className - The name of the class.
+         * @returns {HTMLElement} The class list item element.
+         */
+        initializeClassElement(className) {
+            const classEl =
+                this.classElTemplate.content.firstElementChild.cloneNode(true)
+            const id = `baker-mayfield-${++this.classCounter}`
+            classEl.id = id
+            this.classIdMap.set(className, id)
+            classEl.querySelector('.class-entry').textContent = className
+            classEl.name = className
+            classEl
+                .querySelector('.delete-class')
+                .addEventListener('click', () => {
+                    confirmDelete(className)
+                })
+            classEl
+                .querySelector('.edit-class')
+                .addEventListener('click', () => {
+                    this.onEdit(classEl.name)
+                })
+            classEl.addEventListener('click', async (event) => {
+                const target = event.target
+                if (
+                    !target.classList.contains('edit-class') &&
+                    !target.classList.contains('delete-class')
+                ) {
+                    this.onSelect(classEl.name)
+                }
+            })
+            MDCRipple.attachTo(classEl)
+            return classEl
+        }
+        /**
+         * Adds a class to the screen.
+         * @param {string} className - The name of the class.
+         */
+        addClass(className) {
+            const classEl = this.initializeClassElement(className)
+            this.classListEl.appendChild(classEl)
+            this.noClassesEl.style.display = 'none'
+        }
+        /**
+         * Renames a class in the screen.
+         * @param {string} oldClassName - The name of the class to rename.
+         * @param {string} newClassName - The new name to rename the class to.
+         */
+        renameClass(oldClassName, newClassName) {
+            const classElId = this.classIdMap.get(oldClassName)
+            const classEl = document.getElementById(classElId)
+            classEl.name = newClassName
+            classEl.querySelector('.class-entry').textContent = newClassName
+            this.classIdMap.delete(oldClassName)
+            this.classIdMap.set(newClassName, classElId)
+        }
+        /**
+         * Deletes a class from the screen.
+         * @param {string} className - The name of the class.
+         * @returns {Promise} Promise indicating completion.
+         */
+        deleteClass(className) {
+            return new Promise((resolve) => {
+                chrome.storage.local.get(null, (result) => {
+                    const rosters = result.rosters
+                    delete rosters[className]
+                    const items = { rosters: rosters }
+                    for (const key of Object.keys(result)) {
+                        if (
+                            result[key].hasOwnProperty('class') &&
+                            typeof result[key].class === 'string' &&
+                            result[key].class === className
+                        ) {
+                            delete result[key]['class']
+                            items[key] = result[key]
+                        }
+                    }
+                    this.classListEl.removeChild(
+                        document.getElementById(this.classIdMap.get(className))
+                    )
+                    this.classIdMap.delete(className)
+                    if (this.classIdMap.size === 0) {
+                        this.noClassesEl.style.display = 'flex'
+                    }
+                    chrome.storage.local.set(items, () => {
+                        resolve()
+                    })
+                })
+            })
+        }
+        get hidden() {
+            return this.container.hidden
+        }
+        set hidden(value) {
+            this.container.hidden = value
+        }
+    }
+
+    /**
+     * Represents a view that displays the attendance of the participants in the Meet with respect to the selected class.
+     *
+     * @callback StudentScreen~goBackCallback
+     *
+     * @callback StudentScreen~editClassCallback
+     * @param {string} className - The name of the class to be edited.
+     */
+    class StudentScreen {
+        /**
+         * Creates and initializes a student screen.
+         * @param {HTMLElement} containerEl - The element that will back the screen.
+         */
+        constructor(containerEl) {
+            this.container = containerEl
+            this.contentEl = this.container.querySelector('.student-content')
+            this.classHeaderEl = this.container.querySelector('.class-header')
+            this.noStudentsEl = this.container.querySelector('.no-students')
+            this.rosterStatusEl = document.getElementById('roster-status')
+            this.unlistedTemplate = document.getElementById('unlisted-template')
+            this.studentTemplate = document.getElementById('student-template')
+
+            const statusContainer = document.getElementById('status-container')
+            const statusBarEl = document.getElementById('status-bar')
+            const statusDetailsEl = document.getElementById('status-details')
+            Object.defineProperty(statusContainer, 'expanded', {
+                get: function () {
+                    return statusBarEl.getAttribute('aria-expanded') === 'true'
+                },
+                set: function (value) {
+                    statusBarEl.setAttribute('aria-pressed', value)
+                    statusBarEl.setAttribute('aria-expanded', value)
+                    if (value) {
+                        statusDetailsEl.classList.remove('collapsed')
+                        statusBarEl.setAttribute(
+                            'data-tooltip',
+                            'Hide Status Details'
+                        )
+                        statusBarEl.setAttribute(
+                            'aria-label',
+                            'Hide Status Details'
+                        )
+                    } else {
+                        statusDetailsEl.classList.add('collapsed')
+                        statusBarEl.setAttribute(
+                            'data-tooltip',
+                            'Show Status Details'
+                        )
+                        statusBarEl.setAttribute(
+                            'aria-label',
+                            'Show Status Details'
+                        )
+                    }
+                },
+            })
+            function toggleStatusContainer() {
+                statusContainer.expanded = !statusContainer.expanded
+            }
+            statusBarEl.addEventListener('click', toggleStatusContainer)
+            statusBarEl.addEventListener('keydown', (event) => {
+                if (
+                    event.key === ' ' ||
+                    event.key === 'Enter' ||
+                    event.key === 'Spacebar'
+                ) {
+                    toggleStatusContainer()
+                }
+            })
+            document
+                .getElementById('hide-status-details')
+                .addEventListener('click', toggleStatusContainer)
+            this.statusBars = {}
+            this.statusCountEls = {
+                gray: statusDetailsEl.querySelector(
+                    '.status-details-container.gray .status-details-count'
+                ),
+            }
+            for (const color of ['red', 'yellow', 'green']) {
+                this.statusBars[color] = document.getElementById(
+                    `status-${color}`
+                )
+                this.statusCountEls[color] = statusDetailsEl.querySelector(
+                    `.status-details-container.${color} .status-details-count`
+                )
+            }
+            this.jumpButtonEl = document.getElementById('status-unlisted')
+            Object.defineProperty(this.jumpButtonEl, 'primed', {
+                get: function () {
+                    return this.classList.contains('mdc-ripple-surface')
+                },
+                set: function (value) {
+                    if (value) {
+                        this.classList.add('mdc-ripple-surface')
+                        this.setAttribute('aria-disabled', false)
+                        this.style.cursor = 'pointer'
+                        this.setAttribute('jscontroller', 'VXdfxd')
+                    } else {
+                        this.classList.remove('mdc-ripple-surface')
+                        this.setAttribute('aria-disabled', true)
+                        this.style.cursor = 'default'
+                        this.removeAttribute('jscontroller')
+                    }
+                },
+            })
+            /**
+             * The position of the unlisted students divider on the y-axis of the screen.
+             * @type {number}
+             */
+            this.unlistedPos = 0
+            this.jumpButtonEl.addEventListener('click', () => {
+                if (this.jumpButtonEl.primed) {
+                    this.rosterStatusEl.parentElement.scrollTop =
+                        this.unlistedPos
+                }
+            })
+            this.jumpButtonEl.addEventListener('keydown', (event) => {
+                if (
+                    (event.key === ' ' ||
+                        event.key === 'Enter' ||
+                        event.key === 'Spacebar') &&
+                    this.jumpButtonEl.primed
+                ) {
+                    this.rosterStatusEl.parentElement.scrollTop =
+                        this.unlistedPos
+                }
+            })
+
+            this.sortMethods = {
+                'first-name': (a, b) => {
+                    if ((a.index === -1) !== (b.index === -1)) {
+                        return b.index - a.index
+                    }
+                    return Utils.compareFirst(a.name, b.name)
+                },
+                'last-name': (a, b) => {
+                    if ((a.index === -1) !== (b.index === -1)) {
+                        return b.index - a.index
+                    }
+                    return Utils.compareLast(a.name, b.name)
+                },
+                'present-first': (a, b) => {
+                    return b.index - a.index
+                },
+                'present-last': (a, b) => {
+                    if ((a.index === -1) !== (b.index === -1)) {
+                        return b.index - a.index
+                    }
+                    return a.index - b.index
+                },
+            }
+            this.sortMethod = 'first-name'
+            const sortMenuEl = document.getElementById('sort-menu')
+            const sortMenu = new MDCMenu(sortMenuEl)
+            this.container
+                .querySelector('.more')
+                .addEventListener('click', () => {
+                    sortMenu.open = true
+                })
+            const sortOptions = new MDCList(
+                sortMenuEl.querySelector('.mdc-list')
+            )
+            for (const listEl of sortOptions.listElements) {
+                MDCRipple.attachTo(listEl)
+                listEl.addEventListener('click', () => {
+                    this.sortMethod = listEl.id
+                    this.update()
+                })
+            }
+
+            /**
+             * Callback called when the user requests to go back to the previous screen.
+             * @type {StudentScreen~goBackCallback}
+             */
+            this.onBack = () => {}
+
+            /**
+             * Callback called when the user requests to edit the selected class.
+             * @type {StudentScreen~editClassCallback}
+             */
+            this.onEdit = (className) => {}
+
+            this.container
+                .querySelector('.back')
+                .addEventListener('click', () => {
+                    this.onBack()
+                })
+            this.container
+                .querySelector('.edit-roster')
+                .addEventListener('click', () => {
+                    this.onEdit(this.selectedClass)
+                })
+        }
+        /**
+         * Changes the selected class and refreshes the screen.
+         * @param {string} className - The name of the class to choose.
+         * @returns {Promise} Promise indicating completion.
+         */
+        chooseClass(className) {
+            const code = getMeetCode()
+            return new Promise((resolve) => {
+                chrome.storage.local.get(code, (result) => {
+                    const meetData = result[code]
+                    meetData.class = className
+                    chrome.storage.local.set({ [code]: meetData }, () => {
+                        this.contentEl.scrollTop = 0
+                        this.classHeaderEl.textContent = className
+                        this.selectedClass = className
+                        this.update().then(() => {
+                            resolve()
+                        })
+                    })
+                })
+            })
+        }
+        /**
+         * Refreshes the screen with the latest attendance data for the chosen class.
+         * @returns {Promise} Promise indicating completion.
+         */
+        update() {
+            return new Promise((resolve) => {
+                chrome.storage.local.get(null, async (result) => {
+                    const meetData = result[getMeetCode()]
+                    if (!meetData.hasOwnProperty('class')) {
+                        return resolve()
+                    }
+                    const className = meetData.class
+                    const attendance = meetData.attendance
+                    const rosters = result.rosters
+                    const roster = rosters[className]
+                    if (roster.length === 0) {
+                        this.noStudentsEl.style.display = 'flex'
+                    } else {
+                        this.noStudentsEl.style.display = 'none'
+                    }
+                    const entries = []
+                    const statusCounts = {
+                        red: 0,
+                        yellow: 0,
+                        green: 0,
+                        gray: 0,
+                    }
+                    let rosterChanged = false
+                    for (const name in attendance) {
+                        const timestamps = attendance[name]
+                        /***
+                         * Two names are considered equivalent if either
+                         * 1. Their calculated first and last names are equal (e.g. Lin, Tyler and Tyler|Lin)
+                         * or
+                         * 2. They are equal without vertical bars (e.g. Wardell|Stephen Curry and Wardell Stephen|Curry)
+                         */
+                        const rosterIndex = roster.findIndex(
+                            (testName) =>
+                                (Utils.compareFirst(testName, name) === 0 &&
+                                    Utils.compareLast(testName, name) === 0) ||
+                                Utils.collator.compare(
+                                    testName.replace('|', ' ').trim(),
+                                    name.replace('|', ' ').trim()
+                                ) === 0
+                        )
+                        if (rosterIndex === -1) {
+                            entries.push({
+                                name: name,
+                                color: 'gray',
+                                tooltip: 'Not on List',
+                                icon: 'error',
+                                text: `Joined at ${Utils.toTimeString(
+                                    timestamps[0]
+                                )}`,
+                                index: -1,
+                            })
+                            statusCounts.gray++
+                            continue
+                        }
+                        const minsPresent = Utils.minsPresent(timestamps)
+                        const matchName = roster[rosterIndex]
+                        /***
+                         * If the roster and attendance names were considered equivalent, but their raw forms are inequal,
+                         * set the name in the roster to the name from the attendance;
+                         * this corrects instances in which the guessed first and last names were incorrect
+                         */
+                        if (matchName !== name) {
+                            roster[rosterIndex] = name
+                            rosterChanged = true
+                        }
+                        if (minsPresent >= result['presence-threshold']) {
+                            if (timestamps.length % 2 === 1) {
+                                entries.push({
+                                    name: name,
+                                    color: 'green',
+                                    tooltip: 'Present',
+                                    icon: 'check_circle',
+                                    text: `Joined at ${Utils.toTimeString(
+                                        timestamps[0]
+                                    )}`,
+                                    index: 2,
+                                })
+                                statusCounts.green++
+                            } else {
+                                entries.push({
+                                    name: name,
+                                    color: 'yellow',
+                                    tooltip: 'Previously Present',
+                                    icon: 'watch_later',
+                                    text: `Last seen at ${Utils.toTimeString(
+                                        timestamps[timestamps.length - 1]
+                                    )}`,
+                                    index: 1,
+                                })
+                                statusCounts.yellow++
+                            }
+                        } else {
+                            entries.push({
+                                name: name,
+                                color: 'red',
+                                tooltip: 'Absent',
+                                icon: 'cancel',
+                                text: `Joined at ${Utils.toTimeString(
+                                    timestamps[0]
+                                )}`,
+                                index: 0,
+                            })
+                            statusCounts.red++
+                        }
+                    }
+                    if (rosterChanged) {
+                        await new Promise((resolve) => {
+                            chrome.storage.local.set({ rosters: rosters }, () =>
+                                resolve()
+                            )
+                        })
+                    }
+                    const attendanceNames = Object.keys(attendance).map((key) =>
+                        key.toLocaleUpperCase()
+                    )
+                    for (const name of roster) {
+                        if (
+                            !attendanceNames.includes(name.toLocaleUpperCase())
+                        ) {
+                            entries.push({
+                                name: name,
+                                color: 'red',
+                                tooltip: 'Absent',
+                                icon: 'cancel',
+                                text: 'Not here',
+                                index: 0,
+                            })
+                            statusCounts.red++
+                        }
+                    }
+                    entries.sort(this.sortMethods[this.sortMethod])
+                    if (statusCounts.gray === 0 && this.jumpButtonEl.primed) {
+                        this.jumpButtonEl.primed = false
+                    }
+                    this.rosterStatusEl.innerHTML = ''
+                    for (let i = 0; i < entries.length; i++) {
+                        const entry = entries[i]
+                        if (
+                            entry.index === -1 &&
+                            (i === 0 || entries[i - 1].index !== -1)
+                        ) {
+                            this.rosterStatusEl.appendChild(
+                                this.unlistedTemplate.content.cloneNode(true)
+                            )
+                            this.unlistedPos = 61 * i
+
+                            if (!this.jumpButtonEl.primed) {
+                                this.jumpButtonEl.primed = true
+                            }
+                            document
+                                .getElementById('add-all-unlisted')
+                                .addEventListener('click', () => {
+                                    this.rostersCache = rosters
+                                    const nons = entries
+                                        .filter((entry) => entry.index === -1)
+                                        .map((non) => non.name)
+                                    this.addStudents(...nons)
+                                    showSnackbar(
+                                        `Added ${nons.length} student${
+                                            nons.length === 1 ? '' : 's'
+                                        } to class.`,
+                                        'undo'
+                                    )
+                                })
+                        }
+                        const entryEl = this.initializeStudentElement(entry)
+                        const metaButton =
+                            entryEl.querySelector('.mdc-icon-button')
+                        const displayName = entryEl.querySelector(
+                            '.mdc-list-item__primary-text'
+                        ).textContent
+                        if (entry.index === -1) {
+                            metaButton.addEventListener('click', () => {
+                                this.rostersCache = rosters
+                                this.addStudents(entry.name).then(() => {
+                                    showSnackbar(
+                                        `Added ${displayName} to class.`,
+                                        'undo'
+                                    )
+                                })
+                            })
+                        } else {
+                            metaButton.addEventListener('click', () => {
+                                this.rostersCache = rosters
+                                this.removeStudent(entry.name).then(() => {
+                                    showSnackbar(
+                                        `Removed ${displayName} from class.`,
+                                        'undo'
+                                    )
+                                })
+                            })
+                        }
+                        this.rosterStatusEl.appendChild(entryEl)
+                    }
+                    if (roster.length > 0) {
+                        this.rosterStatusEl.removeChild(
+                            this.rosterStatusEl.firstElementChild
+                        )
+                        for (const color in this.statusBars) {
+                            const bar = this.statusBars[color]
+                            bar.style.width = `${
+                                (100 * statusCounts[color]) / roster.length
+                            }%`
+                            const prefix = bar
+                                .getAttribute('aria-label')
+                                .split(':')[0]
+                            bar.setAttribute(
+                                'aria-label',
+                                `${prefix}: ${statusCounts[color]}/${roster.length}`
+                            )
+                            this.statusCountEls[
+                                color
+                            ].innerHTML = `<b>${statusCounts[color]
+                                .toString()
+                                .padStart(
+                                    roster.length.toString().length,
+                                    '0'
+                                )}</b>/${roster.length}`
+                        }
+                    }
+                    this.statusCountEls[
+                        'gray'
+                    ].innerHTML = `<b>${statusCounts.gray}</b>`
+                    this.statusCountEls['gray'].setAttribute(
+                        'aria-label',
+                        `Not on List: ${statusCounts.gray}`
+                    )
+                    resolve()
+                })
+            })
+        }
+        /**
+         * Initializes a student list item element to append to the student list.
+         * @param {Object} entry - The details of the student's attendance status.
+         * @param {number} entry.index - The status index of the entry.
+         * @param {string} entry.name - The student's name.
+         * @param {string} entry.color - The color of the status icon.
+         * @param {string} entry.tooltip - The label for the student's status.
+         * @param {string} entry.icon - The identifier of the status icon.
+         * @param {string} entry.text - The secondary text below the student's name.
+         * @returns {HTMLElement} The student list item element.
+         */
+        initializeStudentElement(entry) {
+            const metaIcon = entry.index === -1 ? 'add_circle' : 'remove_circle'
+            const metaTooltip =
+                entry.index === -1 ? 'Add to Class' : 'Remove from Class'
+            const realName = entry.name.replace('|', ' ').trim()
+            const entryEl = this.studentTemplate.content.cloneNode(true)
+            const statusIcon = entryEl.querySelector('.mdc-list-item__graphic')
+            statusIcon.classList.add(entry.color)
+            statusIcon.setAttribute('aria-label', entry.tooltip)
+            statusIcon.setAttribute('data-tooltip', entry.tooltip)
+            entryEl.querySelector('.mdc-list-item__primary-text').textContent =
+                realName
+            entryEl.querySelector(
+                '.mdc-list-item__secondary-text'
+            ).textContent = entry.text
+            const metaButton = entryEl.querySelector('.mdc-icon-button')
+            metaButton.setAttribute('aria-label', metaTooltip)
+            metaButton.setAttribute('data-tooltip', metaTooltip)
+            metaButton.textContent = metaIcon
+            return entryEl
+        }
+        /**
+         * Adds students to the roster of the selected class.
+         * @param {...string} names - The names of the students to add.
+         * @returns {Promise} Promise indicating completion.
+         */
+        addStudents(...names) {
+            return new Promise((resolve) => {
+                chrome.storage.local.get(null, (result) => {
+                    const className = result[getMeetCode()].class
+                    const rosters = result.rosters
+                    rosters[className].push(...names)
+                    chrome.storage.local.set({ rosters: rosters }, () => {
+                        this.update().then(() => {
+                            resolve()
+                        })
+                    })
+                })
+            })
+        }
+        /**
+         * Removes a student from the roster of the selected class.
+         * @param {string} name - The name of the student to remove.
+         * @returns {Promise} Promise indicating completion.
+         */
+        removeStudent(name) {
+            return new Promise((resolve) => {
+                chrome.storage.local.get(null, (result) => {
+                    const className = result[getMeetCode()].class
+                    const rosters = result.rosters
+                    rosters[className] = rosters[className].filter(
+                        (n) => n !== name
+                    )
+                    chrome.storage.local.set({ rosters: rosters }, () => {
+                        this.update().then(() => {
+                            resolve()
+                        })
+                    })
+                })
+            })
+        }
+        /**
+         * Undoes the last edit made to the roster of the selected class.
+         * @returns {Promise} Promise indicating completion.
+         */
+        undo() {
+            return new Promise((resolve) => {
+                if (this.rostersCache == undefined) {
+                    return resolve()
+                }
+                chrome.storage.local.set({ rosters: this.rostersCache }, () => {
+                    this.update().then(() => {
+                        showSnackbar('Undo successful.')
+                        resolve()
+                    })
+                })
+            })
+        }
+        get hidden() {
+            return this.container.hidden
+        }
+        set hidden(value) {
+            this.container.hidden = value
+        }
+    }
+
+    /**
+     * Represents a view that allows the user to edit the name and roster of a class.
+     *
+     * @callback EditScreen~cancelEditCallback
+     * @param {Object} referrer - The screen that requested the current edit operation.
+     *
+     * @callback EditScreen~saveClassCallback
+     * @param {Object} referrer - The screen that requested the current edit operation.
+     * @param {string} previousClassName - The previous name of the class.
+     * @param {string} className - The new name of the class.
+     */
+    class EditScreen {
+        /**
+         * Creates an edit screen.
+         * @param {HTMLElement} containerEl - The element that will back the screen.
+         */
+        constructor(containerEl) {
+            this.container = containerEl
+            const textFieldEls =
+                this.container.getElementsByClassName('mdc-text-field')
+            this.classNameField = new MDCTextField(textFieldEls[0])
+            this.rosterField = new MDCChipSetTextField(textFieldEls[1])
+
+            /**
+             * Callback called when the user cancels the edit operation.
+             * @type {EditScreen~cancelEditCallback}
+             */
+            this.onCancel = (referrer) => {}
+
+            /**
+             * Callback called when the user saves the class.
+             * @type {EditScreen~saveClassCallback}
+             */
+            this.onSave = (referrer, previousClassName, className) => {}
+
+            this.container
+                .querySelector('.save-class')
+                .addEventListener('click', () => {
+                    const className = this.classNameField.value
+                    const prevClassName = this.classNameField.initValue
+                    chrome.storage.local.get('rosters', (result) => {
+                        const rosters = result.rosters
+                        if (className === '') {
+                            showSnackbar(
+                                'Error: The class name cannot be empty.'
+                            )
+                        } else if (className.includes('§')) {
+                            showSnackbar(
+                                'Error: The class name cannot contain the character §.'
+                            )
+                        } else if (
+                            rosters.hasOwnProperty(className) &&
+                            className !== prevClassName
+                        ) {
+                            showSnackbar(
+                                'Error: You already have a class with that name.'
+                            )
+                        } else {
+                            const roster = this.rosterField.chipTexts
+                            rosters[className] = roster
+                            const items = { rosters: rosters }
+                            delete this.classNameField.initValue
+                            if (
+                                prevClassName !== '' &&
+                                prevClassName !== className
+                            ) {
+                                const code = getMeetCode()
+                                port.postMessage({
+                                    data: 'rename',
+                                    code: code,
+                                    oldClassName: prevClassName,
+                                    newClassName: className,
+                                })
+                                delete rosters[prevClassName]
+                                for (const key in result) {
+                                    const data = result[key]
+                                    if (
+                                        data.hasOwnProperty('class') &&
+                                        data.class === prevClassName
+                                    ) {
+                                        data.class = className
+                                        items[key] = data
+                                    }
+                                }
+                            }
+                            chrome.storage.local.set(items, () => {
+                                showSnackbar(
+                                    `Successfully saved class ${className}.`
+                                )
+                                this.onSave(
+                                    this.referrer,
+                                    prevClassName,
+                                    className
+                                )
+                            })
+                        }
+                    })
+                })
+            this.container
+                .querySelector('.back')
+                .addEventListener('click', () => {
+                    this.onCancel(this.referrer)
+                })
+        }
+        /**
+         * Begins an edit operation for a class.
+         * @param {Object} referrer - The screen that requested the edit operation.
+         * @param {string} className - The name of the class to edit.
+         * @returns {Promise} Promise indicating completion.
+         */
+        startEditing(referrer, className) {
+            this.referrer = referrer
+            this.classNameField.value = className
+            this.classNameField.initValue = className
+            return new Promise((resolve) => {
+                chrome.storage.local.get('rosters', (result) => {
+                    const rosters = result.rosters
+                    const roster = rosters.hasOwnProperty(className)
+                        ? rosters[className]
+                        : []
+                    this.rosterField.refresh(roster)
+                    resolve()
+                })
+            })
+        }
+        get hidden() {
+            return this.container.hidden
+        }
+        set hidden(value) {
+            this.container.hidden = value
+        }
+    }
+
+    // const selectDialogEl = document.getElementById('select')
+    // const selectDialog = new MDCDialog(selectDialogEl)
+
+    const panelEl = document.getElementById('panel')
+    const panelClassScreen = new ClassScreen(
+        panelEl.querySelector('.class-view')
+    )
+    const panelStudentScreen = new StudentScreen(
+        panelEl.querySelector('.student-view')
+    )
+    const panelEditScreen = new EditScreen(panelEl.querySelector('.edit-view'))
+
+    // show selection dialog if necessary
+    // chrome.storage.local.get(null, (result) => {
+    //     const code = getMeetCode()
+    //     if (!result[code].hasOwnProperty('class') && result['show-popup']) {
+    //         initializeDialog().then(() => {
+    //             selectDialog.open()
+    //             selectDialog.scrimClickAction = ''
+    //             selectDialog.escapeKeyAction = ''
+    //             selectDialog.autoStackButtons = false
+    //         })
+    //     } else {
+    //         initializePanel()
+    //     }
+    // })
+
+    const confirmDeleteDialog = new MDCDialog(
+        document.getElementById('delete-dialog')
+    )
+    const deleteButtonEl = document.getElementById('confirm-delete')
+    confirmDeleteDialog.listen('MDCDialog:opening', () => {
+        document.getElementById(
+            'delete-dialog-content'
+        ).innerHTML = `Are you sure you want to delete the class <b>${deleteButtonEl.classToDelete}</b>?`
+    })
+    function confirmDelete(className) {
+        deleteButtonEl.classToDelete = className
+        confirmDeleteDialog.open()
+    }
+    deleteButtonEl.addEventListener('click', () => {
+        const className = deleteButtonEl.classToDelete
+        deleteButtonEl.operation(className).then(() => {
+            showSnackbar(`Successfully deleted class ${className}.`)
         })
     })
-    document.querySelectorAll('.dismiss-updates').forEach((element) => {
-        element.addEventListener('click', () => {
-            chrome.storage.local.set({ 'updates-dismissed': true }, () => {
-                document.querySelectorAll('.updates').forEach((panel) => {
-                    panel.classList.add('collapsed')
+
+    initializePanel()
+
+    // function initializeDialog() {
+    //     return new Promise((resolve) => {
+    //         const selectButton = document.getElementById('select-button')
+    //         let classList = new MDCList(
+    //             selectDialogEl.querySelector('.class-list')
+    //         )
+    //         classList.singleSelection = true
+    //         classList.listen('MDCList:action', () => {
+    //             selectButton.disabled = false
+    //         })
+    //         selectDialog.listen('MDCDialog:closing', initializePanel)
+    //         selectButton.addEventListener('click', () => {
+    //             const className =
+    //                 classList.listElements[classList.selectedIndex].name
+    //             panelStudentScreen.chooseClass(className)
+    //             panelClassScreen.hidden = true
+    //             panelStudentScreen.hidden = false
+    //         })
+
+    //         const dialogClassScreen = new ClassScreen(
+    //             selectDialogEl.querySelector('.class-view')
+    //         )
+    //         const dialogEditScreen = new EditScreen(
+    //             selectDialogEl.querySelector('.edit-view')
+    //         )
+    //         dialogClassScreen.onAdd = () => {
+    //             dialogClassScreen.hidden = true
+    //             dialogEditScreen.hidden = false
+    //             dialogEditScreen.startEditing(dialogClassScreen, '')
+    //         }
+    //         dialogClassScreen.onEdit = (className) => {
+    //             dialogClassScreen.hidden = true
+    //             dialogEditScreen.hidden = false
+    //             dialogEditScreen.startEditing(dialogClassScreen, className)
+    //         }
+    //         dialogEditScreen.onCancel = (referrer) => {
+    //             referrer.hidden = false
+    //             dialogEditScreen.hidden = true
+    //         }
+    //         dialogEditScreen.onSave = (
+    //             referrer,
+    //             previousClassName,
+    //             className
+    //         ) => {
+    //             if (previousClassName === '') {
+    //                 dialogClassScreen.addClass(className)
+    //             } else if (previousClassName !== className) {
+    //                 dialogClassScreen.renameClass(previousClassName, className)
+    //             }
+    //             referrer.hidden = false
+    //             dialogEditScreen.hidden = true
+    //         }
+    //         deleteButtonEl.operation = async (className) => {
+    //             classList.selectedIndex = -1
+    //             selectButton.disabled = true
+    //             dialogClassScreen.deleteClass(className)
+    //         }
+    //         dialogClassScreen.initialize().then(() => {
+    //             resolve()
+    //         })
+    //     })
+    // }
+
+    function initializePanel() {
+        document
+            .getElementById('panel')
+            .querySelector('.help')
+            .addEventListener('click', iveFallenAndICantGetUp)
+        return new Promise((resolve) => {
+            panelClassScreen.onAdd = () => {
+                panelClassScreen.hidden = true
+                panelEditScreen.hidden = false
+                panelEditScreen.startEditing(panelClassScreen, '')
+            }
+            panelClassScreen.onEdit = (className) => {
+                panelClassScreen.hidden = true
+                panelEditScreen.hidden = false
+                panelEditScreen.startEditing(panelClassScreen, className)
+            }
+            panelClassScreen.onSelect = (className) => {
+                panelStudentScreen.chooseClass(className).then(() => {
+                    panelClassScreen.hidden = true
+                    panelStudentScreen.hidden = false
+                })
+            }
+            panelStudentScreen.onBack = () => {
+                panelClassScreen.hidden = false
+                panelStudentScreen.hidden = true
+            }
+            panelStudentScreen.onEdit = (className) => {
+                panelStudentScreen.hidden = true
+                panelEditScreen.hidden = false
+                panelEditScreen.startEditing(panelStudentScreen, className)
+            }
+            panelEditScreen.onCancel = (referrer) => {
+                referrer.hidden = false
+                panelEditScreen.hidden = true
+            }
+            panelEditScreen.onSave = async (
+                referrer,
+                previousClassName,
+                className
+            ) => {
+                if (previousClassName === '') {
+                    panelClassScreen.addClass(className)
+                } else if (previousClassName !== className) {
+                    panelClassScreen.renameClass(previousClassName, className)
+                }
+                if (referrer === panelStudentScreen) {
+                    if (previousClassName !== className) {
+                        await panelStudentScreen.chooseClass(className)
+                    } else {
+                        await panelStudentScreen.update()
+                    }
+                }
+                referrer.hidden = false
+                panelEditScreen.hidden = true
+            }
+            deleteButtonEl.operation =
+                panelClassScreen.deleteClass.bind(panelClassScreen)
+            panelClassScreen.initialize().then(() => {
+                const code = getMeetCode()
+                chrome.storage.local.get(code, (result) => {
+                    if (
+                        result.hasOwnProperty(code) &&
+                        result[code].hasOwnProperty('class')
+                    ) {
+                        panelClassScreen.hidden = true
+                        panelStudentScreen.hidden = false
+                        console.log(result[code].class)
+                        panelStudentScreen.chooseClass(result[code].class)
+                    }
+                    resolve()
                 })
             })
         })
-    })
+    }
 
-    new MutationObserver(function (mutations, me) {
+    // Detect when the user leaves the meet and exports if Export on Leave is enabled
+    new MutationObserver((mutations, me) => {
         if (document.querySelector('.CX8SS')) {
             chrome.runtime.sendMessage({ data: 'delete-tab' })
-            chrome.storage.local.get('auto-export', function (result) {
+            chrome.storage.local.get('auto-export', (result) => {
                 if (result['auto-export']) {
                     port.postMessage({ data: 'export', code: getMeetCode() })
-                    Utils.log(`Exporting...`)
                 }
                 me.disconnect()
             })
@@ -61,691 +1086,146 @@
         subtree: true,
     })
 
-    const closedObserver = new MutationObserver(function (mutations, me) {
-        if (
-            !document.getElementsByClassName(
-                'VfPpkd-Bz112c-LgbsSe yHy1rc eT1oJ IWtuld wBYOYb'
-            )[0]
-        ) {
-            const card = document.getElementById('card')
-            if (card) {
-                card.style.borderRadius = '0 0 0 8px'
-            }
-            me.disconnect()
-        }
-    })
-
-    resizeCard()
-    window.addEventListener('resize', resizeCard)
-    const trayObserver = new MutationObserver(resizeCard)
-
-    let bigButtons = [...document.querySelector('.NzPR9b').children]
-    bigButtons = bigButtons.filter((child) =>
-        child.classList.contains('uArJ5e')
-    )
-    for (let i = bigButtons.length - 2; i <= bigButtons.length - 1; i++) {
-        bigButtons[i].addEventListener('click', () => {
-            document.getElementById('card').style.borderRadius = '8px 0 0 8px'
-            closedObserver.observe(
-                document.getElementsByClassName('mKBhCf')[0],
-                {
-                    childList: true,
-                    subtree: true,
-                }
-            )
-        })
-    }
-
-    trayObserver.observe(document.getElementsByClassName('NzPR9b')[0], {
-        childList: true,
-        subtree: true,
-    })
-
-    for (const helpButton of document.querySelectorAll('[aria-label="Help"]')) {
-        helpButton.addEventListener('click', function () {
-            chrome.runtime.sendMessage({
-                data: 'open-url',
-                url:
-                    'https://github.com/tytot/attendance-for-google-meet#usage',
-            })
-        })
-    }
-
-    const attendanceButton = document.getElementById('attendance')
-    attendanceButton.addEventListener('click', toggleCard)
-    attendanceButton.addEventListener('keydown', function (event) {
-        if (
-            event.key === ' ' ||
-            event.key === 'Enter' ||
-            event.key === 'Spacebar'
-        ) {
-            toggleCard()
-        }
-    })
-
-    for (const closeButton of document.getElementsByClassName('close-card')) {
-        closeButton.addEventListener('click', hideCard)
-    }
-
-    const statusBar = document.getElementById('status-bar')
-    const statusDetails = document.getElementById('status-details')
-    const statusCountEls = statusDetails.getElementsByClassName(
-        'status-details-count'
-    )
-    statusBar.addEventListener('click', toggleStatusDetails)
-    statusBar.addEventListener('keydown', function (event) {
-        if (
-            event.key === ' ' ||
-            event.key === 'Enter' ||
-            event.key === 'Spacebar'
-        ) {
-            toggleStatusDetails()
-        }
-    })
-    document
-        .getElementById('hide-status-details')
-        .addEventListener('click', toggleStatusDetails)
-
-    const jumpButton = document.getElementById('status-unlisted')
-    let unlistedPos = 0
-    jumpButton.addEventListener('click', jumpToUnlisted)
-    jumpButton.addEventListener('keydown', function (event) {
-        if (
-            event.key === ' ' ||
-            event.key === 'Enter' ||
-            event.key === 'Spacebar'
-        ) {
-            jumpToUnlisted()
-        }
-    })
-
-    const rosterStatus = document.getElementById('roster-status')
-
     const exportButton = document.getElementById('export')
-    exportButton.addEventListener('click', function () {
+    exportButton.addEventListener('click', () => {
         port.postMessage({ data: 'export', code: getMeetCode() })
         exportButton.disabled = true
-        Utils.log(`Exporting...`)
     })
 
-    const classList = new MDCList(document.querySelector('#class-list'))
-    classList.singleSelection = true
-    const selectButton = document.getElementById('select-button')
-    document
-        .querySelector('#dialog-content')
-        .addEventListener('click', function () {
-            if (classList.selectedIndex === -1) {
-                selectButton.disabled = true
-            } else {
-                selectButton.disabled = false
-            }
-        })
-
-    const selectDialog = new MDCDialog(document.getElementById('select'))
-    chrome.storage.local.get(null, function (result) {
-        const code = getMeetCode()
-        let showDialog = false
-        if (!result.hasOwnProperty(code)) {
-            // add data boilerplate for this Meet to local storage
-            chrome.storage.local.set({
-                [code]: {
-                    attendance: {},
-                    'start-timestamp': ~~(Date.now() / 1000),
-                },
-            })
-            if (result['show-popup']) {
-                showDialog = true
-
-                selectDialog.open()
-                selectDialog.scrimClickAction = ''
-                selectDialog.escapeKeyAction = ''
-                selectDialog.autoStackButtons = false
-                selectDialog.listen('MDCDialog:closed', (event) => {
-                    initCard()
-                })
-    
-                prepareChips(null, 'dialog-default-view', 'dialog-edit-view')
-    
-                document.getElementById('later').addEventListener('click', () => {
-                    document.getElementById('card-class-view').hidden = false
-                    document.getElementById('card-default-view').hidden = true
-                })
-                selectButton.addEventListener('click', () => {
-                    const className =
-                        classList.listElements[classList.selectedIndex].name
-                    const code = getMeetCode()
-                    chrome.storage.local.get(code, function (result) {
-                        let res = result[code]
-                        res.class = className
-                        chrome.storage.local.set({ [code]: res })
-                        document.getElementById(
-                            'class-label'
-                        ).textContent = className
-                    })
-                })
-                document
-                    .getElementById('cancel-class')
-                    .addEventListener('click', function () {
-                        document.getElementById(
-                            'dialog-default-view'
-                        ).hidden = false
-                        document.getElementById('dialog-edit-view').hidden = true
-                    })
-            }
-        }
-        if (!showDialog) {
-            document.getElementById('card-class-view').hidden = false
-            document.getElementById('card-default-view').hidden = true
-            initCard()
-        }
-    })
-
-    const confirmDeleteDialog = new MDCDialog(
-        document.getElementById('delete-dialog')
-    )
-    const deleteButton = document.getElementById('confirm-delete')
-    confirmDeleteDialog.listen('MDCDialog:opening', (event) => {
-        document.getElementById(
-            'delete-dialog-content'
-        ).textContent = `Are you sure you want to delete the class ${deleteButton.classToDelete}?`
-    })
-    deleteButton.addEventListener('click', function () {
-        const className = deleteButton.classToDelete
-        deleteClass(className)
-        classList.selectedIndex = -1
-        selectButton.disabled = true
-        snackbar.labelText = `Successfully deleted class ${className}.`
-        removeSnackbarButtons()
-        snackbar.open()
-    })
-
-    const sortMenuEl = document.getElementById('sort-menu')
-    const sortMenu = new MDCMenu(sortMenuEl)
-    document.querySelector('.more').addEventListener('click', function () {
-        sortMenu.open = true
-    })
-    const sortOptions = new MDCList(sortMenuEl.querySelector('.mdc-list'))
-    for (const listEl of sortOptions.listElements) {
-        new MDCRipple(listEl)
-        listEl.addEventListener('click', function () {
-            sortMethod = listEl.id
-            forceStatusUpdate()
-        })
-    }
-
+    // snackbar management
     const snackbar = new MDCSnackbar(document.querySelector('.mdc-snackbar'))
+    const snackbarButtons = {
+        help: document.getElementById('snackbar-help'),
+        open: document.getElementById('snackbar-open'),
+        undo: document.getElementById('snackbar-undo'),
+    }
+    snackbarButtons.help.addEventListener('click', troubleshoot)
+    snackbarButtons.open.addEventListener('click', openSpreadsheet)
+    snackbarButtons.undo.addEventListener('click', () => {
+        panelStudentScreen.undo()
+    })
 
-    const sbHelp = document.getElementById('snackbar-help')
-    sbHelp.addEventListener('click', troubleshoot)
-    const sbOpen = document.getElementById('snackbar-open')
-    sbOpen.addEventListener('click', openSpreadsheet)
-    const sbUndo = document.getElementById('snackbar-undo')
-    sbUndo.addEventListener('click', undo)
+    let expectedLabel = ''
+    function showSnackbar(text, ...buttons) {
+        snackbar.close()
+        expectedLabel = text
+        snackbar.labelText = text
+        for (const buttonName in snackbarButtons) {
+            snackbarButtons[buttonName].style.display = buttons.includes(
+                buttonName
+            )
+                ? 'inline-flex'
+                : 'none'
+        }
+        snackbar.open()
+    }
+    // hack to prevent weird flashing between labels
+    const snackbarLabelEl = document.querySelector('.mdc-snackbar__label')
+    new MutationObserver(() => {
+        if (
+            snackbar.labelText !== ' ' &&
+            snackbar.labelText !== expectedLabel
+        ) {
+            snackbar.labelText = expectedLabel
+        }
+    }).observe(snackbarLabelEl, {
+        subtree: true,
+        childList: true,
+    })
 
+    // progress bar management
     const linearProgress = new MDCLinearProgress(
-        document.querySelector('#progress-bar')
+        document.getElementById('progress-bar')
     )
     linearProgress.progress = 0
-    port.onMessage.addListener(function (msg) {
+    port.onMessage.addListener((msg) => {
         linearProgress.progress = msg.progress
         if (msg.done) {
-            removeSnackbarButtons()
             exportButton.disabled = false
             const error = msg.error
             if (error) {
-                snackbar.labelText = error
-                sbHelp.style.display = 'inline-flex'
+                showSnackbar(error, 'help')
             } else {
-                snackbar.labelText = 'Successfully exported to Google Sheets™!'
-                sbOpen.style.display = 'inline-flex'
-            }
-            snackbar.close()
-            snackbar.open()
-        }
-    })
-
-    document
-        .getElementById('default-back')
-        .addEventListener('click', function () {
-            document.getElementById('card-class-view').hidden = false
-            document.getElementById('card-default-view').hidden = true
-        })
-
-    document.getElementById('edit-back').addEventListener('click', function () {
-        const cardTitle = document.getElementById('class-label')
-        if (classTextField.initValue === '') {
-            document.getElementById('card-class-view').hidden = false
-        } else {
-            document.getElementById('card-default-view').hidden = false
-            cardTitle.textContent = classTextField.value
-        }
-        document.getElementById('card-edit-view').hidden = true
-    })
-
-    document.addEventListener('keydown', function (event) {
-        if (event.keyCode === 8 || event.key === 'Backspace') {
-            const chips = chipSet.chips
-            if (chips.length > 0) {
-                const chipAction = chips[chips.length - 1].root.querySelector(
-                    '.mdc-chip__primary-action'
-                )
-                const chipClose = chips[chips.length - 1].root.querySelector(
-                    '.mdc-chip__icon--trailing'
-                )
-                const activeEl = document.activeElement
-                if (activeEl === chipAction) {
-                    chipClose.focus()
-                } else if (activeEl === chipClose) {
-                    removeChip()
-                }
+                showSnackbar('Successfully exported to Google Sheets™!', 'open')
             }
         }
     })
 
     for (const button of document.getElementsByClassName('mdc-button')) {
-        new MDCRipple(button)
+        MDCRipple.attachTo(button)
     }
     for (const button of document.getElementsByClassName('mdc-icon-button')) {
         const ripple = new MDCRipple(button)
         ripple.unbounded = true
     }
 
-    function getMeetCode() {
-        return document
-            .getElementsByTagName('c-wiz')[0]
-            .getAttribute('data-unresolved-meeting-id')
-    }
-
-    function resizeCard() {
-        const tray = document.getElementsByClassName('NzPR9b')[0]
-        if (tray) {
-            const trayWidth = tray.offsetWidth
-            document.getElementById('card').style.width = trayWidth + 'px'
-        }
-    }
-
-    function removeSnackbarButtons() {
-        sbHelp.style.display = 'none'
-        sbOpen.style.display = 'none'
-        sbUndo.style.display = 'none'
-    }
-
-    function storeNames(names) {
+    function processAttendance(names) {
         const code = getMeetCode()
-        chrome.storage.local.get(null, function (result) {
-            const timestamp = ~~(Date.now() / 1000)
-            let codesToDelete = []
-            for (const key in result) {
-                const data = result[key]
-                if (data.hasOwnProperty('timestamp')) {
+        return new Promise((resolve) => {
+            chrome.storage.local.get(null, async (result) => {
+                const timestamp = ~~(Date.now() / 1000)
+                const codesToDelete = []
+                for (const key in result) {
+                    const data = result[key]
                     if (
+                        data.hasOwnProperty('timestamp') &&
                         timestamp - data.timestamp >=
-                        result['reset-interval'] * 3600
+                            result['reset-interval'] * 3600
                     ) {
                         codesToDelete.push(key)
-                        if (key !== code) {
-                            chrome.storage.local.remove([key])
-                            delete result[key]
-                        } else {
-                            result[key] = {
-                                attendance: {},
-                                'start-timestamp': timestamp,
-                            }
-                        }
+                        delete result[key]
                     }
                 }
-            }
-            if (codesToDelete.length > 0) {
-                port.postMessage({
-                    data: 'delete-meta',
-                    codes: codesToDelete,
-                })
-            }
-
-            if (!result.hasOwnProperty(code)) {
-                result[code] = {
+                if (codesToDelete.length > 0) {
+                    port.postMessage({
+                        data: 'delete-meta',
+                        codes: codesToDelete,
+                    })
+                    await new Promise((resolve) => {
+                        chrome.storage.local.remove(codesToDelete, () => {
+                            resolve()
+                        })
+                    })
+                }
+                const meetData = result[code] || {
                     attendance: {},
                     'start-timestamp': timestamp,
                 }
-            }
-            const res = result[code]
-            let currentData = res.attendance
-            res.timestamp = timestamp
+                const attendance = meetData.attendance
+                meetData.timestamp = timestamp
 
-            for (const name of names) {
-                if (currentData[name] == undefined) {
-                    currentData[name] = [timestamp]
-                } else if (currentData[name].length % 2 === 0) {
-                    currentData[name].push(timestamp)
-                }
-                if (names.includes(name)) {
-                    if (currentData[name].length % 2 === 0) {
-                        currentData[name].push(timestamp)
-                    }
-                } else {
-                    if (currentData[name].length % 2 === 1) {
-                        currentData[name].push(timestamp)
+                for (const name of names) {
+                    if (!attendance.hasOwnProperty(name)) {
+                        attendance[name] = [timestamp]
+                    } else if (attendance[name].length % 2 === 0) {
+                        attendance[name].push(timestamp)
                     }
                 }
-            }
-            for (const name in currentData) {
-                if (!names.includes(name) && currentData[name]) {
-                    if (currentData[name].length % 2 === 1) {
-                        currentData[name].push(timestamp)
-                    }
-                }
-            }
-
-            const className = res.class
-            if (className) {
-                updateRosterStatus(
-                    currentData,
-                    result.rosters,
-                    className,
-                    result['presence-threshold']
-                )
-            }
-
-            chrome.storage.local.set({ [code]: res })
-        })
-    }
-
-    function updateRosterStatus(
-        attendance,
-        rosters,
-        className,
-        presenceThreshold = 0
-    ) {
-        rosterStatus.innerHTML = ''
-
-        const roster = rosters[className]
-        if (roster.length === 0) {
-            document.querySelector('#no-students').style.display = 'flex'
-        } else {
-            document.querySelector('#no-students').style.display = 'none'
-        }
-        let entries = []
-        const statusCounts = {
-            red: 0,
-            yellow: 0,
-            green: 0,
-            gray: 0,
-        }
-        let changed = false
-        for (const name in attendance) {
-            const timestamps = attendance[name]
-            let found = false
-            let i = 0
-            while (!found && i < roster.length) {
-                const testName = roster[i]
-                if (
-                    testName.replace('|', ' ').trim().toLocaleUpperCase() ===
-                    name.replace('|', ' ').trim().toLocaleUpperCase()
-                ) {
-                    found = true
-                    const minsPresent = Utils.minsPresent(timestamps)
-                    if (minsPresent >= presenceThreshold) {
-                        if (timestamps.length % 2 === 1) {
-                            entries.push({
-                                name: name,
-                                color: 'green',
-                                tooltip: 'Present',
-                                icon: 'check_circle',
-                                text: `Joined at ${Utils.toTimeString(
-                                    timestamps[0]
-                                )}`,
-                                index: 2,
-                            })
-                            statusCounts.green++
-                        } else {
-                            entries.push({
-                                name: name,
-                                color: 'yellow',
-                                tooltip: 'Previously Present',
-                                icon: 'watch_later',
-                                text: `Last seen at ${Utils.toTimeString(
-                                    timestamps[timestamps.length - 1]
-                                )}`,
-                                index: 1,
-                            })
-                            statusCounts.yellow++
-                        }
-                    } else {
-                        entries.push({
-                            name: name,
-                            color: 'red',
-                            tooltip: 'Absent',
-                            icon: 'cancel',
-                            text: `Joined at ${Utils.toTimeString(
-                                timestamps[0]
-                            )}`,
-                            index: 0,
-                        })
-                        statusCounts.red++
-                    }
-                    if (testName !== name) {
-                        roster[i] = name
-                        if (!changed) {
-                            changed = true
+                for (const name in attendance) {
+                    if (
+                        !names.includes(name) &&
+                        attendance.hasOwnProperty(name)
+                    ) {
+                        if (attendance[name].length % 2 === 1) {
+                            attendance[name].push(timestamp)
                         }
                     }
                 }
-                i++
-            }
-            if (!found) {
-                entries.push({
-                    name: name,
-                    color: 'gray',
-                    tooltip: 'Not on List',
-                    icon: 'error',
-                    text: `Joined at ${Utils.toTimeString(timestamps[0])}`,
-                    index: -1,
+                chrome.storage.local.set({ [code]: meetData }, () => {
+                    resolve()
                 })
-                statusCounts.gray++
-            }
-        }
-        if (changed) {
-            chrome.storage.local.set({ rosters: rosters })
-        }
-        const bigAttendance = Object.keys(attendance).map((key) =>
-            key.toLocaleUpperCase()
-        )
-        for (const name of roster) {
-            if (!bigAttendance.includes(name.toLocaleUpperCase())) {
-                entries.push({
-                    name: name,
-                    color: 'red',
-                    tooltip: 'Absent',
-                    icon: 'cancel',
-                    text: 'Not here',
-                    index: 0,
-                })
-                statusCounts.red++
-            }
-        }
-
-        if (sortMethod === 'firstName') {
-            var compare = (a, b) => {
-                if ((a.index === -1) !== (b.index === -1)) {
-                    return b.index - a.index
-                }
-                return Utils.compareFirst(a.name, b.name)
-            }
-        } else if (sortMethod === 'lastName') {
-            compare = (a, b) => {
-                if ((a.index === -1) !== (b.index === -1)) {
-                    return b.index - a.index
-                }
-                return Utils.compareLast(a.name, b.name)
-            }
-        } else if (sortMethod === 'presentFirst') {
-            compare = (a, b) => {
-                return b.index - a.index
-            }
-        } else {
-            compare = (a, b) => {
-                if ((a.index === -1) !== (b.index === -1)) {
-                    return b.index - a.index
-                }
-                return a.index - b.index
-            }
-        }
-        entries.sort(compare)
-
-        if (
-            statusCounts.gray === 0 &&
-            jumpButton.classList.contains('mdc-ripple-surface')
-        ) {
-            jumpButton.classList.remove('mdc-ripple-surface')
-            jumpButton.setAttribute('aria-disabled', true)
-            jumpButton.style.cursor = 'default'
-            jumpButton.removeAttribute('jscontroller')
-        }
-        entries.forEach((entry, index) => {
-            if (entry.index === -1) {
-                var metaIcon = 'add_circle'
-                var metaTooltip = 'Add to Class'
-                if (index === 0 || entries[index - 1].index !== -1) {
-                    rosterStatus.insertAdjacentHTML(
-                        'beforeend',
-                        `<li class="mdc-list-divider" role="separator"></li>
-                        <li id="unlisted-divider">
-                            Not on List
-                            <button id="add-all-unlisted" class="mdc-button">
-                                <span class="mdc-button__ripple"></span>
-                                <span class="mdc-button__label">Add All</span>
-                            </button>
-                        </li>`
-                    )
-                    unlistedPos = 61 * index
-                    if (!jumpButton.classList.contains('mdc-ripple-surface')) {
-                        jumpButton.classList.add('mdc-ripple-surface')
-                        jumpButton.setAttribute('aria-disabled', false)
-                        jumpButton.style.cursor = 'pointer'
-                        jumpButton.setAttribute('jscontroller', 'VXdfxd')
-                    }
-                    document
-                        .getElementById('add-all-unlisted')
-                        .addEventListener('click', function () {
-                            removeSnackbarButtons()
-                            rostersCache = rosters
-                            const nons = entries
-                                .filter((entry) => entry.index === -1)
-                                .map((non) => non.name)
-                            addBulkStudents(nons)
-                            snackbar.labelText = `Added ${nons.length} student${
-                                nons.length === 1 ? '' : 's'
-                            } to class.`
-                            sbUndo.style.display = 'inline-flex'
-                            snackbar.close()
-                            snackbar.open()
-                        })
-                }
-            } else {
-                metaIcon = 'remove_circle'
-                metaTooltip = 'Remove from Class'
-            }
-            var meta = `<div class="mdc-list-item__meta">
-                <button
-                    class="mdc-icon-button material-icons medium-button"
-                    aria-label="${metaTooltip}"
-                    jscontroller="VXdfxd"
-                    jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
-                    tabindex="0"
-                    data-tooltip="${metaTooltip}"
-                    data-tooltip-vertical-offset="-12"
-                    data-tooltip-horizontal-offset="0"
-                >
-                    ${metaIcon}
-                </button>
-            </div>`
-            const realName = entry.name.replace('|', ' ').trim()
-            rosterStatus.insertAdjacentHTML(
-                'beforeend',
-                `<li class="mdc-list-divider" role="separator"></li>
-                <li class="mdc-list-item" tabindex="0">
-                    <span
-                        class="mdc-list-item__graphic material-icons ${entry.color}"
-                        jscontroller="VXdfxd"
-                        jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
-                        tabindex="0"
-                        aria-label="${entry.tooltip}"
-                        data-tooltip="${entry.tooltip}"
-                        data-tooltip-vertical-offset="-12"
-                        data-tooltip-horizontal-offset="0"
-                    >
-                        ${entry.icon}
-                    </span>
-                    <span class="mdc-list-item__text">
-                        <span class="mdc-list-item__primary-text">
-                            ${realName}
-                        </span>
-                        <span class="mdc-list-item__secondary-text">
-                            ${entry.text}
-                        </span>
-                    </span>
-                    ${meta}
-                </li>`
-            )
-            const metaButton = rosterStatus.lastChild.querySelector(
-                '.mdc-icon-button'
-            )
-            if (entry.index === -1) {
-                metaButton.addEventListener('click', function () {
-                    removeSnackbarButtons()
-                    rostersCache = rosters
-                    addStudent(entry.name)
-                    snackbar.labelText = `Added ${realName} to class.`
-                    sbUndo.style.display = 'inline-flex'
-                    snackbar.close()
-                    snackbar.open()
-                })
-            } else {
-                metaButton.addEventListener('click', function () {
-                    removeSnackbarButtons()
-                    rostersCache = rosters
-                    removeStudent(entry.name)
-                    snackbar.labelText = `Removed ${realName} from class.`
-                    sbUndo.style.display = 'inline-flex'
-                    snackbar.close()
-                    snackbar.open()
-                })
-            }
-        })
-        if (roster.length > 0)
-            rosterStatus.removeChild(rosterStatus.firstElementChild)
-
-        if (roster.length !== 0) {
-            ;['green', 'yellow', 'red'].forEach(function (color, index) {
-                const bar = document.getElementById(`status-${color}`)
-                bar.style.width = `${
-                    (100 * statusCounts[color]) / roster.length
-                }%`
-                const prefix = bar.getAttribute('aria-label').split(':')[0]
-                bar.setAttribute(
-                    'aria-label',
-                    `${prefix}: ${statusCounts[color]}/${roster.length}`
-                )
-                statusCountEls[index].innerHTML = `<b>${statusCounts[color]
-                    .toString()
-                    .padStart(roster.length.toString().length, '0')}</b>/${
-                    roster.length
-                }`
             })
-        }
-        statusCountEls[3].innerHTML = `<b>${statusCounts.gray}</b>`
+        })
     }
 
-    function troubleshoot() {
-        chrome.runtime.sendMessage({
-            data: 'open-url',
-            url:
-                'https://github.com/tytot/attendance-for-google-meet#troubleshoot',
-        })
+    function getMeetCode() {
+        return document
+            .querySelector('c-wiz')
+            .getAttribute('data-unresolved-meeting-id')
     }
 
     function openSpreadsheet() {
-        chrome.storage.local.get('spreadsheet-id', function (result) {
+        chrome.storage.local.get('spreadsheet-id', (result) => {
             const id = result['spreadsheet-id']
             const url = `https://docs.google.com/spreadsheets/d/${id}`
             chrome.runtime.sendMessage({
@@ -754,703 +1234,26 @@
             })
         })
     }
-
-    function initCard() {
-        const element = document.getElementById('select')
-        element.parentNode.removeChild(element)
-        prepareChips('card-class-view', 'card-default-view', 'card-edit-view')
-        forceStatusUpdate()
+    function troubleshoot() {
+        chrome.runtime.sendMessage({
+            data: 'open-url',
+            url: 'https://github.com/tytot/attendance-for-google-meet#troubleshoot',
+        })
     }
-
-    function toggleCard() {
-        if (document.getElementById('card').classList.contains('collapsed')) {
-            showCard()
-        } else {
-            hideCard()
-        }
-    }
-
-    function showCard() {
-        document.getElementsByClassName('NzPR9b')[0].style.borderRadius = '0px'
-        const attendanceButton = document.getElementById('attendance')
-        attendanceButton.classList.remove('IeuGXd')
-        document.getElementById('card').classList.remove('collapsed')
-    }
-
-    function hideCard() {
-        setTimeout(() => {
-            document.getElementsByClassName('NzPR9b')[0].style.borderRadius =
-                '0 0 0 8px'
-        }, 250)
-        const attendanceButton = document.getElementById('attendance')
-        attendanceButton.classList.add('IeuGXd')
-        document.getElementById('card').classList.add('collapsed')
-    }
-
-    function toggleStatusDetails() {
-        const expanded = statusBar.getAttribute('aria-expanded') === 'true'
-        statusBar.setAttribute('aria-pressed', !expanded)
-        statusBar.setAttribute('aria-expanded', !expanded)
-        if (!expanded) {
-            statusDetails.classList.remove('collapsed')
-            statusBar.setAttribute('data-tooltip', 'Hide Status Details')
-            statusBar.setAttribute('aria-label', 'Hide Status Details')
-        } else {
-            statusDetails.classList.add('collapsed')
-            statusBar.setAttribute('data-tooltip', 'Show Status Details')
-            statusBar.setAttribute('aria-label', 'Show Status Details')
-        }
-    }
-
-    function jumpToUnlisted() {
-        if (jumpButton.classList.contains('mdc-ripple-surface')) {
-            rosterStatus.parentElement.scrollTop = unlistedPos
-        }
-    }
-
-    function getClassHTML(className) {
-        return `<li
-            class="mdc-list-item mdc-list-item--class"
-            role="option"
-            tabindex="0"
-        >
-            <span class="mdc-list-item__ripple"></span>
-            <span
-                class="mdc-list-item__graphic material-icons"
-                aria-hidden="true"
-            >
-                perm_identity
-            </span>
-            <span class="mdc-list-item__text class-entry">
-                ${className}
-            </span>
-            <div class="mdc-list-item__meta">
-                <button
-                    class="mdc-icon-button material-icons medium-button edit-class"
-                    aria-label="Edit"
-                    jscontroller="VXdfxd"
-                    jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
-                    tabindex="0"
-                    data-tooltip="Edit"
-                    data-tooltip-vertical-offset="-12"
-                    data-tooltip-horizontal-offset="0"
-                >
-                    edit
-                </button>
-                <button
-                    class="mdc-icon-button material-icons medium-button delete-class"
-                    aria-label="Delete"
-                    jscontroller="VXdfxd"
-                    jsaction="mouseenter:tfO1Yc; mouseleave:JywGue;"
-                    tabindex="0"
-                    data-tooltip="Delete"
-                    data-tooltip-vertical-offset="-12"
-                    data-tooltip-horizontal-offset="0"
-                >
-                    delete
-                </button>
-            </div>
-        </li>`
-    }
-
-    function initializeClasses() {
-        return new Promise((resolve) => {
-            chrome.storage.local.get('rosters', function (result) {
-                let res = result['rosters']
-                if (res == undefined) {
-                    res = {}
-                    chrome.storage.local.set({ rosters: res })
-                }
-
-                const classList = document.getElementById('class-list')
-                let classes = []
-                for (const className in res) {
-                    classList.insertAdjacentHTML(
-                        'beforeend',
-                        getClassHTML(className)
-                    )
-                    const classEl = classList.lastChild
-                    classEl.name = className
-                    classEl.roster = res[className]
-                    classes.push(classEl)
-                }
-                if (classes.length === 0) {
-                    document.querySelector('#no-classes').style.display = 'flex'
-                }
-                resolve(classes)
-            })
+    function iveFallenAndICantGetUp() {
+        chrome.runtime.sendMessage({
+            data: 'open-url',
+            url: 'https://github.com/tytot/attendance-for-google-meet#usage',
         })
     }
 
-    function undo() {
-        return new Promise((resolve) => {
-            if (rostersCache == null) {
-                resolve()
-            }
-            chrome.storage.local.set({ rosters: rostersCache }, function () {
-                forceStatusUpdate()
-                snackbar.labelText = 'Undo successful.'
-                removeSnackbarButtons()
-                snackbar.open()
-                resolve()
-            })
+    // Listen for attendance data from proxied function
+    window.addEventListener('message', (event) => {
+        if (event.origin !== 'https://meet.google.com') return
+        if (event.data.sender !== 'Ya boi') return
+        processAttendance(event.data.attendance).then(() => {
+            panelStudentScreen.update()
         })
-    }
-
-    function addClass(className, roster) {
-        return new Promise((resolve) => {
-            chrome.storage.local.get('rosters', function (result) {
-                let res = result['rosters']
-                res[className] = roster
-                chrome.storage.local.set({ rosters: res })
-
-                const classList = document.getElementById('class-list')
-                classList.insertAdjacentHTML(
-                    'beforeend',
-                    getClassHTML(className)
-                )
-                const classEl = classList.lastChild
-                classEl.name = className
-                classEl.roster = res[className]
-
-                document.querySelector('#no-classes').style.display = 'none'
-
-                resolve(classEl)
-            })
-        })
-    }
-
-    // function addClass(className, roster) {
-    //     return new Promise((resolve, reject) => {
-    //         writeRostersWithSplit(className, [roster])
-    //             .then((response) => {
-    //                 console.log(response)
-
-    //                 const classList = document.getElementById('class-list')
-    //                 classList.insertAdjacentHTML(
-    //                     'beforeend',
-    //                     getClassHTML(className)
-    //                 )
-    //                 const classEl = classList.lastChild
-    //                 classEl.name = className
-    //                 classEl.roster = roster
-    //                 document.querySelector('#no-classes').style.display = 'none'
-
-    //                 resolve(classEl)
-    //             })
-    //             .catch((error) => {
-    //                 console.log(error)
-    //                 reject(error)
-    //             })
-    //     })
-    // }
-
-    // function writeRostersWithSplit(className, rosterSet) {
-    //     console.log(rosterSet)
-    //     return new Promise((resolve, reject) => {
-    //         chrome.storage.local.get('rosters', function (result) {
-    //             let res = result['rosters']
-    //             for (let i = 0; i < rosterSet.length; i++) {
-    //                 if (i === 0) {
-    //                     res[className] = rosterSet[i]
-    //                 } else {
-    //                     res[`${className}°${i}`] = rosterSet[i]
-    //                 }
-    //             }
-    //             chrome.storage.local.set({ rosters: res }, function () {
-    //                 if (chrome.runtime.lastError) {
-    //                     if (
-    //                         chrome.runtime.lastError.message.startsWith(
-    //                             'QUOTA_BYTES_PER_ITEM'
-    //                         ) && rosterSet.length <= 16
-    //                     ) {
-    //                         writeRostersWithSplit(
-    //                             className,
-    //                             rosterSet
-    //                                 .map((subRoster) => {
-    //                                     const half = Math.ceil(
-    //                                         subRoster.length / 2
-    //                                     )
-    //                                     return [
-    //                                         subRoster.splice(0, half),
-    //                                         subRoster.splice(-half),
-    //                                     ]
-    //                                 })
-    //                                 .flat()
-    //                         ).then(resolve)
-    //                     } else {
-    //                         reject(chrome.runtime.lastError)
-    //                     }
-    //                 } else {
-    //                     resolve()
-    //                 }
-    //             })
-    //         })
-    //     })
-    // }
-
-    function updateClass(className, roster, set = false) {
-        return new Promise((resolve) => {
-            chrome.storage.local.get(null, function (result) {
-                let res = result['rosters']
-                res[className] = roster
-                chrome.storage.local.set({ rosters: res })
-                if (set) {
-                    const code = getMeetCode()
-                    result[code].class = className
-                    chrome.storage.local.set({ [code]: result[code] })
-                }
-                const classList = document.getElementById('class-list')
-                const classEls = classList.getElementsByTagName('li')
-                for (const classEl of classEls) {
-                    if (classEl.name === className) {
-                        classEl.roster = roster
-                        break
-                    }
-                }
-                resolve()
-            })
-        })
-    }
-
-    function updateAndRenameClass(
-        oldClassName,
-        newClassName,
-        roster,
-        set = false
-    ) {
-        return new Promise((resolve) => {
-            chrome.storage.local.get(null, function (result) {
-                let res = result['rosters']
-                res[newClassName] = roster
-                delete res[oldClassName]
-                chrome.storage.local.set({ rosters: res })
-                const code = getMeetCode()
-                if (set) {
-                    result[code].class = newClassName
-                    chrome.storage.local.set({ [code]: result[code] })
-                }
-                for (const key in result) {
-                    const data = result[key]
-                    if (key !== code && data.hasOwnProperty('timestamp')) {
-                        data.class = newClassName
-                        chrome.storage.local.set({ [key]: data })
-                    }
-                }
-                const classList = document.getElementById('class-list')
-                const classEls = classList.getElementsByTagName('li')
-                for (const classEl of classEls) {
-                    if (classEl.name === oldClassName) {
-                        classEl.name = newClassName
-                        classEl.roster = roster
-                        classEl.querySelector(
-                            '.class-entry'
-                        ).textContent = newClassName
-                        break
-                    }
-                }
-                resolve()
-            })
-        })
-    }
-
-    function deleteClass(className) {
-        return new Promise((resolve) => {
-            chrome.storage.local.get(null, function (result) {
-                let res = result['rosters']
-                delete res[className]
-                chrome.storage.local.set({ rosters: res })
-
-                for (const key of Object.keys(result)) {
-                    if (
-                        result[key].hasOwnProperty('class') &&
-                        typeof result[key].class === 'string' &&
-                        result[key].class === className
-                    ) {
-                        delete result[key]['class']
-                        chrome.storage.local.set({ [key]: result[key] })
-                    }
-                }
-                const classList = document.getElementById('class-list')
-                const classEls = classList.getElementsByTagName('li')
-                for (const classEl of classEls) {
-                    if (classEl.name === className) {
-                        classList.removeChild(classEl)
-                        break
-                    }
-                }
-                if (Object.keys(res).length === 0) {
-                    document.querySelector('#no-classes').style.display = 'flex'
-                }
-                resolve()
-            })
-        })
-    }
-
-    function addStudent(name) {
-        chrome.storage.local.get(null, function (result) {
-            const code = getMeetCode()
-            const className = result[code].class
-            let res = result.rosters
-            res[className].push(name)
-            chrome.storage.local.set({ rosters: res })
-            updateRosterStatus(
-                result[code].attendance,
-                res,
-                className,
-                result['presence-threshold']
-            )
-        })
-    }
-
-    function addBulkStudents(names) {
-        chrome.storage.local.get(null, function (result) {
-            const code = getMeetCode()
-            const className = result[code].class
-            let res = result.rosters
-            names.forEach((name) => {
-                res[className].push(name)
-            })
-            chrome.storage.local.set({ rosters: res })
-            updateRosterStatus(
-                result[code].attendance,
-                res,
-                className,
-                result['presence-threshold']
-            )
-        })
-    }
-
-    function removeStudent(name) {
-        chrome.storage.local.get(null, function (result) {
-            const code = getMeetCode()
-            const className = result[getMeetCode()].class
-            let res = result.rosters
-            res[className] = res[className].filter((n) => n !== name)
-            chrome.storage.local.set({ rosters: res })
-            updateRosterStatus(
-                result[code].attendance,
-                res,
-                className,
-                result['presence-threshold']
-            )
-        })
-    }
-
-    function forceStatusUpdate() {
-        chrome.storage.local.get(null, function (result) {
-            const res = result[getMeetCode()]
-            const className = res.class
-            if (className) {
-                updateRosterStatus(
-                    res.attendance,
-                    result.rosters,
-                    className,
-                    result['presence-threshold']
-                )
-            }
-        })
-    }
-
-    function editClass(className, roster) {
-        classTextField.value = className
-        classTextField.initValue = className
-        chipSetEl.innerHTML = ''
-        chipSet = new MDCChipSet(chipSetEl)
-        for (const name of roster) {
-            addChip(name.replace('|', ' ').trim())
-        }
-        stuTextField.value = getNewFieldValue()
-    }
-
-    function addChip(name) {
-        const chipEl = document.createElement('div')
-        chipEl.className = 'mdc-chip'
-        chipEl.setAttribute('role', 'row')
-        chipEl.innerHTML = `<div class="mdc-chip__ripple"></div>
-        <span role="gridcell">
-            <span role="button" tabindex="0" class="mdc-chip__primary-action">
-                <span class="mdc-chip__text">${name}</span>
-            </span>
-            <span role="gridcell">
-                <i
-                    class="material-icons mdc-chip__icon mdc-chip__icon--trailing"
-                    tabindex="0"
-                    role="button"
-                    style="margin-left: 0;"
-                    >cancel</i
-                >
-            </span>
-        </span>`
-        chipSetEl.appendChild(chipEl)
-        chipSet.addChip(chipEl)
-
-        chipEl
-            .querySelector('.mdc-chip__icon')
-            .addEventListener('click', function () {
-                removeChip(name)
-            })
-    }
-
-    function removeChip(name) {
-        const nameArray = chipSet.chips.map((chip) =>
-            chip.root.outerText.replace('cancel', '').trim()
-        )
-        if (name) {
-            var i = nameArray.indexOf(name)
-        } else {
-            i = nameArray.length - 1
-        }
-        const chip = chipSet.chips[i]
-        chip.beginExit()
-        stuTextField.value = getNewFieldValue(true)
-    }
-
-    function prepareChips(_cardView, defaultView, editView) {
-        cardView = _cardView || defaultView
-        const textFields = document.getElementsByClassName('mdc-text-field')
-        classTextField = new MDCTextField(textFields[0])
-        stuTextFieldEl = textFields[1]
-        stuTextField = new MDCTextField(stuTextFieldEl)
-        chipSetEl = document.getElementsByClassName('mdc-chip-set')[0]
-        chipSet = new MDCChipSet(chipSetEl)
-
-        initializeClasses().then((classes) => {
-            for (const classEl of classes) {
-                addDefaultEventListeners(
-                    classEl,
-                    cardView,
-                    defaultView,
-                    editView,
-                    _cardView
-                )
-                new MDCRipple(classEl)
-            }
-        })
-
-        document
-            .getElementById('addeth-class')
-            .addEventListener('click', function () {
-                document.getElementById('class-label').adding = true
-                document.getElementById(cardView).hidden = true
-                document.getElementById(editView).hidden = false
-                editClass('', [])
-            })
-
-        document
-            .getElementById('save-class')
-            .addEventListener('click', function () {
-                const className = classTextField.value
-                const initClassName = classTextField.initValue
-
-                chrome.storage.local.get('rosters', async function (result) {
-                    let res = result['rosters']
-                    removeSnackbarButtons()
-                    if (className === '') {
-                        snackbar.labelText =
-                            'Error: The class name cannot be empty.'
-                        snackbar.close()
-                        snackbar.open()
-                    } else if (className.includes('§')) {
-                        snackbar.labelText =
-                            'Error: The class name cannot contain the character §.'
-                        snackbar.close()
-                        snackbar.open()
-                    } else if (
-                        res.hasOwnProperty(className) &&
-                        className !== initClassName
-                    ) {
-                        snackbar.labelText =
-                            'Error: You already have a class with that name.'
-                        snackbar.close()
-                        snackbar.open()
-                    } else {
-                        const nameArray = chipSet.chips.map((chip) =>
-                            chip.root.outerText.replace('cancel', '').trim()
-                        )
-                        delete classTextField.initValue
-                        if (initClassName === '') {
-                            const classEl = await addClass(className, nameArray)
-                            new MDCRipple(classEl)
-                            addDefaultEventListeners(
-                                classEl,
-                                cardView,
-                                defaultView,
-                                editView,
-                                _cardView
-                            )
-                            document.getElementById(cardView).hidden = false
-                            document.getElementById(editView).hidden = true
-                        } else {
-                            if (initClassName !== className) {
-                                await updateAndRenameClass(
-                                    initClassName,
-                                    className,
-                                    nameArray,
-                                    !selectDialog.isOpen
-                                )
-                                port.postMessage({
-                                    data: 'rename',
-                                    code: getMeetCode(),
-                                    oldClassName: initClassName,
-                                    newClassName: className,
-                                })
-                            } else {
-                                await updateClass(
-                                    className,
-                                    nameArray,
-                                    !selectDialog.isOpen
-                                )
-                            }
-                            const cardTitle = document.getElementById(
-                                'class-label'
-                            )
-                            cardTitle.textContent = className
-                            document.getElementById(defaultView).hidden = false
-                            document.getElementById(editView).hidden = true
-                            forceStatusUpdate()
-                        }
-                        if (selectButton) {
-                            selectButton.disabled = true
-                        }
-
-                        snackbar.labelText = `Successfully saved class ${className}.`
-                        snackbar.close()
-                        snackbar.open()
-                    }
-                })
-            })
-
-        document
-            .getElementById('edit-roster')
-            .addEventListener('click', function () {
-                chrome.storage.local.get(null, function (result) {
-                    let res = result[getMeetCode()]
-                    const className = res.class
-                    try {
-                        document.getElementById(defaultView).hidden = true
-                        document.getElementById(editView).hidden = false
-                    } catch {}
-                    editClass(className, Array.from(result.rosters[className]))
-                })
-            })
-
-        stuTextFieldEl.addEventListener('input', function (event) {
-            const rawInput = stuTextField.value
-            const input = rawInput.trimLeft()
-            const newValue = getNewFieldValue()
-            if (rawInput + ' ' === newValue) {
-                const chips = chipSet.chips
-                const chipAction = chips[chips.length - 1].root.querySelector(
-                    '.mdc-chip__primary-action'
-                )
-                chipAction.focus()
-                stuTextField.value = newValue
-            } else {
-                if (input.includes('\n')) {
-                    let names = input
-                        .split(/\r?\n/)
-                        .map((name) => name.trim().replace(/\s+/g, ' '))
-                        .filter((name) => name !== '')
-                    for (const name of names) {
-                        addChip(name)
-                    }
-                    stuTextField.value = getNewFieldValue()
-                } else {
-                    stuTextField.value = newValue + input
-                }
-            }
-        })
-
-        const input = document.getElementsByClassName(
-            'mdc-text-field__input'
-        )[1]
-        input.addEventListener('scroll', function () {
-            const scrollY = input.scrollTop
-            chipSetEl.style.top = '-' + scrollY + 'px'
-        })
-    }
-
-    function addDefaultEventListeners(
-        classEl,
-        cardView,
-        defaultView,
-        editView,
-        clickable
-    ) {
-        if (clickable) {
-            classEl.addEventListener('click', function (event) {
-                const target = event.target
-                if (
-                    !target.classList.contains('edit-class') &&
-                    !target.classList.contains('delete-class')
-                ) {
-                    const code = getMeetCode()
-                    chrome.storage.local.get(null, function (result) {
-                        const res = result[code]
-                        res.class = classEl.name
-                        chrome.storage.local.set({ [code]: res })
-
-                        document.getElementById(cardView).hidden = true
-                        document.getElementById(defaultView).hidden = false
-
-                        document.getElementById('class-label').textContent =
-                            classEl.name
-
-                        updateRosterStatus(
-                            res.attendance,
-                            result.rosters,
-                            res.class,
-                            result['presence-threshold']
-                        )
-                        rosterStatus.parentElement.scrollTop = 0
-                    })
-                }
-            })
-        }
-        classEl
-            .querySelector('.delete-class')
-            .addEventListener('click', function () {
-                deleteButton.classToDelete = classEl.name
-                confirmDeleteDialog.open()
-            })
-        classEl
-            .querySelector('.edit-class')
-            .addEventListener('click', function () {
-                document.getElementById(cardView).hidden = true
-                document.getElementById(defaultView).hidden = true
-                document.getElementById(editView).hidden = false
-                editClass(classEl.name, Array.from(classEl.roster))
-            })
-    }
-
-    function getNewFieldValue(removal = false) {
-        const chipRows = (chipSetEl.offsetHeight - 8) / 40
-
-        let newValue = ''
-        for (let i = 0; i < chipRows - 1; i++) {
-            newValue += ' '.repeat(100) + '\n'
-        }
-
-        let lastHeight = -1
-        let counter = 0
-        let chips = chipSet.chips.map((chip) => chip.root)
-        if (removal) {
-            chips.pop()
-        }
-        for (let i = chips.length - 1; i >= 0; i--) {
-            const chip = chips[i]
-            const top = chip.getBoundingClientRect().top
-            if (lastHeight != -1 && Math.abs(top - lastHeight) > 10) {
-                break
-            }
-            lastHeight = top
-            const text = chip.querySelector('.mdc-chip__text').innerHTML
-            for (let i = 0; i < text.length + 7; i++) {
-                counter++
-            }
-        }
-        newValue += ' '.repeat(Math.max(0, counter - 1))
-        return newValue
-    }
-})()
+        // console.log('Updating...')
+    })
+}

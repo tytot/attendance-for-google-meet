@@ -251,7 +251,7 @@ chrome.storage.local.get(null, (result) => {
                     New in Version ${chrome.runtime.getManifest().version}
                 </h2>
                 <ul>
-                    <li>Compatibility with Google Meet's new design.</li>
+                    <li>Fixed a bug when sorting by absent first.</li>
                 </ul>
             </div>
         </div>

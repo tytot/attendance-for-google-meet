@@ -1,6 +1,6 @@
 {
     "name": "Attendance for Google Meet™",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "Records Google Meet™ attendance and exports to Google Sheets™.",
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgu3DFNTJ4W9qEZwA4GjeTn4kj0dXRooOfJdu6BAv041ZWGAx6Nowcj7cd9K4JfCzOGlNpMkXaWX8pXQD004n7oeg2AKqbgO7cKo2EDgLKYKDy+Uq/Mjb/bS8sQaa6kzTVhP8tJg19/DR01EJ0/Y8//2I6OnnhskWMhIZNt2bUGQTG9Pk/i5cRcGNcW1pkv6quTU+n49lU969guaRyK8ER5BUBn1qLzv6g61LDubtYkWAuxkx7KEBUtByGpAeh/xk7aQtuSEEBjhagwfL+aXYRVeecH732gRWzP9yepE8ZHJYNdMfsSq2Pg/KSgj83KO2rZhxGI0RgsIJPOMThh5+hwIDAQAB",
     "web_accessible_resources": [

@@ -130,9 +130,12 @@ chrome.runtime.onInstalled.addListener((details) => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.data === 'instantiate') {
-        chrome.tabs.executeScript(
+        chrome.scripting.executeScript(
             {
-                file: 'js/attendance.js',
+                files: ['js/attendance.js'],
+                target: {
+                    tabId: sender.tab.id
+                }
             },
             (result) => {
                 sendResponse(result)

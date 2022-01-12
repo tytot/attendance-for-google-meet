@@ -346,7 +346,7 @@
                 'present-first': (a, b) => {
                     return b.index - a.index
                 },
-                'present-last': (a, b) => {
+                'absent-first': (a, b) => {
                     if ((a.index === -1) !== (b.index === -1)) {
                         return b.index - a.index
                     }
@@ -552,6 +552,7 @@
                             statusCounts.red++
                         }
                     }
+                    console.log(this.sortMethod)
                     entries.sort(this.sortMethods[this.sortMethod])
                     if (statusCounts.gray === 0 && this.jumpButtonEl.primed) {
                         this.jumpButtonEl.primed = false

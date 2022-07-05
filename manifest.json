@@ -9,6 +9,7 @@
                 "fonts/*",
                 "img/icons/drive.png",
                 "js/attendance.js",
+                "js/utils.js",
                 "js/inject.js"
             ],
             "matches": ["*://meet.google.com/*"]

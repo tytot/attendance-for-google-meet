@@ -24,6 +24,25 @@ class Utils {
         return Math.abs(nHash)
     }
 
+    static areEqualArrays(a1, a2) {
+        const superSet = {}
+        for (const i of a1) {
+            superSet[i] = 1
+        }
+        for (const i of a2) {
+            if (!superSet[i]) {
+                return false
+            }
+            superSet[i] = 2
+        }
+        for (let i in superSet) {
+            if (superSet[i] === 1) {
+                return false
+            }
+        }
+        return true
+    }
+
     static minsPresent(timestamps) {
         let minsPresent = 0
         for (let i = 0; i < timestamps.length; i += 2) {
@@ -55,66 +74,33 @@ class Utils {
         }
     }
 
-    static getFirstName(fullName) {
-        if (Utils.nameMap.has(fullName)) {
-            return Utils.nameMap.get(fullName)[0]
-        }
-        return Utils.splitNames(fullName)[0]
-    }
-
-    static getLastName(fullName) {
-        if (Utils.nameMap.has(fullName)) {
-            return Utils.nameMap.get(fullName)[1]
-        }
-        return Utils.splitNames(fullName)[1]
-    }
-
-    static splitNames(fullName) {
-        let splitNames
+    static getNames(fullName, firstName = '') {
         if (fullName.includes('|')) {
-            splitNames = fullName.split('|')
-        } else if (fullName.includes(',')) {
-            splitNames = fullName.split(/,(.+)/)
-            splitNames = [splitNames[1].trim(), splitNames[0].trim()]
-        } else {
-            const names = fullName
-                .split(' ')
-                .filter(
-                    (name) =>
-                        !(
-                            (name.charAt(0) === '[' &&
-                                name.slice(-1) === ']') ||
-                            (name.charAt(0) === '(' && name.slice(-1) === ')')
-                        )
-                )
-            if (names.length === 1) {
-                splitNames = [fullName, '']
-            } else {
-                let i = names.length - 1
-                for (; i > 1; i--) {
-                    const name = names[i]
-                    if (name.charAt(0) === name.charAt(0).toLowerCase()) {
-                        break
-                    }
-                }
-                splitNames = [
-                    names.slice(0, i).join(' '),
-                    names.slice(i).join(' '),
-                ]
-            }
+            return fullName.split('|')
         }
-        Utils.nameMap.set(fullName, splitNames)
-        return splitNames
+        if (Utils.nameMap.has(fullName)) {
+            return Utils.nameMap.get(fullName)
+        }
+        const lastName = fullName
+            .replace(new RegExp(`^${firstName}\\s*`), '')
+            .replace(new RegExp(`\\s*${firstName}$`), '')
+            .replace(',', '')
+            .trim()
+        Utils.nameMap.set(fullName, [firstName, lastName])
+        return [firstName, lastName]
     }
 
     static compareFirst(a, b) {
         return Utils.collator.compare(
-            Utils.getFirstName(a),
-            Utils.getFirstName(b)
+            Utils.getNames(a)[0],
+            Utils.getNames(b)[0]
         )
     }
 
     static compareLast(a, b) {
-        return Utils.collator.compare(Utils.getLastName(a), Utils.getLastName(b))
+        return Utils.collator.compare(
+            Utils.getNames(a)[1],
+            Utils.getNames(b)[1]
+        )
     }
 }

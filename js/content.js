@@ -1139,9 +1139,11 @@ chrome.storage.local.get(null, (result) => {
 
     new MutationObserver((mutations, me) => {
         if (document.querySelector('.c8mVDd')) {
-            const s = document.createElement('script')
-            s.src = chrome.runtime.getURL('js/inject.js')
-            document.documentElement.appendChild(s)
+            ;['js/utils.js', 'js/inject.js'].forEach((filePath) => {
+                const s = document.createElement('script')
+                s.src = chrome.runtime.getURL(filePath)
+                document.documentElement.appendChild(s)
+            })
             initialize()
             me.disconnect()
         }

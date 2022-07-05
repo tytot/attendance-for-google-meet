@@ -552,7 +552,6 @@
                             statusCounts.red++
                         }
                     }
-                    console.log(this.sortMethod)
                     entries.sort(this.sortMethods[this.sortMethod])
                     if (statusCounts.gray === 0 && this.jumpButtonEl.primed) {
                         this.jumpButtonEl.primed = false
@@ -1062,7 +1061,6 @@
                     ) {
                         panelClassScreen.hidden = true
                         panelStudentScreen.hidden = false
-                        console.log(result[code].class)
                         panelStudentScreen.chooseClass(result[code].class)
                     }
                     resolve()
@@ -1247,14 +1245,13 @@
             url: 'https://github.com/tytot/attendance-for-google-meet#usage',
         })
     }
-
+    
     // Listen for attendance data from proxied function
     window.addEventListener('message', (event) => {
         if (event.origin !== 'https://meet.google.com') return
-        if (event.data.sender !== 'Ya boi') return
+        if (event.data.sender !== 'A4GM') return
         processAttendance(event.data.attendance).then(() => {
             panelStudentScreen.update()
         })
-        // console.log('Updating...')
     })
 }

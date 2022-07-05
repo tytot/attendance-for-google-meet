@@ -1,5 +1,5 @@
 try {
-    importScripts("js/requests.js", "js/utils.js", "js/background.js")
+    importScripts("js/utils.js", "js/requests.js", "js/background.js")
 } catch (e) {
     console.error(e)
 }

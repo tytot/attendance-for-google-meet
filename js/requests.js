@@ -599,8 +599,8 @@ async function generateAttendanceRows(code) {
     const names = Array.from(roster)
     names.sort(Utils.compareLast)
     for (const name of names) {
-        const firstName = Utils.getFirstName(name)
-        const lastName = Utils.getLastName(name)
+        const [firstName, lastName] = Utils.getNames(name)
+        console.log
         let present = 'N',
             timeIn = '',
             timeOut = '',

@@ -251,7 +251,7 @@ chrome.storage.local.get(null, (result) => {
                     New in Version ${chrome.runtime.getManifest().version}
                 </h2>
                 <ul>
-                    <li>Fixed a bug when sorting by absent first.</li>
+                    <li>Fixed issue that caused all participants to register as absent.</li>
                 </ul>
             </div>
         </div>

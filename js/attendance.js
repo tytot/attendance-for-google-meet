@@ -999,7 +999,7 @@
         document
             .getElementById('panel')
             .querySelector('.help')
-            .addEventListener('click', iveFallenAndICantGetUp)
+            .addEventListener('click', usage)
         return new Promise((resolve) => {
             panelClassScreen.onAdd = () => {
                 panelClassScreen.hidden = true
@@ -1239,7 +1239,7 @@
             url: 'https://github.com/tytot/attendance-for-google-meet#troubleshoot',
         })
     }
-    function iveFallenAndICantGetUp() {
+    function usage() {
         chrome.runtime.sendMessage({
             data: 'open-url',
             url: 'https://github.com/tytot/attendance-for-google-meet#usage',

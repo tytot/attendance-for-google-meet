@@ -17,15 +17,16 @@ UI:
     ✔ Ability to paste names into text box @done(20-08-19 12:00)
 
 Backend:
+    ☐ Store Meet attendance metadata in nested object
     ✔ Compatibility between "Last, First" names and "First Last" names @started(21-04-26 19:19) @done(21-04-27 21:16) @lasted(1d1h57m40s)
-    ✔ Comprehensive refactor of source code @done(21-06-30 16:31)
+    ☐ Comprehensive refactor of source code to use new Chrome APIs
     ☐ Option to download and upload class rosters @started(21-03-28 17:20)
     ☐ Update to Manifest V3 @high
     ✔ Resolve issues with non-English names @done(21-03-08 22:39)
     ✔ Fix problems that arise when using the same code repeatedly @done(21-03-07 21:13)
     ✔ Fix export on leave @done(21-01-28 21:10)
     ✔ Deal with big classes @low @done(21-03-08 22:39)
-    ☐ Resolve bug wherein some present students are marked as absent @high 
+    ✔ Resolve bug wherein some present students are marked as absent @high @done(22-07-12 19:05)
     ✔ Get rid of nameArray variable @started(20-10-08 10:41) @done(20-10-08 14:23) @lasted(3h42m6s)
     ✔ Determine first/last names from video data object @low @started(20-10-05 11:32) @done(20-10-06 15:43) @lasted(1d4h11m3s)
     ✔ Deal with cases in which token is invalid @started(20-10-01 19:13) @done(20-10-03 21:33) @lasted(2d2h20m40s)

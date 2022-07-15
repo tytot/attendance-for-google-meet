@@ -1,5 +1,7 @@
 'use strict'
 {
+    const updateInterval = 500
+
     const prop = '[\\w$]{2,3}'
     const getAllRegex = new RegExp(
         `^getAll\\(\\){return\\[\\.\\.\\.this\\.(${prop})\\.values\\(\\)\\]\\.map\\(a=>a\\.(${prop})\\)}$`
@@ -92,7 +94,6 @@
             console.error(e)
         }
     }
-
     const finder = setInterval(attemptHook, 1)
 
     function sendUpdate() {
@@ -108,6 +109,5 @@
             )
         }
     }
-
-    setInterval(sendUpdate, 500)
+    setInterval(sendUpdate, updateInterval)
 }

@@ -8,8 +8,8 @@
             "resources": [
                 "fonts/*",
                 "img/icons/drive.png",
-                "js/attendance.js",
                 "js/utils.js",
+                "js/attendance.js",
                 "js/inject.js"
             ],
             "matches": ["*://meet.google.com/*"]

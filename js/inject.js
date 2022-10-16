@@ -5,8 +5,11 @@
         `^getAll\\(\\){return\\[\\.\\.\\.this\\.(${prop})\\.values\\(\\)\\]\\.map\\(a=>a\\.(${prop})\\)}$`
     )
     const filterRegex = new RegExp(
-        `^${prop}\\(\\){return this\\.getAll\\(\\)\\.filter\\(a=>!a\\.(${prop})&&5===a\\.state\\)}$`
+        `^${prop}\\(\\){return this\\.getAll\\(\\)\\.filter\\(${prop}\\)}$`
     )
+
+    let retries = 0
+    const maxRetries = 10000
 
     const hooker = {
         getName: function (data) {
@@ -33,12 +36,12 @@
             return Utils.getNames(fullName, firstName).join('|')
         },
         lastNames: [],
+        getAll: function () {
+            const mapValues = this.map ? [...this.map.values()] : []
+            return mapValues.map((a) => a[this.dataProp])
+        },
         names: function () {
-            const names = [...(this.map?.values() || [])]
-                .map((a) => a[this.dataProp])
-                .filter((a) => !a[this.filterProp] && 5 === a.state)
-                .map((a) => this.getName(a))
-            return names
+            return this.filterFunc.call(this).map((a) => this.getName(a))
         },
         namesChanged: function (names) {
             return (
@@ -48,39 +51,45 @@
         },
     }
 
+    const finder = setInterval(attemptHook, 1)
+
     function attemptHook() {
         try {
             for (const key in window.default_MeetingsUi) {
                 const val = window.default_MeetingsUi[key]
                 if (!val?.prototype) continue
-                const getAllMatch = Object.getOwnPropertyDescriptor(
+                const getAll = Object.getOwnPropertyDescriptor(
                     val.prototype,
                     'getAll'
                 )
-                    ?.value?.toString()
+                if (!getAll) continue
+                const match = getAll.value
+                    .toString()
                     .replace('\n', '')
                     .match(getAllRegex)
-                if (!getAllMatch) {
+                if (!match) {
                     continue
                 }
-                hooker.dataProp = getAllMatch[2]
-                if (
-                    !Object.getOwnPropertyNames(val.prototype).some(
-                        (funcName) =>
-                            (hooker.filterProp =
-                                Object.getOwnPropertyDescriptor(
-                                    val.prototype,
-                                    funcName
-                                )
-                                    ?.value?.toString()
-                                    .match(filterRegex)?.[1])
+                hooker.dataProp = match[2]
+                for (const funcName of Object.getOwnPropertyNames(
+                    val.prototype
+                )) {
+                    const func = Object.getOwnPropertyDescriptor(
+                        val.prototype,
+                        funcName
                     )
-                ) {
+                    if (!func) continue
+                    if (filterRegex.test(func.value.toString())) {
+                        hooker.filterFunc = func.value
+                        break
+                    }
+                }
+                if (!hooker.filterFunc) {
                     continue
                 }
                 const og = val.prototype.getAll
                 val.prototype.getAll = function () {
-                    hooker.map = this[getAllMatch[1]]
+                    hooker.map = this[match[1]]
                     val.prototype.getAll = og
                     return og.call(this)
                 }
@@ -91,9 +100,13 @@
         } catch (e) {
             console.error(e)
         }
+        if (++retries == maxRetries) {
+            Utils.log(
+                `Unable to perform hook within ${maxRetries / 1000} seconds.`
+            )
+            clearInterval(finder)
+        }
     }
-
-    const finder = setInterval(attemptHook, 1)
 
     function sendUpdate() {
         const names = hooker.names()

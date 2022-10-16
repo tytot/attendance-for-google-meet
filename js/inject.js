@@ -25,14 +25,14 @@
                             continue
                         }
                         this.dataPath = [key, subKey]
-                        Utils.log('Found path to participant data.')
+                        a4gm.utils.log('Found path to participant data.')
                     }
                 }
             }
             const participant = data[this.dataPath[0]][this.dataPath[1]]
             const fullName = participant[28]
             const firstName = participant[37]
-            return Utils.getNames(fullName, firstName).join('|')
+            return a4gm.utils.getNames(fullName, firstName)
         },
         lastNames: [],
         names: function () {
@@ -45,7 +45,7 @@
         namesChanged: function (names) {
             return (
                 this.lastNames.length !== names.length ||
-                !Utils.areEqualArrays(this.lastNames, names)
+                !a4gm.utils.areEqualArrays(this.lastNames, names)
             )
         },
     }
@@ -54,7 +54,9 @@
         try {
             for (const key in window.default_MeetingsUi) {
                 const val = window.default_MeetingsUi[key]
-                if (!val?.prototype) continue
+                if (!val?.prototype) {
+                    continue
+                }
                 const getAllMatch = Object.getOwnPropertyDescriptor(
                     val.prototype,
                     'getAll'
@@ -86,7 +88,7 @@
                     val.prototype.getAll = og
                     return og.call(this)
                 }
-                Utils.log(`Successfully hooked into ${key}#getAll.`)
+                a4gm.utils.log(`Successfully hooked into ${key}#getAll.`)
                 clearInterval(finder)
                 break
             }

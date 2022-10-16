@@ -9,8 +9,9 @@
                 "fonts/*",
                 "img/icons/drive.png",
                 "js/utils.js",
+                "js/inject.js",
                 "js/attendance.js",
-                "js/inject.js"
+                "js/views.js"
             ],
             "matches": ["*://meet.google.com/*"]
         }
@@ -32,8 +33,8 @@
             "matches": ["*://meet.google.com/**-**-**"],
             "css": ["css/material-components.min.css", "css/style.css"],
             "js": [
-                "js/material-components.min.js",
                 "js/utils.js",
+                "js/material-components.min.js",
                 "js/content.js",
                 "js/chipset-textfield.js"
             ]

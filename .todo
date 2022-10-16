@@ -17,6 +17,7 @@ UI:
     ✔ Ability to paste names into text box @done(20-08-19 12:00)
 
 Backend:
+    ☐ Optimize HTML to use IDs instead of classes when possible
     ☐ Store Meet attendance metadata in nested object
     ✔ Compatibility between "Last, First" names and "First Last" names @started(21-04-26 19:19) @done(21-04-27 21:16) @lasted(1d1h57m40s)
     ☐ Comprehensive refactor of source code to use new Chrome APIs

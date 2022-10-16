@@ -120,15 +120,12 @@ class MDCChipSetTextField extends MDCTextField {
         this.value = this.expectedWhitespace()
     }
     addChip(text) {
-        const chipEl = this.chipTemplateEl.content.firstElementChild.cloneNode(
-            true
-        )
+        const chipEl =
+            this.chipTemplateEl.content.firstElementChild.cloneNode(true)
         const id = `nick-chubb-${++this.chipCounter}`
         chipEl.id = id
         chipEl.rawText = text
-        chipEl.querySelector('.mdc-chip__text').textContent = text
-            .replace('|', ' ')
-            .trim()
+        chipEl.querySelector('.mdc-chip__text').textContent = text.trim()
         this.chipSetEl.appendChild(chipEl)
         this.chipSet.addChip(chipEl)
         const chip = this.chipSet.chips[this.chipSet.chips.length - 1]

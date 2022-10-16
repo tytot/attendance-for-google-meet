@@ -1,8 +1,6 @@
 .prettierrc
 fonts/*
-css/material-components.min.css
-js/material-components.min.js
+*/material-components.*
 temp/
-
 lib*
 *.zip

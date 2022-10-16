@@ -102,7 +102,7 @@ chrome.runtime.onInstalled.addListener((details) => {
                 chrome.storage.sync.set(data)
                 chrome.storage.local.clear()
             })
-        } else if (Utils.collator.compare(pv, '1.2.14') >= 0) {
+        } else if (a4gm.utils.collator.compare(pv, '1.2.14') >= 0) {
             if (pv === '1.2.14') {
                 chrome.storage.sync.get(null, (data) => {
                     chrome.storage.local.set(data)
@@ -132,7 +132,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.data === 'instantiate') {
         chrome.scripting.executeScript(
             {
-                files: ['js/attendance.js'],
+                files: ['js/views.js'],
                 target: {
                     tabId: sender.tab.id
                 }
@@ -205,14 +205,14 @@ function authenticate() {
 
 function refreshToken(token, callback) {
     chrome.identity.removeCachedAuthToken({ token: token }, () => {
-        Utils.log('Removed cached auth token.')
+        a4gm.utils.log('Removed cached auth token.')
         chrome.identity.getAuthToken({ interactive: true }, callback)
     })
 }
 
 function rename(token, code, oldClassName, newClassName, retry = false) {
     chrome.storage.local.get('spreadsheet-id', async (result) => {
-        Utils.log('Renaming class...')
+        a4gm.utils.log('Renaming class...')
         const id = result['spreadsheet-id']
         let requests = [deleteSheetMetadata(oldClassName)]
         try {
@@ -222,12 +222,12 @@ function rename(token, code, oldClassName, newClassName, retry = false) {
                 updateSheetProperties(newClassName, code, sheetId, 'title')
             )
             const data = await batchUpdate(token, requests, id, sheetId)
-            Utils.log(`Renamed sheet ${oldClassName} to ${newClassName}`)
+            a4gm.utils.log(`Renamed sheet ${oldClassName} to ${newClassName}`)
             console.log(data)
         } catch (error) {
             if (!retry && error.status === 401) {
                 refreshToken(token, (newToken) => {
-                    Utils.log('Retrying rename of class.')
+                    a4gm.utils.log('Retrying rename of class.')
                     rename(newToken, code, oldClassName, newClassName, true)
                 })
             } else {
@@ -245,7 +245,7 @@ function rename(token, code, oldClassName, newClassName, retry = false) {
 function deleteMeta(token, codes, retry = false) {
     chrome.storage.local.get('spreadsheet-id', async (result) => {
         if (result.hasOwnProperty('spreadsheet-id')) {
-            Utils.log('Deleting stale metadata...')
+            a4gm.utils.log('Deleting stale metadata...')
             const id = result['spreadsheet-id']
             let requests = []
             for (const code of codes) {
@@ -253,12 +253,12 @@ function deleteMeta(token, codes, retry = false) {
             }
             try {
                 const data = await batchUpdate(token, requests, id)
-                Utils.log('Delete metadata response:')
+                a4gm.utils.log('Delete metadata response:')
                 console.log(data)
             } catch (error) {
                 if (!retry && error.status === 401) {
                     refreshToken(token, (newToken) => {
-                        Utils.log('Retrying deletion of stale metadata.')
+                        a4gm.utils.log('Retrying deletion of stale metadata.')
                         deleteMeta(newToken, codes, true)
                     })
                 } else {
@@ -283,8 +283,8 @@ function tryExport(token, code, port, retry = false) {
         if (result[code].hasOwnProperty('class')) {
             const className = result[code].class
             if (retry || !notifierMap.has(`${className}-${code}`)) {
-                Utils.log('Attempting export...')
-                Utils.log('Meet code: ' + code)
+                a4gm.utils.log('Attempting export...')
+                a4gm.utils.log('Meet code: ' + code)
                 try {
                     if (id == undefined) {
                         createSpreadsheet(token, className, code, port)
@@ -294,7 +294,7 @@ function tryExport(token, code, port, retry = false) {
                 } catch (error) {
                     if (!retry && error.status === 401) {
                         refreshToken(token, (newToken) => {
-                            Utils.log('Retrying export.')
+                            a4gm.utils.log('Retrying export.')
                             tryExport(newToken, code, port, true)
                         })
                     } else {
@@ -331,7 +331,7 @@ async function createSpreadsheet(token, className, code, port) {
     }
     let spreadsheetId = null
     let requests = []
-    Utils.log('Creating new attendance spreadsheet...')
+    a4gm.utils.log('Creating new attendance spreadsheet...')
 
     const notifierKey = `${className}-${code}`
     if (!notifierMap.has(notifierKey)) {
@@ -346,7 +346,7 @@ async function createSpreadsheet(token, className, code, port) {
         throw newSpreadsheet.error
     }
     notifier.post(port, { progress: 0.3 })
-    Utils.log(
+    a4gm.utils.log(
         `Successfully created Attendance spreadsheet with id ${newSpreadsheet.spreadsheetId}.`
     )
     chrome.storage.local.set({
@@ -361,13 +361,13 @@ async function createSpreadsheet(token, className, code, port) {
     const data = await batchUpdate(token, requests, spreadsheetId, 0)
     notifier.post(port, { done: true, progress: 1 })
     notifierMap.delete(notifierKey)
-    Utils.log('Initialize spreadsheet response:')
+    a4gm.utils.log('Initialize spreadsheet response:')
     console.log(data)
 }
 
 async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
     let requests = []
-    Utils.log('Updating spreadsheet...')
+    a4gm.utils.log('Updating spreadsheet...')
 
     const notifierKey = `${className}-${code}`
     if (!notifierMap.has(notifierKey)) {
@@ -388,7 +388,7 @@ async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
             ) + 1
         requests = requests.concat(addSheet(className, code, sheetId))
         requests = requests.concat(createHeaders(sheetId))
-        Utils.log(`Creating new sheet for class ${className}, ID ${sheetId}`)
+        a4gm.utils.log(`Creating new sheet for class ${className}, ID ${sheetId}`)
     } else {
         sheetId = classMeta.location.sheetId
     }
@@ -408,13 +408,13 @@ async function updateSpreadsheet(token, className, code, spreadsheetId, port) {
     requests = requests.concat(icReqs)
     let data = await batchUpdate(token, requests, spreadsheetId, sheetId)
     notifier.post(port, { progress: 0.65 })
-    Utils.log('Update spreadsheet response:')
+    a4gm.utils.log('Update spreadsheet response:')
     console.log(data)
     const cgReqs = await collapseGroup(token, code, spreadsheetId, sheetId)
     notifier.post(port, { progress: 0.75 })
     if (cgReqs) {
         data = await batchUpdate(token, cgReqs, spreadsheetId, sheetId)
-        Utils.log('Update metadata and groups response:')
+        a4gm.utils.log('Update metadata and groups response:')
         console.log(data)
     }
     notifier.post(port, { done: true, progress: 1 })

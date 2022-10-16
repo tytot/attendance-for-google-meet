@@ -7,7 +7,7 @@ chrome.storage.local.get(null, (result) => {
                 data: 'check-active',
             },
             async (response) => {
-                Utils.log('Initializing extension...')
+                a4gm.utils.log('Initializing extension...')
                 document.body.insertAdjacentHTML(
                     'afterbegin',
                     confirmDeleteDialogHTML
@@ -179,14 +179,6 @@ chrome.storage.local.get(null, (result) => {
                 listSpawnedObserver.observe(document.body, {
                     childList: true,
                 })
-
-                const code = document
-                    .querySelector('c-wiz')
-                    .getAttribute('data-unresolved-meeting-id')
-
-                if (!result.hasOwnProperty(code)) {
-                    await addAttendanceBoilerplate(code)
-                }
                 if (!result.hasOwnProperty('rosters')) {
                     await addRosterBoilerplate()
                 }
@@ -206,22 +198,6 @@ chrome.storage.local.get(null, (result) => {
         })
     }
 
-    function addAttendanceBoilerplate(code) {
-        return new Promise((resolve) => {
-            chrome.storage.local.set(
-                {
-                    [code]: {
-                        attendance: {},
-                        'start-timestamp': ~~(Date.now() / 1000),
-                    },
-                },
-                () => {
-                    resolve()
-                }
-            )
-        })
-    }
-
     function addRosterBoilerplate() {
         return new Promise((resolve) => {
             chrome.storage.local.set({ rosters: {} }, () => {
@@ -236,7 +212,7 @@ chrome.storage.local.get(null, (result) => {
                 data: 'instantiate',
             },
             () => {
-                Utils.log('Successfully initialized extension.')
+                a4gm.utils.log('Successfully initialized extension.')
             }
         )
     }

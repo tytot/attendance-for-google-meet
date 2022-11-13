@@ -25,6 +25,7 @@ class Utils {
     }
 
     static areEqualArrays(a1, a2) {
+        if (a1.length !== a2.length) return false
         const superSet = {}
         for (const i of a1) {
             superSet[i] = 1

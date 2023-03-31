@@ -60,65 +60,89 @@ chrome.storage.local.get(null, (result) => {
                     }
                 )
 
-                document
-                    .querySelector('.r6xAKc')
-                    .insertAdjacentHTML('afterend', buttonHTML)
-                const infoButton = document.querySelector('.r6xAKc button')
-                definePressedProperty(infoButton)
-                const attendanceButton = document.getElementById('attendance')
-                definePressedProperty(attendanceButton)
-                infoButton.addEventListener('click', (event) => {
-                    if (!infoButton.pressed) {
-                        if (!attendanceButton.pressed) {
-                            ariaPressedObserver.observe(
-                                attendanceButton,
-                                ariaPressedObserverOptions
-                            )
-                        } else {
-                            event.stopPropagation()
-                            infoButton.pressed = true
-                            document
-                                .querySelector('[data-tab-id="5"]')
-                                .classList.remove('qdulke')
-                            attendanceButton.pressed = false
-                            attendancePanel.classList.add('qdulke')
-                        }
-                    }
-                })
-                attendanceButton.addEventListener('click', (event) => {
-                    if (!attendanceButton.pressed) {
-                        const infoPanel =
-                            document.querySelector('[data-tab-id="5"]')
-                        if (infoPanel === null) {
-                            panelSpawnedObserver.observe(panelContainer, {
-                                childList: true,
-                            })
-                        } else {
-                            panelUnhiddenObserver.observe(
-                                document.querySelector('[data-tab-id="5"]'),
-                                {
-                                    attributes: true,
-                                    attributeFilter: ['class'],
-                                    attributeOldValue: true,
+                const buttonsSpawnedObserver = new MutationObserver(
+                    (mutations, me) => {
+                        const buttonContainer =
+                            document.querySelector('.r6xAKc')
+                        if (!buttonContainer) return
+
+                        buttonContainer.parentElement.style.display = 'flex'
+                        buttonContainer.insertAdjacentHTML(
+                            'afterend',
+                            buttonHTML
+                        )
+                        const infoButton =
+                            document.querySelector('.r6xAKc button')
+                        definePressedProperty(infoButton)
+                        const attendanceButton =
+                            document.getElementById('attendance')
+                        definePressedProperty(attendanceButton)
+                        infoButton.addEventListener('click', (event) => {
+                            if (!infoButton.pressed) {
+                                if (!attendanceButton.pressed) {
+                                    ariaPressedObserver.observe(
+                                        attendanceButton,
+                                        ariaPressedObserverOptions
+                                    )
+                                } else {
+                                    event.stopPropagation()
+                                    infoButton.pressed = true
+                                    document
+                                        .querySelector('[data-tab-id="5"]')
+                                        .classList.remove('qdulke')
+                                    attendanceButton.pressed = false
+                                    attendancePanel.classList.add('qdulke')
                                 }
-                            )
-                        }
-                        if (!infoButton.pressed) {
-                            ariaPressedObserver.observe(
-                                infoButton,
-                                ariaPressedObserverOptions
-                            )
-                        } else {
-                            event.stopPropagation()
-                            infoButton.pressed = false
-                            document
-                                .querySelector('[data-tab-id="5"]')
-                                .classList.add('qdulke')
-                            attendanceButton.pressed = true
-                            attendancePanel.classList.remove('qdulke')
-                        }
+                            }
+                        })
+                        attendanceButton.addEventListener('click', (event) => {
+                            if (!attendanceButton.pressed) {
+                                const infoPanel =
+                                    document.querySelector('[data-tab-id="5"]')
+                                if (infoPanel === null) {
+                                    panelSpawnedObserver.observe(
+                                        panelContainer,
+                                        {
+                                            childList: true,
+                                        }
+                                    )
+                                } else {
+                                    panelUnhiddenObserver.observe(
+                                        document.querySelector(
+                                            '[data-tab-id="5"]'
+                                        ),
+                                        {
+                                            attributes: true,
+                                            attributeFilter: ['class'],
+                                            attributeOldValue: true,
+                                        }
+                                    )
+                                }
+                                if (!infoButton.pressed) {
+                                    ariaPressedObserver.observe(
+                                        infoButton,
+                                        ariaPressedObserverOptions
+                                    )
+                                } else {
+                                    event.stopPropagation()
+                                    infoButton.pressed = false
+                                    document
+                                        .querySelector('[data-tab-id="5"]')
+                                        .classList.add('qdulke')
+                                    attendanceButton.pressed = true
+                                    attendancePanel.classList.remove('qdulke')
+                                }
+                            }
+                        })
+                        me.disconnect()
                     }
-                })
+                )
+                buttonsSpawnedObserver.observe(
+                    document.querySelector('[jscontroller="NcNt1e"]'),
+                    {
+                        childList: true,
+                    }
+                )
 
                 const listSpawnedObserver = new MutationObserver(
                     (mutations, me) => {
@@ -251,7 +275,8 @@ chrome.storage.local.get(null, (result) => {
                     New in Version ${chrome.runtime.getManifest().version}
                 </h2>
                 <ul>
-                    <li>Fixed issue that caused all participants to register as absent.</li>
+                    <li>Fixed bug that caused the attendance button to not show up</li>
+                    <li>Minor user interface improvements</li>
                 </ul>
             </div>
         </div>
@@ -646,7 +671,7 @@ chrome.storage.local.get(null, (result) => {
                                 <span class="material-icons">lens</span>
                                 <span class="status-details-count"><b>0</b></span>
                             </div>
-                            <div class="status-details-text">Not on List</div>
+                            <div class="status-details-text">not on list</div>
                         </div>
                         <button id="hide-status-details" class="mdc-button">
                             <span class="mdc-button__ripple"></span>

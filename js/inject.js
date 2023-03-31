@@ -58,7 +58,6 @@
     const finder = setInterval(attemptHook, 1)
 
     function attemptHook() {
-        console.log('attempting')
         try {
             for (const key in window.default_MeetingsUi) {
                 const val = window.default_MeetingsUi[key]
